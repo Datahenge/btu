@@ -13,7 +13,7 @@ MIT
 
 1. Install BTU as a Frappe App
 ```
-bench get-app --branch v1.0.0 https://github.com/frappe/erpnext
+bench get-app --branch version-13 https://github.com/Datahenge/btu
 ```
 2. You need to run `rqscheduler` (which runs continously) in a terminal, or as a daemon.
 
