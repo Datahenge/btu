@@ -46,6 +46,7 @@ Tasks can be executed in 4 different ways:
 1. Install BTU as a Frappe App
 ```
 bench get-app --branch version-13 https://github.com/Datahenge/btu
+bench --site your_site_name install-app btu
 ```
 
 The installation process will automatically install Python package [rq-scheduler](https://pypi.org/project/rq-scheduler/).
