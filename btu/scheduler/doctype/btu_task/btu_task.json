@@ -1,0 +1,129 @@
+{
+ "actions": [],
+ "autoname": "BTU-.#####",
+ "creation": "2021-08-14 14:04:50.727345",
+ "description": "A Task represents a Python function that can be executed automatically in the background, using Redis Queue and workers.",
+ "doctype": "DocType",
+ "documentation": "https://gitlab.com/datahenge/btu",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "desc_short",
+  "cb1",
+  "button_run_on_webserver",
+  "button_push_into_queue",
+  "sb_definition",
+  "function_string",
+  "desc_long",
+  "cb2",
+  "arguments",
+  "run_only_as_worker",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "description": "If the function requires arguments, enter them here as a Python Dictionary of key-values.",
+   "fieldname": "arguments",
+   "fieldtype": "Small Text",
+   "label": "Function Arguments"
+  },
+  {
+   "fieldname": "desc_long",
+   "fieldtype": "Small Text",
+   "label": "Task Description"
+  },
+  {
+   "fieldname": "cb1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "eval: doc.docstatus == 1",
+   "description": "Task will be pushed into the Redis Queue, and executed by the next available worker.",
+   "fieldname": "button_push_into_queue",
+   "fieldtype": "Button",
+   "label": "Run via Redis Worker",
+   "options": "btn_push_into_queue"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "BTU Task",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval: doc.run_only_as_worker == 0",
+   "description": "Function will execute asynchronously on the Web Server.",
+   "fieldname": "button_run_on_webserver",
+   "fieldtype": "Button",
+   "label": "Run on Web Server"
+  },
+  {
+   "fieldname": "sb_definition",
+   "fieldtype": "Section Break",
+   "label": "Definition"
+  },
+  {
+   "description": "The module path and function will be validated during Save.",
+   "fieldname": "function_string",
+   "fieldtype": "Data",
+   "label": "Path to Function",
+   "reqd": 1
+  },
+  {
+   "default": "0",
+   "description": "This checkbox disables the \"Run on Web Server\" button.<br>Useful to protect accidentally running a lengthy process on the web server.",
+   "fieldname": "run_only_as_worker",
+   "fieldtype": "Check",
+   "label": "Run only from Workers"
+  },
+  {
+   "fieldname": "desc_short",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Short Description",
+   "reqd": 1
+  },
+  {
+   "fieldname": "cb2",
+   "fieldtype": "Column Break"
+  }
+ ],
+ "is_submittable": 1,
+ "links": [
+  {
+   "link_doctype": "BTU Task Log",
+   "link_fieldname": "task"
+  },
+  {
+   "link_doctype": "BTU Task Schedule",
+   "link_fieldname": "task"
+  }
+ ],
+ "modified": "2021-08-30 12:34:33.819912",
+ "modified_by": "Administrator",
+ "module": "Scheduler",
+ "name": "BTU Task",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "select": 1,
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "name",
+ "sort_order": "DESC",
+ "title_field": "desc_short"
+}

@@ -1,0 +1,191 @@
+{
+ "actions": [],
+ "autoname": "TS.######",
+ "creation": "2021-08-14 14:16:17.422988",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "task",
+  "task_description",
+  "enabled",
+  "cb1",
+  "queue_name",
+  "redis_job_id",
+  "sb_argument_overrides",
+  "argument_overrides",
+  "sb_schedule",
+  "schedule_description",
+  "cron_string",
+  "cb2",
+  "run_frequency",
+  "day_of_week",
+  "day_of_month",
+  "month",
+  "hour",
+  "minute",
+  "sb_help",
+  "cron_help"
+ ],
+ "fields": [
+  {
+   "columns": 1,
+   "fieldname": "task",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Task",
+   "options": "BTU Task",
+   "reqd": 1
+  },
+  {
+   "default": "default",
+   "description": "Use this queue and worker when running the task.",
+   "fieldname": "queue_name",
+   "fieldtype": "Select",
+   "label": "Queue Name",
+   "options": "default\nshort\nlong",
+   "reqd": 1
+  },
+  {
+   "columns": 1,
+   "default": "0",
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "label": "Enabled"
+  },
+  {
+   "default": "Cron Style",
+   "fieldname": "run_frequency",
+   "fieldtype": "Select",
+   "label": "Run Frequency",
+   "options": "Hourly\nDaily\nWeekly\nMonthly\nYearly\nCron Style",
+   "reqd": 1
+  },
+  {
+   "description": "UNIX crontab format: \"minute hour day-of-month month day-of-week\"<br>Example:  0 22 * * 1-5.",
+   "fieldname": "cron_string",
+   "fieldtype": "Data",
+   "label": "Cron String",
+   "read_only_depends_on": "eval:doc.run_frequency != \"Cron Style\""
+  },
+  {
+   "depends_on": "eval:doc.run_frequency === 'Weekly'",
+   "fieldname": "day_of_week",
+   "fieldtype": "Select",
+   "label": "Day of Week",
+   "options": "Monday\nTuesday\nWednesday\nThursday\nFriday\nSaturday\nSunday"
+  },
+  {
+   "depends_on": "eval:doc.run === 'Monthly' || doc.run === 'Yearly'",
+   "fieldname": "day_of_month",
+   "fieldtype": "Int",
+   "label": "Day of Month"
+  },
+  {
+   "depends_on": "eval:doc.run_frequency === 'Monthly' || doc.run_frequency === 'Yearly'",
+   "fieldname": "month",
+   "fieldtype": "Select",
+   "label": "Month of Year",
+   "options": "JAN\nFEB\nMAR\nAPR\nMAY\nJUN\nJUL\nAUG\nSEP\nOCT\nNOV\nDEC"
+  },
+  {
+   "depends_on": "eval:doc.run_frequency !== 'Hourly' && doc.run_frequency !== 'Cron Style'",
+   "fieldname": "hour",
+   "fieldtype": "Data",
+   "label": "Hour (0 to 23)"
+  },
+  {
+   "depends_on": "eval: doc.run_frequency !== 'Cron Style'",
+   "fieldname": "minute",
+   "fieldtype": "Int",
+   "label": "Minute"
+  },
+  {
+   "fieldname": "redis_job_id",
+   "fieldtype": "Data",
+   "label": "Redis Job ID",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cb1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "schedule_description",
+   "fieldtype": "Data",
+   "label": "Schedule Description",
+   "read_only": 1
+  },
+  {
+   "columns": 3,
+   "default": "task.desc_short",
+   "fieldname": "task_description",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Task Description",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sb_schedule",
+   "fieldtype": "Section Break",
+   "label": "Schedule"
+  },
+  {
+   "fieldname": "cb2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "sb_help",
+   "fieldtype": "Section Break",
+   "label": "Help"
+  },
+  {
+   "fieldname": "cron_help",
+   "fieldtype": "HTML",
+   "label": "Cron Help",
+   "options": "<div>\nCron examples from the makers of Cronitor\n<b>\n<a href=\"https://crontab.guru/examples.html\" style=\"color: blue;\" target=\"_blank\">\nhere.\n</a>\n</b>\n</div>"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "sb_argument_overrides",
+   "fieldtype": "Section Break",
+   "label": "Argument Overrides"
+  },
+  {
+   "fieldname": "argument_overrides",
+   "fieldtype": "Long Text",
+   "label": "Function Arguments"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2021-08-30 12:31:43.542230",
+ "modified_by": "Administrator",
+ "module": "Scheduler",
+ "name": "BTU Task Schedule",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "select": 1,
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "role": "All"
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC"
+}
