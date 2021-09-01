@@ -125,6 +125,25 @@ class BTUTaskSchedule(Document):
 	def task_doc(self):
 		return frappe.get_doc("BTU Task", self.task)
 
+	@frappe.whitelist()
+	def get_last_job_results(self):
+		import zlib
+		from frappe.utils.background_jobs import get_redis_conn
+		conn = get_redis_conn()
+		# conn.type('rq:job:TS000001')
+		# conn.hkeys('rq:job:TS000001')
+
+		job_status =  conn.hget(f'rq:job:{self.name}', 'status').decode('utf-8')
+		if job_status == 'finished':
+			frappe.msgprint(f"Job {self.name} completed successfully.")
+			return
+		frappe.msgprint("Job status = {job_status}")
+		compressed_data = conn.hget(f'rq:job:{self.name}', 'exc_info')
+		if not compressed_data:
+			frappe.msgprint("No results available; job may not have been processed yet.")
+		else:
+			frappe.msgprint(zlib.decompress(compressed_data))
+
 
 def check_minutes(minute):
 	if not minute or not 0 <= minute < 60:

@@ -25,7 +25,8 @@
   "hour",
   "minute",
   "sb_help",
-  "cron_help"
+  "cron_help",
+  "btn_get_last_job_results"
  ],
  "fields": [
   {
@@ -155,11 +156,17 @@
    "fieldname": "argument_overrides",
    "fieldtype": "Long Text",
    "label": "Function Arguments"
+  },
+  {
+   "fieldname": "btn_get_last_job_results",
+   "fieldtype": "Button",
+   "label": "Get Last Job Results",
+   "options": "get_last_job_results"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2021-08-30 12:31:43.542230",
+ "modified": "2021-09-01 01:09:21.231015",
  "modified_by": "Administrator",
  "module": "Scheduler",
  "name": "BTU Task Schedule",

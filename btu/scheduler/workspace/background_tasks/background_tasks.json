@@ -1,0 +1,43 @@
+{
+ "category": "Modules",
+ "charts": [],
+ "creation": "2021-08-30 19:47:34.513628",
+ "developer_mode_only": 0,
+ "disable_user_customization": 0,
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "extends_another_page": 0,
+ "hide_custom": 0,
+ "idx": 0,
+ "is_default": 0,
+ "is_standard": 1,
+ "label": "Background Tasks",
+ "links": [],
+ "modified": "2021-08-30 19:47:34.513628",
+ "modified_by": "Administrator",
+ "module": "Scheduler",
+ "name": "Background Tasks",
+ "owner": "Administrator",
+ "pin_to_bottom": 0,
+ "pin_to_top": 0,
+ "shortcuts": [
+  {
+   "doc_view": "List",
+   "label": "Tasks",
+   "link_to": "BTU Task",
+   "type": "DocType"
+  },
+  {
+   "doc_view": "List",
+   "label": "Schedules",
+   "link_to": "BTU Task Schedule",
+   "type": "DocType"
+  },
+  {
+   "doc_view": "List",
+   "label": "Logs",
+   "link_to": "BTU Task Log",
+   "type": "DocType"
+  }
+ ]
+}

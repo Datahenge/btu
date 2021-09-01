@@ -6,8 +6,7 @@ Call these functions from 'Bench Console' or 'Bench Execute'; then validate resu
 
 """
 import frappe
-import btu
-from btu.task_runner import TaskRunner
+
 
 @frappe.whitelist()
 def ping_with_wait(seconds_to_wait):
@@ -77,8 +76,8 @@ def test_frappe_enqueue():
 	bench execute btu.manual_tests.test_frappe_enqueue
 	"""
 	frappe.enqueue(
+			method="btu.manual_tests.send_hello_email_to_user",
 			queue='short',
-			method=btu.manual_tests.send_hello_email_to_user
 	)
 	print("Submitted a function 'send_hello_email_to_user()' to the Redis Queue.")
 
