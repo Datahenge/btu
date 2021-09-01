@@ -66,7 +66,34 @@ rqscheduler -H 127.0.0.1 --port 11000
 (documentation To Be Continued)
 
 #### Option 3: Create a systemd Unit File, for automatic execution on boot.
-(documentation To Be Continued)
+
+Create a file here:  `/etc/systemd/system/erpnext_rqscheduler.service`
+
+And write the following contents.  Make sure you edit and enter the proper path to your Frappe environment.
+```
+[Unit]
+Description=Background Tasks Unleashed: RQ Scheduler
+
+Wants=network.target
+After=syslog.target network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/erpnext/v13bench
+#
+# It's very important that we run rqscheduler in the context of the ERPNext Python Virtual Environment.
+#
+ExecStart=/erpnext/v13bench/env/bin/python \
+    /erpnext/v13bench/env/lib/python3.7/site-packages/rq_scheduler/scripts/rqscheduler.py -H 127.0.0.1 --port 11000
+StandardOutput=/erpnext/v13bench/logs/rqscheduler.log
+StandardError=/erpnext/v13bench/logs/rqscheduler_error.log
+Restart=on-failure
+RestartSec=10
+KillMode=process
+
+[Install]
+WantedBy=multi-user.target
+```
 
 ### Usage
 Your website should have a new Workspace named `BTU Workspace`, with 3 new DocTypes:
