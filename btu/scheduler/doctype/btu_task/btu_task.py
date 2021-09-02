@@ -113,13 +113,15 @@ class BTUTask(Document):
 		has_missing_arguments = False
 		message = None
 
-		for argument in function_arguments:
-			if argument not in self.built_in_arguments().keys():
-				if not has_missing_arguments:
-					# If this is the 1st error, begin with a header row.
-					has_missing_arguments = True
-					message = "----ERROR----\n"
-				message += f"\nTask's function requires argument <b>'{argument}'</b> but this is not defined on the Task."
+		if self.built_in_arguments():
+			for argument in function_arguments:
+				if argument not in self.built_in_arguments().keys():
+					if not has_missing_arguments:
+						# If this is the 1st error, begin with a header row.
+						has_missing_arguments = True
+						message = "----ERROR----\n"
+					message += f"\nTask's function requires argument <b>'{argument}'</b> but this is not defined on the Task."
+
 		if has_missing_arguments:
 			message += "\n\nYou might be able to run this via a Task Schedule, but not directly here."
 			frappe.msgprint(message)
