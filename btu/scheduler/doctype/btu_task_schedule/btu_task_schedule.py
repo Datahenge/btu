@@ -134,13 +134,17 @@ class BTUTaskSchedule(Document):
 		# conn.hkeys('rq:job:TS000001')
 
 		try:
+			# job_data =  conn.hgetall(f'rq:job:{self.redis_job_id}').decode('utf-8')
+			# frappe.msgprint(job_data)
 			job_status =  conn.hget(f'rq:job:{self.redis_job_id}', 'status').decode('utf-8')
 		except Exception:
 			frappe.msgprint(f"No job information is available for Job {self.redis_job_id}")
+			return
+
 		if job_status == 'finished':
 			frappe.msgprint(f"Job {self.redis_job_id} completed successfully.")
 			return
-		frappe.msgprint("Job status = {job_status}")
+		frappe.msgprint(f"Job status = {job_status}")
 		compressed_data = conn.hget(f'rq:job:{self.redis_job_id}', 'exc_info')
 		if not compressed_data:
 			frappe.msgprint("No results available; job may not have been processed yet.")
