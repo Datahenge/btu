@@ -75,6 +75,7 @@ class BTUTask(Document):
 		# Use standard frappe.enqueue() to place the 'function_wrapper' into RQ.
 		frappe.enqueue(method=task_runner.function_wrapper,
 			queue=queue_name,
+			timeout=self.max_task_duration,
 			is_async=True)
 
 	def built_in_arguments(self):

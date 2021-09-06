@@ -233,5 +233,5 @@ def redis_rebuild_all_schedules():
 	for name in job_schedules:
 		doc_schedule = frappe.get_doc("BTU Task Schedule", name)
 		doc_schedule.validate()
-		doc_schedule.reschedule_job()
+		doc_schedule.reschedule_task()
 		print(f"BTU Startup: Task Schedule '{doc_schedule.name}' stored in Redis.")

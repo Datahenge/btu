@@ -29,7 +29,6 @@ class Result():
 		if not isinstance(success, bool):
 			raise TypeError("Result class argument 'success' must be a boolean.")
 		if message and (not isinstance(message, str)):
-			frappe.whatis(message)
 			raise TypeError("Result class argument 'message' must be a Python string.")
 		self.okay = success
 		self.message = message or None

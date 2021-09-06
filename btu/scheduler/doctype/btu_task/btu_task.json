@@ -18,6 +18,7 @@
   "cb2",
   "arguments",
   "run_only_as_worker",
+  "max_task_duration",
   "amended_from"
  ],
  "fields": [
@@ -89,6 +90,12 @@
   {
    "fieldname": "cb2",
    "fieldtype": "Column Break"
+  },
+  {
+   "default": "600s",
+   "fieldname": "max_task_duration",
+   "fieldtype": "Data",
+   "label": "Max Task Duration"
   }
  ],
  "is_submittable": 1,
@@ -102,7 +109,7 @@
    "link_fieldname": "task"
   }
  ],
- "modified": "2021-08-30 12:34:33.819912",
+ "modified": "2021-09-02 14:45:14.934440",
  "modified_by": "Administrator",
  "module": "Scheduler",
  "name": "BTU Task",
