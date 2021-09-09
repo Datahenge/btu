@@ -48,10 +48,28 @@ def schedule_job_in_redis(path_to_function, cron_string, queue_name,
 		repeat=None,  # Repeat this number of times (None means repeat forever)
 		queue_name=queue_name,  # In which queue the job should be put in
 		meta={'app': 'Background Tasks Unleashed'},        # Arbitrary pickleable data on the job itself.
-		use_local_timezone=False    # Interpret hours in the local timezone
+		use_local_timezone=False,    # Interpret hours in the local timezone
+		timeout="1h"
 	)
 	if not job.get_id():
 		raise Exception("ERROR: Job is not yielding an ID.")
 
 	print(" ** Added job to Redis Queue '" + queue_name + "' with Job ID: " + job.get_id() + " at " + cron_string)
 	return job.get_id()
+
+
+@frappe.whitelist()
+def are_tasks_scheduled():
+	"""
+	Called by hooks.py
+	Callable by REST API at any time.
+	"""
+	return frappe.local.flags.btu_tasks_scheduled or False
+
+
+@frappe.whitelist()
+def mark_tasks_as_scheduled():
+	"""
+	Once the worker has submitted all Tasks as Redis jobs, set this flag on the webserver.
+	"""
+	frappe.local.flags.btu_tasks_scheduled = True

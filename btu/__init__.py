@@ -99,6 +99,7 @@ def get_system_datetime_now():
 	utc_datetime = datetime.now(tzutc())  # Get the current UTC datetime.
 	return utc_datetime.astimezone( get_system_timezone())  # Convert to the site's Time Zone:
 
+
 def make_datetime_naive(any_datetime):
 	"""
 	Takes a timezone-aware datetime, and makes it naive.

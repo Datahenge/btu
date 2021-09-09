@@ -216,22 +216,37 @@ def schedule_to_cron_string(doc_schedule):
 
 
 @frappe.whitelist()
-def redis_rebuild_all_schedules():
+def resubmit_all_task_schedules():
 	import time as _time
 
 	# The following code kickstarts the BTU Scheduled Tasks during web server startup.
-	#if not hasattr(_frappe.local.flags, 'btu_jobs_loaded'):
-	#	print("Creating a new flag 'frappe.local.flags.btu_jobs_loaded'")
-	#	_frappe.local.flags.btu_jobs_loaded = None
+	if not hasattr(frappe.local.flags, 'btu_jobs_loaded'):
+		frappe.local.flags.btu_jobs_loaded = False
+		message = "Creating a new flag 'frappe.local.flags.btu_jobs_loaded'"
+		print(message)
 
-	# TODO: I have no way of knowing whether this already happened when the Web Server booted up.
 	# Load jobs for the first time after server startup.
 	print(f"Value of 'frappe.local.flags.btu_jobs_loaded' = {frappe.local.flags.btu_jobs_loaded}")
 	_time.sleep(5)
+
+	if frappe.local.flags.btu_jobs_loaded is None:
+		frappe.local.flags.btu_jobs_loaded = False
+
+	if frappe.local.flags.btu_jobs_loaded is True:
+		return
+
 	filters = { "enabled": True }
 	job_schedules = frappe.db.get_all("BTU Task Schedule", filters=filters, pluck='name')
+
 	for name in job_schedules:
-		doc_schedule = frappe.get_doc("BTU Task Schedule", name)
-		doc_schedule.validate()
-		doc_schedule.reschedule_task()
-		print(f"BTU Startup: Task Schedule '{doc_schedule.name}' stored in Redis.")
+		try:
+			doc_schedule = frappe.get_doc("BTU Task Schedule", name)
+			doc_schedule.validate()
+			doc_schedule.reschedule_task()
+			print(f"BTU Startup: Task Schedule '{doc_schedule.name}' stored in Redis.")
+		except Exception as ex:
+			print(f"ERROR: Task {doc_schedule.name} : {ex}")
+			doc_schedule.enabled = False
+			doc_schedule.save()
+
+	frappe.local.flags.btu_jobs_loaded = True
