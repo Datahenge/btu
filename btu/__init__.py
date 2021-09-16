@@ -32,7 +32,7 @@ class Result():
 			raise TypeError("Result class argument 'message' must be a Python string.")
 		self.okay = success
 		self.message = message or None
-		self.execution_time = round(execution_time,2)
+		self.execution_time = round(execution_time,2) if execution_time else None
 
 	def __bool__(self):
 		"""

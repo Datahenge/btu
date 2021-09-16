@@ -1,11 +1,11 @@
 """ btu.hooks.py """
 
 from datetime import datetime as _datetime
-import frappe as _frappe
-
 from . import __version__ as app_version
 
 # pylint: disable=invalid-name
+# pylint: disable=pointless-string-statement
+
 app_name = "btu"
 app_title = "Background Tasks Unleashed"
 app_publisher = "Datahenge LLC"
@@ -15,10 +15,33 @@ app_color = "grey"
 app_email = "brian@datahenge.com"
 app_license = "MIT"
 
-# Hooks is executed by Workers, which have no idea about Web Server's global state.
-# Code running here will not know about Frappe Flags.
+"""
+--------
+The Trouble with Hooks.py
+--------
 
-# Not even sure how it knows what Site it is?
+This file is loaded and executed by:
+1. Web Server processes.  You could be running many separate instances of Gunicorn.
+2. Workers.
+
+So how do we know the "global" state of things?
+We really don't know.  We can fetch "locals" per Werkzeug process.  But (to my knowledge) there is no "master", global thread.
+
+So.  Unless you need code to run, over and over, all the time?  Don't put it here in hook.py.  It's going to be executed
+uncontrollably.
+
+The following code demonstrates the variety of ways that 'hooks.py is being used.
+
+"""
+
+import threading  # pylint: disable=wrong-import-position, wrong-import-order
+import os  # pylint: disable=wrong-import-position, wrong-import-order
+print("\n--------\nHooks.py was executed.")
+print(f"Current Time: {_datetime.now()}")
+print(f"OS Process ID: {os.getpid()}")
+print(f"OS Thread Name: {threading.current_thread().name}")
+print("--------\n")
+
 
 """
 Regarding extending 'bootinfo'
@@ -29,6 +52,8 @@ It is a poorly-named feature.
 
 # extend_bootinfo = "btu.boot.boot_session"
 """
+
+
 
 def check_if_tasks_scheduled():
 	"""
@@ -45,16 +70,10 @@ def check_if_tasks_scheduled():
 		response = requests.get('http://localhost:8000/api/method/btu.scheduler.are_tasks.scheduled')
 		print(f"Response from web server: {response}")
 	except Exception as ex:
-		print(f"Error in request call: {ex}")
+		print(f"Error in request call: {ex}\n")
 		return False
 
 
-# The problem with hooks.py is it's called All. The. Time.  It's annoying how often it's loaded again and again.
-# I don't want to ping the web server every 60 seconds.
-
-# _frappe.whatis("foo")
-
-print(f"\n--------\nHooks.py was executed at {_datetime.now()}\n--------\n")
-if not check_if_tasks_scheduled():
-	from btu.scheduler.doctype.btu_task_schedule.btu_task_schedule import resubmit_all_task_schedules
-	# resubmit_all_task_schedules()
+#if not check_if_tasks_scheduled():
+#	from btu.scheduler.doctype.btu_task_schedule.btu_task_schedule import resubmit_all_task_schedules
+#	resubmit_all_task_schedules()

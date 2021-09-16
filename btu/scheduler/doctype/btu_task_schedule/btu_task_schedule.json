@@ -112,8 +112,10 @@
    "fieldtype": "Column Break"
   },
   {
+   "columns": 3,
    "fieldname": "schedule_description",
    "fieldtype": "Data",
+   "in_list_view": 1,
    "label": "Schedule Description",
    "read_only": 1
   },
@@ -166,7 +168,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2021-09-01 01:09:21.231015",
+ "modified": "2021-09-15 18:37:59.939897",
  "modified_by": "Administrator",
  "module": "Scheduler",
  "name": "BTU Task Schedule",
@@ -193,6 +195,7 @@
    "role": "All"
   }
  ],
- "sort_field": "modified",
- "sort_order": "DESC"
+ "sort_field": "task",
+ "sort_order": "DESC",
+ "title_field": "task"
 }
