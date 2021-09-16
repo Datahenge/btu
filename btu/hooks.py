@@ -34,12 +34,12 @@ The following code demonstrates the variety of ways that 'hooks.py is being used
 
 """
 
-import threading  # pylint: disable=wrong-import-position, wrong-import-order
-import os  # pylint: disable=wrong-import-position, wrong-import-order
+import threading as _threading  # pylint: disable=wrong-import-position, wrong-import-order
+import os as _os  # pylint: disable=wrong-import-position, wrong-import-order
 print("\n--------\nHooks.py was executed.")
 print(f"Current Time: {_datetime.now()}")
-print(f"OS Process ID: {os.getpid()}")
-print(f"OS Thread Name: {threading.current_thread().name}")
+print(f"OS Process ID: {_os.getpid()}")
+print(f"OS Thread Name: {_threading.current_thread().name}")
 print("--------\n")
 
 
