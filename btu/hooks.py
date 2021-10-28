@@ -34,13 +34,17 @@ The following code demonstrates the variety of ways that 'hooks.py is being used
 
 """
 
+DEBUG = False
+
 import threading as _threading  # pylint: disable=wrong-import-position, wrong-import-order
 import os as _os  # pylint: disable=wrong-import-position, wrong-import-order
-print("\n--------\nHooks.py was executed.")
-print(f"Current Time: {_datetime.now()}")
-print(f"OS Process ID: {_os.getpid()}")
-print(f"OS Thread Name: {_threading.current_thread().name}")
-print("--------\n")
+
+if DEBUG:
+	print("\n--------\nHooks.py was executed.")
+	print(f"Current Time: {_datetime.now()}")
+	print(f"OS Process ID: {_os.getpid()}")
+	print(f"OS Thread Name: {_threading.current_thread().name}")
+	print("--------\n")
 
 
 """
@@ -52,7 +56,6 @@ It is a poorly-named feature.
 
 # extend_bootinfo = "btu.boot.boot_session"
 """
-
 
 
 def check_if_tasks_scheduled():
