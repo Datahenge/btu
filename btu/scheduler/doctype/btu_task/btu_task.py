@@ -54,11 +54,12 @@ class BTUTask(Document):
 		module_imported = self._imported_module()
 		# 2. Ensure function exists in the Module.
 		if not self._function_name() in dir(module_imported):
-			frappe.throw(f"Cannot find function '{self. _function_name()}' in module path '{self._module_path()}'.")
+			raise ImportError(f"Cannot find function '{self. _function_name()}' in module path '{self._module_path()}'.")
+
 		# 3. Ensure function is an instance of btu.TaskWrapper()
 		# callable_function = self._callable_function()
 		# if not isinstance(callable_function, TaskWrapper):
-		# 	frappe.throw(f"Function '{self. _function_name()}' is not an instance of btu.task_runner.TaskWrapper()")
+		# 	raise Exception(f"Function '{self. _function_name()}' is not an instance of btu.task_runner.TaskWrapper()")
 		# frappe.msgprint("\u2713 Task module and function exist and are valid.")
 
 	def push_task_into_queue(self, queue_name='default', extra_arguments=None):

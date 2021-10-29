@@ -154,21 +154,21 @@ class BTUTaskSchedule(Document):
 
 def check_minutes(minute):
 	if not minute or not 0 <= minute < 60:
-		frappe.throw(_("Minute value must be between 0 and 59"))
+		raise ValueError(_("Minute value must be between 0 and 59"))
 
 def check_hours(hour):
 	if not hour or not hour.isdigit() or not 0 <= int(hour) < 24:
-		frappe.throw(_("Hour value must be between 0 and 23"))
+		raise ValueError(_("Hour value must be between 0 and 23"))
 
 def check_day_of_week(day_of_week):
 
 	if not day_of_week or day_of_week is None:
-		frappe.throw(_("Please select a day of the week"))
+		raise ValueError(_("Please select a day of the week"))
 
 def check_day_of_month(run_frequency, day, month=None):
 
 	if run_frequency == "Monthly" and not day:
-		frappe.throw(_("Please select a day of the month"))
+		raise ValueError(_("Please select a day of the month"))
 
 	elif run_frequency == "Yearly":
 		if day and month:
@@ -176,10 +176,10 @@ def check_day_of_month(run_frequency, day, month=None):
 			last = monthrange(datetime.now().year,
 							  m.get(str(month).title()))[1]
 			if int(day) > last:
-				frappe.throw(
+				raise ValueError(
 					_("Day value for {0} must be between 1 and {1}").format(month, last))
 		else:
-			frappe.throw(_("Please select a day of the week and a month"))
+			raise ValueError(_("Please select a day of the week and a month"))
 
 def schedule_to_cron_string(doc_schedule):
 	"""

@@ -163,6 +163,7 @@ class TaskRunner():
 		self.dprint("\nEnd Standard Output")
 		self.dprint(f"Function Result: {function_result}")
 
+		# Code below was mostly a sanity check: Can we successfully read from the ERPNext Database?
 		# print("Querying the Site database for User 'Administrator' ...")
 		# doc_user_admin = frappe.get_doc("User", "Administrator")
 		# print(f"\u2713 Found it: {doc_user_admin.name}")
