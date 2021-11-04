@@ -6,7 +6,38 @@ from frappe.model.document import Document
 from btu import Result
 
 class BTUTaskLog(Document):
-	pass
+
+	def after_insert(self):
+		try:
+			self.send_email_summary()
+		except Exception as ex:
+			message = "Error while attempting to send email about Task Log."
+			frappe.msgprint(message, to_console=True)
+			self.stdout = message + "\n" + ex + "\n" + self.stdout
+
+	def send_email_summary(self):
+		"""
+		Send an email about the Task's success or failure.
+		"""
+
+		if not self.schedule:
+			return  # only send emails for Tasks that were scheduled.
+
+		if self.success_fail is True:
+			subject = f"Success: BTU Task {self.task}"
+		else:
+			subject = f"Failure: BTU Task {self.task}"
+
+		email_args = {
+			"recipients": "brian@datahenge.com",
+			"sender": "technology@farmtopeople.com",
+			"subject": subject,
+			"message": self.result_message + self.stdout,
+			"now": True,
+			"attachments": None
+		}
+		frappe.enqueue(method=frappe.sendmail, queue='short', timeout=300, is_async=True, **email_args)
+
 
 def write_log_for_task(task_id, result, stdout=None, date_time_started=None, schedule_id=None):
 	"""

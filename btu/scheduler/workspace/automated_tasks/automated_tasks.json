@@ -13,7 +13,7 @@
  "is_standard": 1,
  "label": "Automated Tasks",
  "links": [],
- "modified": "2021-08-30 19:48:47.939414",
+ "modified": "2021-11-03 21:05:47.927172",
  "modified_by": "Administrator",
  "module": "Scheduler",
  "name": "Automated Tasks",
@@ -37,6 +37,12 @@
    "doc_view": "List",
    "label": "Logs",
    "link_to": "BTU Task Log",
+   "type": "DocType"
+  },
+  {
+   "doc_view": "List",
+   "label": "Setup and Configuration",
+   "link_to": "BTU Configuration",
    "type": "DocType"
   }
  ]

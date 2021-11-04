@@ -37,7 +37,7 @@ def ping_and_error():
 
 
 @frappe.whitelist()
-def send_hello_email_to_user():
+def send_hello_email_to_user(debug=False):
 	"""
 		When run from Bench Execute, this will email the Administrator.
 	    bench execute btu.manual_tests.send_hello_email_to_user
@@ -52,16 +52,25 @@ def send_hello_email_to_user():
 
 	# Print message to the console
 	user_doc = frappe.get_doc("User", frappe.session.user)
+
+	if not user_doc.email:
+		frappe.throw(f"Current user '{user_doc.name}' does not have an Email Address associated with their account.")
+
 	message = f"\n--------\nHello {user_doc.full_name}."
 	message += f"\nThis function was called by '{caller_name}'"
 	message += f"\nThe current, local time is {datetime.datetime.now()}"
 	message += "\n--------\n"
-	print(message)
+
+	if debug:
+		print(message)
+
+	print(f"Sending test email to address '{user_doc.email}'")
+	frappe.msgprint(f"Sending test email to address '{user_doc.email}'")
 
 	frappe.sendmail(
 		recipients=user_doc.email,
 		message=message.replace('\n', '<br>'),
-		subject=f"From Queue: Hello {user_doc.full_name}"
+		subject=f"From BTU: Hello {user_doc.full_name}"
 	)
 	return "Leaving function 'send_hello_email_to_user()'.  Confirmation email should arrive soon."
 

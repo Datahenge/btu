@@ -1,0 +1,41 @@
+{
+ "actions": [],
+ "creation": "2021-11-03 20:53:46.334323",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "btn_send_hello_email"
+ ],
+ "fields": [
+  {
+   "description": "Sends a short \"hello\" email to the current session User.",
+   "fieldname": "btn_send_hello_email",
+   "fieldtype": "Button",
+   "label": "Send Hello Email",
+   "options": "button_send_hello_email"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "issingle": 1,
+ "links": [],
+ "modified": "2021-11-03 21:06:41.234358",
+ "modified_by": "Administrator",
+ "module": "Scheduler",
+ "name": "BTU Configuration",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC"
+}
