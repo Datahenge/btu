@@ -12,8 +12,9 @@ class BTUTaskLog(Document):
 			self.send_email_summary()
 		except Exception as ex:
 			message = "Error in BTU Task Log while attempting to send email about Task Log."
+			message += "\n" + str(ex) + "\n"
 			frappe.msgprint(message, to_console=True)
-			self.stdout = message + "\n" + ex + "\n" + self.stdout
+			self.stdout = message + (self.stdout or "")
 
 	def send_email_summary(self):
 		"""
@@ -40,7 +41,7 @@ class BTUTaskLog(Document):
 		                bcc=";".join(bcc_list) if bcc_list else None,
 			            sender="technology@farmtopeople.com",
 			            subject=subject,
-			            message=self.result_message + self.stdout,
+			            message=(self.result_message or "") + (self.stdout or ""),
 			            now=True,
 			            attachments=None)
 

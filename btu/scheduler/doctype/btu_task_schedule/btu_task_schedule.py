@@ -21,7 +21,7 @@ from frappe import _
 from frappe.model.document import Document
 
 # BTU
-from btu import validate_cron_string, scheduler as btu_scheduler
+from btu import ( validate_cron_string, scheduler as btu_scheduler, Result)
 from btu.task_runner import TaskRunner
 
 
@@ -151,7 +151,29 @@ class BTUTaskSchedule(Document):
 		else:
 			frappe.msgprint(zlib.decompress(compressed_data))
 
+	@frappe.whitelist()
+	def button_test_email_via_log(self):
+		"""
+		Write an entry to the BTU Task Log, which should trigger emails.  Then delete the entry.
+		"""
+		from btu.scheduler.doctype.btu_task_log.btu_task_log import write_log_for_task  # late import to avoid circular reference
+		if not self.email_recipients:
+			frappe.msgprint("Task Schedule does not have any Email Recipients; no emails can be tested.")
+			return
 
+		try:
+			log_key = write_log_for_task(self.task, result=Result(True,"Email Test"), schedule_id=self.name)
+			frappe.db.commit()
+			frappe.delete_doc("BTU Task Log", log_key)
+			frappe.msgprint("Log written; emails should arrive shortly.")
+
+		except Exception as ex:
+			frappe.msgprint(f"Errors while testing Task Emails: {ex}")
+			raise ex
+
+# ----------------
+# STATIC FUNCTIONS
+# ----------------
 def check_minutes(minute):
 	if not minute or not 0 <= minute < 60:
 		raise ValueError(_("Minute value must be between 0 and 59"))

@@ -26,6 +26,7 @@
   "minute",
   "sb_email",
   "email_recipients",
+  "btn_test_email_via_log",
   "sb_help",
   "cron_help",
   "btn_get_last_job_results"
@@ -174,12 +175,20 @@
   },
   {
    "fieldname": "sb_email",
-   "fieldtype": "Section Break"
+   "fieldtype": "Section Break",
+   "label": "Email"
+  },
+  {
+   "description": "Simulate sending emails by writing a short entry to the Task Log.",
+   "fieldname": "btn_test_email_via_log",
+   "fieldtype": "Button",
+   "label": "Send Test Email",
+   "options": "button_test_email_via_log"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2021-11-05 05:21:25.405705",
+ "modified": "2021-11-05 05:44:36.020871",
  "modified_by": "Administrator",
  "module": "Scheduler",
  "name": "BTU Task Schedule",
