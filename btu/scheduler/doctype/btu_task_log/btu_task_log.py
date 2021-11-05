@@ -11,7 +11,7 @@ class BTUTaskLog(Document):
 		try:
 			self.send_email_summary()
 		except Exception as ex:
-			message = "Error while attempting to send email about Task Log."
+			message = "Error in BTU Task Log while attempting to send email about Task Log."
 			frappe.msgprint(message, to_console=True)
 			self.stdout = message + "\n" + ex + "\n" + self.stdout
 
@@ -19,24 +19,44 @@ class BTUTaskLog(Document):
 		"""
 		Send an email about the Task's success or failure.
 		"""
-
 		if not self.schedule:
 			return  # only send emails for Tasks that were scheduled.
+
+		doc_schedule = frappe.get_doc("BTU Task Schedule", self.schedule)
+		if not doc_schedule.email_recipients:
+			return  # no email recipients defined
+
+		recipient_list = [ row.email_address for row in doc_schedule.email_recipients if row.recipient_type == 'TO' ]
+		cc_list = [ row.email_address for row in doc_schedule.email_recipients if row.recipient_type == 'CC' ]
+		bcc_list = [ row.email_address for row in doc_schedule.email_recipients if row.recipient_type == 'BCC' ]
 
 		if self.success_fail is True:
 			subject = f"Success: BTU Task {self.task}"
 		else:
 			subject = f"Failure: BTU Task {self.task}"
 
+		frappe.sendmail(recipients=";".join(recipient_list) if recipient_list else None,
+			            cc=";".join(cc_list) if cc_list else None,
+		                bcc=";".join(bcc_list) if bcc_list else None,
+			            sender="technology@farmtopeople.com",
+			            subject=subject,
+			            message=self.result_message + self.stdout,
+			            now=True,
+			            attachments=None)
+
+		"""
 		email_args = {
-			"recipients": "brian@datahenge.com",
+			"recipients": ";".join(recipient_list) if recipient_list else None,
+			"cc": ";".join(cc_list) if cc_list else None,
+			"bcc": ";".join(bcc_list) if bcc_list else None,
 			"sender": "technology@farmtopeople.com",
 			"subject": subject,
 			"message": self.result_message + self.stdout,
 			"now": True,
 			"attachments": None
 		}
-		frappe.enqueue(method=frappe.sendmail, queue='short', timeout=300, is_async=True, **email_args)
+		"""
+		# frappe.enqueue(method=frappe.sendmail, queue='short', timeout=300, is_async=True, **email_args)
 
 
 def write_log_for_task(task_id, result, stdout=None, date_time_started=None, schedule_id=None):

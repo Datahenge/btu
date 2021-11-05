@@ -1,0 +1,41 @@
+{
+ "actions": [],
+ "creation": "2021-11-05 05:18:14.265001",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "email_address",
+  "recipient_type"
+ ],
+ "fields": [
+  {
+   "fieldname": "email_address",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Email Address",
+   "reqd": 1,
+   "search_index": 1
+  },
+  {
+   "default": "TO",
+   "fieldname": "recipient_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Recipient Type",
+   "length": 10,
+   "options": "TO\nCC\nBCC",
+   "reqd": 1
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2021-11-05 05:18:32.458460",
+ "modified_by": "Administrator",
+ "module": "Scheduler",
+ "name": "BTU Email Recipient",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC"
+}

@@ -24,6 +24,8 @@
   "month",
   "hour",
   "minute",
+  "sb_email",
+  "email_recipients",
   "sb_help",
   "cron_help",
   "btn_get_last_job_results"
@@ -164,11 +166,20 @@
    "fieldtype": "Button",
    "label": "Get Last Job Results",
    "options": "get_last_job_results"
+  },
+  {
+   "fieldname": "email_recipients",
+   "fieldtype": "Table",
+   "options": "BTU Email Recipient"
+  },
+  {
+   "fieldname": "sb_email",
+   "fieldtype": "Section Break"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2021-09-15 18:37:59.939897",
+ "modified": "2021-11-05 05:21:25.405705",
  "modified_by": "Administrator",
  "module": "Scheduler",
  "name": "BTU Task Schedule",
