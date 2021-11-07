@@ -101,7 +101,10 @@ class BTUTaskSchedule(Document):
 		btu_scheduler.redis_cancel_by_queue_job_id(self.redis_job_id)
 
 		# 2. Schedule a new RQ job:
-		task_runner = TaskRunner(self.task, site_name=frappe.local.site, enable_debug_mode=True)
+		task_runner = TaskRunner(self.task,
+		                         site_name=frappe.local.site,
+		                         schedule_id=self.name,
+								 enable_debug_mode=True)
 		task_runner.redis_job_id = self.name  # This makes it easier to find the RQ Job, by making Job = Schedule's name
 
 		new_job_id = task_runner.schedule_task_in_redis(cron_string=self.cron_string, queue_name=self.queue_name)
@@ -162,7 +165,10 @@ class BTUTaskSchedule(Document):
 			return
 
 		try:
-			log_key = write_log_for_task(self.task, result=Result(True,"Email Test"), schedule_id=self.name)
+			result_obj = Result(success=True, message="This test demonstrates how Task Logs can trigger an email on completion.")
+			log_key = write_log_for_task(self.task,
+			                             result=result_obj,
+										 schedule_id=self.name)
 			frappe.db.commit()
 			frappe.delete_doc("BTU Task Log", log_key)
 			frappe.msgprint("Log written; emails should arrive shortly.")

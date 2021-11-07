@@ -4,6 +4,7 @@
 import frappe
 from frappe.model.document import Document
 from btu import Result
+from btu import email as btu_email
 
 class BTUTaskLog(Document):
 
@@ -11,39 +12,57 @@ class BTUTaskLog(Document):
 		try:
 			self.send_email_summary()
 		except Exception as ex:
+			print(ex)
 			message = "Error in BTU Task Log while attempting to send email about Task Log."
 			message += "\n" + str(ex) + "\n"
 			frappe.msgprint(message, to_console=True)
 			self.stdout = message + (self.stdout or "")
 
-	def send_email_summary(self):
+	def send_email_summary(self, debug=True):
 		"""
 		Send an email about the Task's success or failure.
 		"""
 		if not self.schedule:
+			if debug:
+				print("Warning: BTU Task Log does not reference a Task Schedule.  No email can be transmitted.")
 			return  # only send emails for Tasks that were scheduled.
 
 		doc_schedule = frappe.get_doc("BTU Task Schedule", self.schedule)
 		if not doc_schedule.email_recipients:
+			if debug:
+				print("BTU Task Schedule has no email recipients.")
 			return  # no email recipients defined
 
 		recipient_list = [ row.email_address for row in doc_schedule.email_recipients if row.recipient_type == 'TO' ]
 		cc_list = [ row.email_address for row in doc_schedule.email_recipients if row.recipient_type == 'CC' ]
 		bcc_list = [ row.email_address for row in doc_schedule.email_recipients if row.recipient_type == 'BCC' ]
 
-		if self.success_fail is True:
+		# Create the email "Subject" string:
+		if self.success_fail == 'Success':
 			subject = f"Success: BTU Task {self.task}"
 		else:
 			subject = f"Failure: BTU Task {self.task}"
 
-		frappe.sendmail(recipients=";".join(recipient_list) if recipient_list else None,
-			            cc=";".join(cc_list) if cc_list else None,
-		                bcc=";".join(bcc_list) if bcc_list else None,
-			            sender="technology@farmtopeople.com",
-			            subject=subject,
-			            message=(self.result_message or "") + (self.stdout or ""),
-			            now=True,
-			            attachments=None)
+		# Create the email "Body" string:
+		body = ""
+		if self.result_message:
+			body += f"Function returned a Result:\n{self.result_message}\n\n"
+		if self.stdout:
+			body += f"Standard Output:\n{self.stdout}"
+
+		# Finally, send the email to the recipients:
+		btu_email.send_email(sender="technology@farmtopeople.com",
+		                     recipients=";".join(recipient_list) if recipient_list else None,
+			                 subject=subject,
+			                 body=body)
+
+		if debug:
+			print("Sent email message to Task Schedule's recipients.")
+
+		#	            cc=";".join(cc_list) if cc_list else None,
+		#               bcc=";".join(bcc_list) if bcc_list else None,
+		#				now=True,
+		#	            attachments=None)
 
 		"""
 		email_args = {
@@ -97,7 +116,8 @@ def write_log_for_task(task_id, result, stdout=None, date_time_started=None, sch
 	if schedule_id:
 		new_log.schedule = schedule_id
 
-	new_log.insert(ignore_permissions=True)  # Not even System Administrators are supposed to create and save these.
+	# NOTE: Calling new_log.insert() will --not-- trigger Document class controller methods, like after_insert()
+	new_log.save(ignore_permissions=True)  # Not even System Administrators are supposed to create and save these.
 	frappe.db.commit()
 	return new_log.name
 

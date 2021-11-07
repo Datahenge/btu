@@ -10,4 +10,7 @@ class BTUConfiguration(Document):
 
 	@frappe.whitelist()
 	def button_send_hello_email(self):
+		"""
+		Button for triggerering a short 'hello' email to the current session user.
+		"""
 		send_hello_email_to_user()

@@ -5,7 +5,16 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "btn_send_hello_email"
+  "sb_testing",
+  "btn_send_hello_email",
+  "email_section",
+  "email_server",
+  "email_server_port",
+  "column_break_5",
+  "email_auth_username",
+  "email_auth_password",
+  "email_encryption",
+  "email_body_is_html"
  ],
  "fields": [
   {
@@ -14,12 +23,61 @@
    "fieldtype": "Button",
    "label": "Send Hello Email",
    "options": "button_send_hello_email"
+  },
+  {
+   "fieldname": "email_section",
+   "fieldtype": "Section Break",
+   "label": "Email"
+  },
+  {
+   "fieldname": "email_server",
+   "fieldtype": "Data",
+   "label": "SMTP Server Address"
+  },
+  {
+   "description": "Typical values are 587 for TLS, or 465 for older SSL.",
+   "fieldname": "email_server_port",
+   "fieldtype": "Data",
+   "label": "Email Server Port"
+  },
+  {
+   "fieldname": "email_auth_username",
+   "fieldtype": "Data",
+   "label": "Auth Username"
+  },
+  {
+   "fieldname": "email_auth_password",
+   "fieldtype": "Password",
+   "label": "Auth Password"
+  },
+  {
+   "fieldname": "column_break_5",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "email_body_is_html",
+   "fieldtype": "Check",
+   "label": "Use HTML for Emails"
+  },
+  {
+   "fieldname": "sb_testing",
+   "fieldtype": "Section Break",
+   "label": "Testing"
+  },
+  {
+   "default": "STARTTLS",
+   "description": "Starts the negotiation between server and client, to begin encryption.",
+   "fieldname": "email_encryption",
+   "fieldtype": "Select",
+   "label": "Encryption Options",
+   "options": "None\nSSL\nSTARTTLS"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2021-11-03 21:06:41.234358",
+ "modified": "2021-11-07 02:14:30.173058",
  "modified_by": "Administrator",
  "module": "Scheduler",
  "name": "BTU Configuration",

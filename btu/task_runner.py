@@ -33,7 +33,7 @@ class TaskRunner():
 		function_name = function_path.split('.')[-1]
 		return (module_path, function_name)
 
-	def __init__(self, btu_task, site_name, enable_debug_mode=True):
+	def __init__(self, btu_task, site_name, schedule_id=None, enable_debug_mode=True):
 		# Note: Argument 'btu_task' can be either a Document or 'name' of BTU Task
 		import uuid
 		from btu.scheduler.doctype.btu_task.btu_task import BTUTask  # late import needed because of circular reference.
@@ -46,6 +46,7 @@ class TaskRunner():
 		else:
 			self.site_name = site_name
 
+		self.schedule_id = schedule_id
 		self.debug_mode_enabled = enable_debug_mode
 		self.redis_job_id = uuid.uuid4().hex
 		self.standard_output = StandardOutput.DB_LOG
@@ -171,8 +172,9 @@ class TaskRunner():
 		# STEP 4. If applicable, write a new record to BTU Task Log.
 		self.dprint("Attempting to write to BTU Task Logs:")
 		new_log_id = write_log_for_task(task_id=self.btu_task.name,
-							result=function_result,
-							stdout=stdout_buffer_for_log or None,
-							date_time_started=start_datetime)
-		self.dprint(f"Created new BTU Task Log '{new_log_id}'")
+							            result=function_result,
+							            stdout=stdout_buffer_for_log or None,
+							            date_time_started=start_datetime,
+										schedule_id=self.schedule_id)
+		self.dprint(f"Wrote a new BTU Task Log record: '{new_log_id}'")
 		self.dprint("\n-------- End function_wrapper --------\n")
