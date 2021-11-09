@@ -1,5 +1,4 @@
 # Python requirements for Background Tasks Unleashed
-
 # 
 rq~=1.8.1
 rq-scheduler~=0.11.0
