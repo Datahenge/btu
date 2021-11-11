@@ -8,7 +8,7 @@ Call these functions from 'Bench Console' or 'Bench Execute'; then validate resu
 import inspect
 import datetime
 import frappe
-from btu.email import send_email
+from btu.email import send_email, apply_subject_prefix, apply_body_prefix
 
 @frappe.whitelist()
 def ping_with_wait(seconds_to_wait):
@@ -56,21 +56,25 @@ def send_hello_email_to_user(debug=False):
 	if not user_doc.email:
 		frappe.throw(f"Current user '{user_doc.name}' does not have an Email Address associated with their account.")
 
+	datetime_now_string = datetime.datetime.now().strftime("%A, %B %d %Y, %-I:%M %p")
 	# Construct a small message string, to pass in the email's body.
 	message_body = f"Hello, {user_doc.full_name}."
-	message_body += f"\n\nThis function was initiatd by '{caller_name}'"
-	message_body += f"\nThe current, local time is {datetime.datetime.now()}"
-	message_body += "\n--------\n"
+	message_body += f"\n\nThis function was initiated by '{caller_name}'"
+	message_body += f"\nThe current, local time is {datetime_now_string}"
+	message_body += "\n\n--------\n"
 
 	if debug:
 		print(f"Sending test email to address '{user_doc.email}'")
 	frappe.msgprint(f"Sending test email to address '{user_doc.email}' ...")
 
+	# Create the subject of the email
+	subject = f"From BTU: Hello {user_doc.full_name}"
+
 	send_email(sender='testing@datahenge.com',
 	           recipients=user_doc.email,
-			   subject=f"From BTU: Hello {user_doc.full_name}",
-			   body=message_body)
-
+			   subject= apply_subject_prefix(subject),
+			   body= apply_body_prefix(message_body)
+	)
 	return "Leaving function 'send_hello_email_to_user()'.  Confirmation email should arrive soon."
 
 

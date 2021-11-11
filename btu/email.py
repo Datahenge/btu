@@ -17,6 +17,20 @@ from frappe.utils.password import get_decrypted_password
 
 def send_email(sender, recipients, subject, body):
 
+	if not isinstance(subject, str):
+		raise Exception("Argument 'subject' should be a Python string type.")
+
+	if isinstance(recipients, list):
+		recipient_str = ", ".join(recipients)
+	elif isinstance(recipients, str):
+		recipient_str = recipients
+	else:
+		raise TypeError(recipients)
+
+	# Apply environment prefixes.
+	subject = apply_subject_prefix(subject)
+	body = apply_body_prefix(body)
+
 	btu_config = frappe.get_doc("BTU Configuration")
 	use_html = bool(btu_config.email_body_is_html)
 	password = get_decrypted_password(doctype="BTU Configuration",
@@ -30,12 +44,12 @@ def send_email(sender, recipients, subject, body):
 		message = MIMEMultipart("alternative")
 		message["Subject"] = subject
 		message["From"] = sender
-		message["To"] = recipients
+		message["To"] = recipient_str
 		part = MIMEText(body, "html")
 		message.attach(part)
 		message = message.as_string()
 	else:
-		message = _create_plaintext_message(sender, recipients, subject, body)
+		message = _create_plaintext_message(sender, recipient_str, subject, body)
 
 	with smtplib.SMTP(btu_config.email_server, btu_config.email_server_port) as smtp_server:
 
@@ -49,12 +63,49 @@ def send_email(sender, recipients, subject, body):
 
 		smtp_server.login(user=btu_config.email_auth_username,
 		                  password=password)
-		smtp_server.sendmail(sender, recipients, msg=message)
+		smtp_server.sendmail(from_addr=sender,
+		                     to_addrs=recipient_str.split(","),  # requires a List of Recipients
+							 msg=message)
 
 
-def _create_plaintext_message(sender, recipient, subject, body):
-	header = 'From: %s\n' % sender
-	header +='To: %s\n' % recipient
-	header +='Subject: %s\n\n' % subject
+def _create_plaintext_message(sender, recipients, subject, body):
+
+	if isinstance(recipients, list):
+		recipient_str = ", ".join(recipients)
+	elif isinstance(recipients, str):
+		recipient_str = recipients
+	else:
+		raise TypeError(recipients)
+
+	header = f"From: {sender}\n"
+	header += f"To: {recipient_str}\n"
+	header += f"Subject: {subject}\n\n"
 	result = header + body
 	return result
+
+
+def get_environment_name():
+	"""
+	Returns the current environment name from the BTU Configuration document.
+	"""
+	return frappe.db.get_single_value("BTU Configuration", "environment_name")
+
+
+def apply_subject_prefix(subject):
+	"""
+	Given an email subject, apply a prefix (if applicable)
+	"""
+	environment_name = get_environment_name()
+	if not environment_name:
+		return subject
+	return f"({environment_name}) {subject}"
+
+
+def apply_body_prefix(body):
+	"""
+	Given an email subject, apply a prefix (if applicable)
+	"""
+	environment_name = get_environment_name()
+	if not environment_name:
+		return body
+	return f"(sent from the ERPNext {environment_name} environment)\n\n" + body

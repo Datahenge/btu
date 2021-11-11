@@ -10,11 +10,12 @@
   "email_section",
   "email_server",
   "email_server_port",
-  "column_break_5",
   "email_auth_username",
   "email_auth_password",
+  "column_break_5",
   "email_encryption",
-  "email_body_is_html"
+  "email_body_is_html",
+  "environment_name"
  ],
  "fields": [
   {
@@ -72,12 +73,18 @@
    "fieldtype": "Select",
    "label": "Encryption Options",
    "options": "None\nSSL\nSTARTTLS"
+  },
+  {
+   "description": "This prefix will be applied to emails to indicate environment (e.g. DEV, TEST, LIVE)",
+   "fieldname": "environment_name",
+   "fieldtype": "Data",
+   "label": "Environment Prefix"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2021-11-07 02:14:30.173058",
+ "modified": "2021-11-11 00:22:04.214709",
  "modified_by": "Administrator",
  "module": "Scheduler",
  "name": "BTU Configuration",

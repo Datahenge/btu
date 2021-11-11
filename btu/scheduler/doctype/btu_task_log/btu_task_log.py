@@ -52,7 +52,7 @@ class BTUTaskLog(Document):
 
 		# Finally, send the email to the recipients:
 		btu_email.send_email(sender="technology@farmtopeople.com",
-		                     recipients=";".join(recipient_list) if recipient_list else None,
+		                     recipients=recipient_list or None,
 			                 subject=subject,
 			                 body=body)
 
