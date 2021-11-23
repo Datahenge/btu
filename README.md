@@ -35,15 +35,19 @@ Tasks can be executed in 4 different ways:
 ----
 ### Installation
 
-1. Install BTU as a Frappe App
+To Install BTU as a Frappe App:
+
 ```
 bench get-app --branch version-13 https://github.com/Datahenge/btu
 bench --site your_site_name install-app btu
 ```
 
-The installation process will automatically install Python package [rq-scheduler](https://pypi.org/project/rq-scheduler/).
+### Task Scheduler Daemon.
+BTU is currently using [rq-scheduler](https://pypi.org/project/rq-scheduler/) for task scheduling and integration with Redis Queue RQ. 
+Work is underway to replace rq-scheduler with [btu-scheduler](https://github.com/Datahenge/btu_scheduler_daemon).
 
-2. An instance of `rqscheduler` must be running at all times, to perform the scheduling.
+### Legacy RQ Scheduler instructions.
+An instance of `rqscheduler` must be running at all times, to perform the scheduling.
 
 #### Option 1: Run rqscheduler manually, in a terminal
 
@@ -89,6 +93,7 @@ WantedBy=multi-user.target
 
 ### Usage
 Your website should have a new Workspace named `BTU Workspace`, with 3 new DocTypes:
+
   * Tasks
   * Task Schedules
   * Task Logs
@@ -99,13 +104,13 @@ Your website should have a new Workspace named `BTU Workspace`, with 3 new DocTy
 These are some of project tasks I intend want to finish:
 
 * Create a *User Guide* here on GitHub.
-* Ensure the Task Schedules are kickstarted on web server startup (more-difficult than it sounds)
 * Create some HTML that displays what is happening on RQ.
-    * It's rather difficult to **know** what is happening in Redis Queue.  You can install some GUI tools like [Another Redis Desktop Manager](https://www.electronjs.org/apps/anotherredisdesktopmanager) or [RQ Monitor](https://pypi.org/project/rqmonitor/).  But these tools still don't make it obvious to a User that everything is "okay" or "broken"
+    * It's rather difficult to **know** what is happening in Redis Queue.
+    * Administrator can install GUI tools like [Another Redis Desktop Manager](https://www.electronjs.org/apps/anotherredisdesktopmanager) or [RQ Monitor](https://pypi.org/project/rqmonitor/).
+    * However, these tools don't help non-Admins to understand whether everything is running okay, or not.
 
-Copyright 2021, Datahenge LLC\
+#### Copyright and License
+BTU is licensed MIT.  See LICENSE.md file.
+
+Copyright 2021, Datahenge LLC
 Maintainer: brian@datahenge.com
-
-#### License
-
-MIT
