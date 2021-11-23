@@ -1,8 +1,12 @@
 ## Background Tasks Unleashed
 Background Tasks Unleashed (BTU) is an application for the [Frappe Framework](https://frappeframework.com/) (See GitHub repo [here](https://github.com/frappe)).\
 It is effectively a replacement for the 'out-of-the-box' **`Scheduled Job Types`**.
-* Run any Python function immediately, or on a repeating schedule.
-* View the results of the function call in your web browser, by examining Task Logs.
+
+What can BTU do?
+
+* Call and run any Python function immediately, or on a repeating schedule.
+* Write to a Log, indicating not only the success/fail of the Task, but also execution time, Standard Output and Errors.
+* View Logs on the web page, or automatically email Logs to multiple users.
 
 ----
 ### Features
