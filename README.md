@@ -1,12 +1,4 @@
 ## Background Tasks Unleashed
-Copyright 2021, Datahenge LLC\
-Maintainer: brian@datahenge.com
-
-#### License
-
-MIT
-
-### Overview
 Background Tasks Unleashed (BTU) is an application for the [Frappe Framework](https://frappeframework.com/) (See GitHub repo [here](https://github.com/frappe)).\
 It is effectively a replacement for the 'out-of-the-box' **`Scheduled Job Types`**.
 * Run any Python function immediately, or on a repeating schedule.
@@ -15,7 +7,7 @@ It is effectively a replacement for the 'out-of-the-box' **`Scheduled Job Types`
 ----
 ### Features
 #### Web-Centric
-Background Tasks are created, edited, and scheduled entirely from the web browser.  You never need to edit `hooks.py`.
+Background Tasks are created, edited, and scheduled entirely from the web browser.  Users never need to login to the web server, touch `hooks.py`, or examine log files on disk.
 
 #### Flexible
 Tasks can be executed in 4 different ways:
@@ -110,3 +102,10 @@ These are some of project tasks I intend want to finish:
 * Ensure the Task Schedules are kickstarted on web server startup (more-difficult than it sounds)
 * Create some HTML that displays what is happening on RQ.
     * It's rather difficult to **know** what is happening in Redis Queue.  You can install some GUI tools like [Another Redis Desktop Manager](https://www.electronjs.org/apps/anotherredisdesktopmanager) or [RQ Monitor](https://pypi.org/project/rqmonitor/).  But these tools still don't make it obvious to a User that everything is "okay" or "broken"
+
+Copyright 2021, Datahenge LLC\
+Maintainer: brian@datahenge.com
+
+#### License
+
+MIT
