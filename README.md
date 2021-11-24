@@ -8,6 +8,8 @@ What can BTU do?
 * Write to a Log, indicating not only the success/fail of the Task, but also execution time, Standard Output and Errors.
 * View Logs on the web page, or automatically email Logs to multiple users.
 
+**See Also**: You must also install the companion application: [BTU Scheduler Daemon](https://github.com/Datahenge/btu_scheduler_daemon)
+
 ----
 ### Features
 #### Web-Centric
