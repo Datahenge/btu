@@ -12,7 +12,7 @@ What can BTU do?
 ----
 ### Features
 #### Web-Centric
-Background Tasks are created, edited, and scheduled entirely from the web browser.  Users never need to login to the web server, touch `hooks.py`, or examine log files on disk.
+Background Tasks are created, edited, and scheduled entirely from the web browser.  Users never need to login to the Linux web server, touch `hooks.py`, or examine log files on disk.
 
 #### Flexible
 Tasks can be executed in 4 different ways:
