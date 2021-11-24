@@ -1,5 +1,5 @@
 ## Background Tasks Unleashed
-Background Tasks Unleashed (BTU) is a [Frappe Framework](https://github.com/frappe) application for Task Scheduling and automation for Python code.  It is effectively a replacement for the 'out-of-the-box' **`Scheduled Job Types`** feature in Frappe v13.
+Background Tasks Unleashed (BTU) is a [Frappe Framework](https://github.com/frappe) application for Task Scheduling and automation.  It is effectively a complete replacement for the 'out-of-the-box' **`Scheduled Job Types`** feature in Frappe v13.
 
 What can BTU do?
 
