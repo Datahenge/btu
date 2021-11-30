@@ -5,10 +5,11 @@ Purpose:
 Call these functions from 'Bench Console' or 'Bench Execute'; then validate results manually.
 
 """
+
 import inspect
 import datetime
 import frappe
-from btu.email import send_email, apply_subject_prefix, apply_body_prefix
+from btu.email import send_email
 
 @frappe.whitelist()
 def ping_with_wait(seconds_to_wait):
@@ -72,8 +73,8 @@ def send_hello_email_to_user(debug=False):
 
 	send_email(sender='testing@datahenge.com',
 	           recipients=user_doc.email,
-			   subject= apply_subject_prefix(subject),
-			   body= apply_body_prefix(message_body)
+			   subject= subject,
+			   body= message_body
 	)
 	return "Leaving function 'send_hello_email_to_user()'.  Confirmation email should arrive soon."
 
