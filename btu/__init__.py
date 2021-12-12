@@ -11,7 +11,7 @@
 
 import frappe
 
-__version__ = '0.2.0'
+__version__ = '0.3.0'
 
 
 class Result():
@@ -63,6 +63,7 @@ def validate_cron_string(cron_string, error_on_invalid=False):
 	"""
 	import re
 
+	# Note: This is also a Temporal function, but I'm trying to avoid making Temporal a dependency of BTU.
 	crontab_time_format_regex = re.compile(
 		r"{0}\s+{1}\s+{2}\s+{3}\s+{4}".format(
 			r"(?P<minute>\*(\/[0-5]?\d)?|[0-5]?\d)",
@@ -84,7 +85,7 @@ def validate_cron_string(cron_string, error_on_invalid=False):
 
 def get_system_timezone():
 	"""
-	Returns the Time Zone of the site.
+	Returns the Time Zone of the Site.
 	"""
 	import pytz
 	system_time_zone = frappe.db.get_system_setting('time_zone')

@@ -9,7 +9,7 @@ Call these functions from 'Bench Console' or 'Bench Execute'; then validate resu
 import inspect
 import datetime
 import frappe
-from btu.email import send_email
+from btu.btu_api.btu_email import Emailer
 
 @frappe.whitelist()
 def ping_with_wait(seconds_to_wait):
@@ -43,22 +43,24 @@ def ping_and_error():
 def send_hello_email_to_user(debug=False):
 	"""
 		When run from Bench Execute, this will email the Administrator.
-	    bench execute btu.manual_tests.send_hello_email_to_user
+
+	    Example:  'bench execute btu.manual_tests.send_hello_email_to_user'
 	"""
 
 	caller_name = inspect.stack()[2][3]
 	if caller_name == 'execute_cmd':
-		caller_name = "JavaScript"
+		caller_name = "JavaScript on Web Page"
 	if caller_name == '<lambda>':
-		caller_name = "JavaScript"
+		caller_name = "JavaScript on Web Page"
 
-	# Load the session User's document, and get their email address.
+	# Load the session User's document, to acquire their email address.
 	user_doc = frappe.get_doc("User", frappe.session.user)
 	if not user_doc.email:
 		frappe.throw(f"Current user '{user_doc.name}' does not have an Email Address associated with their account.")
 
 	datetime_now_string = datetime.datetime.now().strftime("%A, %B %d %Y, %-I:%M %p")
-	# Construct a small message string, to pass in the email's body.
+
+	# Construct a small message Body for the email.
 	message_body = f"Hello, {user_doc.full_name}."
 	message_body += f"\n\nThis function was initiated by '{caller_name}'"
 	message_body += f"\nThe current, local time is {datetime_now_string}"
@@ -68,23 +70,22 @@ def send_hello_email_to_user(debug=False):
 		print(f"Sending test email to address '{user_doc.email}'")
 	frappe.msgprint(f"Sending test email to address '{user_doc.email}' ...")
 
-	# Create the subject of the email
 	subject = f"From BTU: Hello {user_doc.full_name}"
+	sender = frappe.get_doc("BTU Configuration").email_auth_username  # Send is configured in the DocType 'BTU Configuration'
 
-	send_email(sender='testing@datahenge.com',
-	           recipients=user_doc.email,
-			   subject= subject,
-			   body= message_body
-	)
-	return "Leaving function 'send_hello_email_to_user()'.  Confirmation email should arrive soon."
+	Emailer(sender=sender,
+	        emailto_list=user_doc.email,
+			subject= subject,
+			body= message_body).send()
+	return "Exiting function 'send_hello_email_to_user()'.  If successful, an email will arrive soon."
 
 
 @frappe.whitelist()
 def test_frappe_enqueue():
 	"""
-	A simple test to demonstrate that Redis Queue and workers are online and operational.
+	A simple test to demonstrate that Redis Queue and Workers are online and operational.
 
-	bench execute btu.manual_tests.test_frappe_enqueue
+		From shell:	bench execute btu.manual_tests.test_frappe_enqueue
 	"""
 	frappe.enqueue(
 			method="btu.manual_tests.send_hello_email_to_user",

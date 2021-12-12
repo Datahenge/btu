@@ -36,7 +36,7 @@ class TaskRunner():
 	def __init__(self, btu_task, site_name, schedule_id=None, enable_debug_mode=True):
 		# Note: Argument 'btu_task' can be either a Document or 'name' of BTU Task
 		import uuid
-		from btu.scheduler.doctype.btu_task.btu_task import BTUTask  # late import needed because of circular reference.
+		from btu.btu_core.doctype.btu_task.btu_task import BTUTask  # late import needed because of circular reference.
 
 		if not site_name:
 			if frappe.local.site:
@@ -85,7 +85,7 @@ class TaskRunner():
 		"""
 		Given a valid cron string, schedule this Task in the Redis Queue for future execution.
 		"""
-		from btu.scheduler import schedule_job_in_redis
+		from btu.btu_core import schedule_job_in_redis
 
 		ret = schedule_job_in_redis(path_to_function=self.function_wrapper,
 		                            cron_string=cron_string,
@@ -110,7 +110,7 @@ class TaskRunner():
 		# It's possible that Python + RQ pickle the entire Class and namespace, though.
 		import importlib
 		from btu import Result, get_system_datetime_now, make_datetime_naive
-		from btu.scheduler.doctype.btu_task_log.btu_task_log import write_log_for_task
+		from btu.btu_core.doctype.btu_task_log.btu_task_log import write_log_for_task
 
 		self.dprint(f"\n-------- Begin function_wrapper (job {self.redis_job_id})--------\n")
 		if not hasattr(frappe, 'boot'):

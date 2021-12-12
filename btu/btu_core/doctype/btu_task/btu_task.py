@@ -15,8 +15,8 @@ from frappe.model.document import Document
 
 # BTU
 from btu import Result, get_system_datetime_now, make_datetime_naive
-from btu.task_runner import TaskRunner
-from btu.scheduler.doctype.btu_task_log.btu_task_log import write_log_for_task
+from btu.btu_core.task_runner import TaskRunner
+from btu.btu_core.doctype.btu_task_log.btu_task_log import write_log_for_task
 
 
 class BTUTask(Document):

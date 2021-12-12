@@ -34,7 +34,7 @@
  ],
  "modified": "2021-11-06 22:36:03.560678",
  "modified_by": "Administrator",
- "module": "Scheduler",
+ "module": "BTU_Core",
  "name": "Automated Tasks",
  "owner": "Administrator",
  "pin_to_bottom": 0,

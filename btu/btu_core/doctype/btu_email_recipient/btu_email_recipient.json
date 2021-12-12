@@ -32,7 +32,7 @@
  "links": [],
  "modified": "2021-11-05 05:18:32.458460",
  "modified_by": "Administrator",
- "module": "Scheduler",
+ "module": "BTU_Core",
  "name": "BTU Email Recipient",
  "owner": "Administrator",
  "permissions": [],

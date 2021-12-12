@@ -4,7 +4,7 @@
  "creation": "2021-08-14 14:04:50.727345",
  "description": "A Task represents a Python function that can be executed automatically in the background, using Redis Queue and workers.",
  "doctype": "DocType",
- "documentation": "https://gitlab.com/datahenge/btu",
+ "documentation": "https://github.com/Datahenge/btu",
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
@@ -111,7 +111,7 @@
  ],
  "modified": "2021-09-02 14:45:14.934440",
  "modified_by": "Administrator",
- "module": "Scheduler",
+ "module": "BTU_Core",
  "name": "BTU Task",
  "owner": "Administrator",
  "permissions": [

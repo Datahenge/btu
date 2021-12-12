@@ -12,7 +12,7 @@ function rebuild_all_tasks() {
 
 	// Ask Python for the current Delivery Period, then run the dialog.
 	frappe.call({
-		method: "btu.scheduler.doctype.btu_task_schedule.btu_task_schedule.rebuild_all_schedules",
+		method: "btu.btu_core.doctype.btu_task_schedule.btu_task_schedule.rebuild_all_schedules",
 		args: null,
 		callback: (r) => {
 			if (r.message) {

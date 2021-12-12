@@ -52,7 +52,7 @@ function delete_log_records(listview) {
 		}
 
 		frappe.call({
-			method: 'btu.scheduler.doctype.btu_task_log.btu_task_log.delete_logs_by_dates',
+			method: 'btu.btu_core.doctype.btu_task_log.btu_task_log.delete_logs_by_dates',
  			// Note to Developers: Ensure the Python function has identical argument names as below.
 			args: { from_date: args.from_date,
 				    to_date: args.to_date

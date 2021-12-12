@@ -1,4 +1,4 @@
-""" btu.scheduler """
+""" btu.btu_core """
 
 # Third Party
 from rq_scheduler import Scheduler

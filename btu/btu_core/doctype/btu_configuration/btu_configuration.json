@@ -7,6 +7,10 @@
  "field_order": [
   "sb_testing",
   "btn_send_hello_email",
+  "cb1",
+  "btn_send_ping",
+  "btu_scheduler_section",
+  "path_to_btu_scheduler_uds",
   "email_section",
   "email_server",
   "email_server_port",
@@ -59,7 +63,7 @@
    "default": "0",
    "fieldname": "email_body_is_html",
    "fieldtype": "Check",
-   "label": "Use HTML for Emails"
+   "label": "Send email Body as HTML"
   },
   {
    "fieldname": "sb_testing",
@@ -79,14 +83,36 @@
    "fieldname": "environment_name",
    "fieldtype": "Data",
    "label": "Environment Prefix"
+  },
+  {
+   "fieldname": "btu_scheduler_section",
+   "fieldtype": "Section Break",
+   "label": "BTU Scheduler"
+  },
+  {
+   "default": "/tmp/btu_scheduler.sock",
+   "description": "This is the absolute path to the BTU Scheduler daemon's Unix Domain Socket.  Example:  /tmp/btu_scheduler.sock\n",
+   "fieldname": "path_to_btu_scheduler_uds",
+   "fieldtype": "Data",
+   "label": "Path to BTU Scheduler Unix socket"
+  },
+  {
+   "fieldname": "btn_send_ping",
+   "fieldtype": "Button",
+   "label": "Send 'ping' to Scheduler Daemon",
+   "options": "button_send_ping"
+  },
+  {
+   "fieldname": "cb1",
+   "fieldtype": "Column Break"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2021-11-11 00:22:04.214709",
+ "modified": "2021-12-04 18:14:05.041280",
  "modified_by": "Administrator",
- "module": "Scheduler",
+ "module": "BTU_Core",
  "name": "BTU Configuration",
  "owner": "Administrator",
  "permissions": [

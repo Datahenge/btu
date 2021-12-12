@@ -96,7 +96,7 @@
  "links": [],
  "modified": "2021-09-07 12:38:10.658307",
  "modified_by": "Administrator",
- "module": "Scheduler",
+ "module": "BTU_Core",
  "name": "BTU Task Log",
  "owner": "Administrator",
  "permissions": [

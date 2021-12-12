@@ -12,8 +12,7 @@ from datetime import datetime
 from time import gmtime, localtime, mktime
 
 # Third Party
-# from rq_scheduler import Scheduler
-import cron_descriptor  # get_description, ExpressionDescriptor
+import cron_descriptor
 
 # Frappe
 import frappe
@@ -21,18 +20,18 @@ from frappe import _
 from frappe.model.document import Document
 
 # BTU
-from btu import ( validate_cron_string, scheduler as btu_scheduler, Result)
-from btu.task_runner import TaskRunner
+from btu import ( validate_cron_string, btu_core, Result)
+from btu.btu_core.task_runner import TaskRunner
 
 
 class BTUTaskSchedule(Document):
 
 	def on_trash(self):
 		"""
-		After deleting this Task Schedule, delete the corresponding Redis Job.
+		After deleting this Task Schedule, delete the corresponding Redis data.
 		"""
 		if self.redis_job_id:
-			btu_scheduler.redis_cancel_by_queue_job_id(self.redis_job_id)
+			btu_core.redis_cancel_by_queue_job_id(self.redis_job_id)
 
 	def before_validate(self):
 		self.task_description = self.task_doc().desc_short
@@ -98,7 +97,7 @@ class BTUTaskSchedule(Document):
 		Rewrite this BTU Task Schedule to the Redis Queue.
 		"""
 		# 1. Cancel the current Task Schedule (if it exists) in Redis Queue.
-		btu_scheduler.redis_cancel_by_queue_job_id(self.redis_job_id)
+		btu_core.redis_cancel_by_queue_job_id(self.redis_job_id)
 
 		# 2. Schedule a new RQ job:
 		task_runner = TaskRunner(self.task,
@@ -121,7 +120,7 @@ class BTUTaskSchedule(Document):
 
 	def cancel_schedule(self):
 		# Referenced By:  before_save()
-		btu_scheduler.redis_cancel_by_queue_job_id(self.redis_job_id)
+		btu_core.redis_cancel_by_queue_job_id(self.redis_job_id)
 		self.redis_job_id = ""
 		frappe.msgprint("Job disabled")
 
@@ -159,7 +158,7 @@ class BTUTaskSchedule(Document):
 		"""
 		Write an entry to the BTU Task Log, which should trigger emails.  Then delete the entry.
 		"""
-		from btu.scheduler.doctype.btu_task_log.btu_task_log import write_log_for_task  # late import to avoid circular reference
+		from btu.btu_core.doctype.btu_task_log.btu_task_log import write_log_for_task  # late import to avoid circular reference
 		if not self.email_recipients:
 			frappe.msgprint("Task Schedule does not have any Email Recipients; no emails can be tested.")
 			return

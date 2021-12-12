@@ -190,7 +190,7 @@
  "links": [],
  "modified": "2021-11-07 02:07:25.265009",
  "modified_by": "Administrator",
- "module": "Scheduler",
+ "module": "BTU_Core",
  "name": "BTU Task Schedule",
  "owner": "Administrator",
  "permissions": [
