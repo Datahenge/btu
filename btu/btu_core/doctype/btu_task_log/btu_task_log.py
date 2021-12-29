@@ -5,11 +5,16 @@ import frappe
 from frappe.model.document import Document
 
 from btu import Result
-from btu.btu_api import btu_email
+from btu.btu_core import btu_email
+from temporal.core import get_system_datetime_now
 
 class BTUTaskLog(Document):
 
 	def after_insert(self):
+
+		# Update the "Last Result" column on the BTU Task.
+		frappe.db.set_value("BTU Task", self.task, "last_runtime", get_system_datetime_now())
+
 		try:
 			btu_email.email_task_log_summary(self)
 		except Exception as ex:

@@ -30,9 +30,18 @@
    "link_type": "DocType",
    "onboard": 0,
    "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Scheduled Task Summary",
+   "link_to": "BTU Scheduled Task Summary",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
   }
  ],
- "modified": "2021-11-06 22:36:03.560678",
+ "modified": "2021-12-17 15:50:12.483746",
  "modified_by": "Administrator",
  "module": "BTU_Core",
  "name": "Automated Tasks",
@@ -41,19 +50,19 @@
  "pin_to_top": 0,
  "shortcuts": [
   {
-   "doc_view": "List",
+   "doc_view": "",
    "label": "Tasks",
    "link_to": "BTU Task",
    "type": "DocType"
   },
   {
-   "doc_view": "List",
+   "doc_view": "",
    "label": "Schedules",
    "link_to": "BTU Task Schedule",
    "type": "DocType"
   },
   {
-   "doc_view": "List",
+   "doc_view": "",
    "label": "Logs",
    "link_to": "BTU Task Log",
    "type": "DocType"

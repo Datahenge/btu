@@ -6,10 +6,7 @@ Call these functions from 'Bench Console' or 'Bench Execute'; then validate resu
 
 """
 
-import inspect
-import datetime
 import frappe
-from btu.btu_api.btu_email import Emailer
 
 @frappe.whitelist()
 def ping_with_wait(seconds_to_wait):
@@ -42,16 +39,18 @@ def ping_and_error():
 @frappe.whitelist()
 def send_hello_email_to_user(debug=False):
 	"""
-		When run from Bench Execute, this will email the Administrator.
-
+		NOTE: When via Bench Execute, this will email the Administrator's email address.
 	    Example:  'bench execute btu.manual_tests.send_hello_email_to_user'
 	"""
+	import inspect
+	import datetime
+	from btu.btu_core.btu_email import Emailer
 
 	caller_name = inspect.stack()[2][3]
 	if caller_name == 'execute_cmd':
-		caller_name = "JavaScript on Web Page"
+		caller_name = "JavaScript on a web page."
 	if caller_name == '<lambda>':
-		caller_name = "JavaScript on Web Page"
+		caller_name = "JavaScript on a web page."
 
 	# Load the session User's document, to acquire their email address.
 	user_doc = frappe.get_doc("User", frappe.session.user)
@@ -80,8 +79,25 @@ def send_hello_email_to_user(debug=False):
 	return "Exiting function 'send_hello_email_to_user()'.  If successful, an email will arrive soon."
 
 
+def ping_now():
+	print("pong")
+
+
+def test_rq_workers1():
+	"""
+	Purpose: 		A simple test to demonstrate that Redis Queue and Workers are online and operational.
+	From Shell:		bench execute btu.manual_tests.test_rq_workers1
+	Result is printed to terminal.
+	"""
+	result = frappe.enqueue(
+			method="btu.manual_tests.ping_now",
+			queue="default",
+			job_name="test_rq_workers1"
+	)
+	print(result)
+
 @frappe.whitelist()
-def test_frappe_enqueue():
+def test_rq_workers2():
 	"""
 	A simple test to demonstrate that Redis Queue and Workers are online and operational.
 
@@ -145,3 +161,50 @@ def test_taskrunner_3():
 	doc_task = _find_or_create_ping_task()
 	print(f"Immediately queuing Task '{doc_task.name}' in Redis.")
 	doc_task.push_task_into_queue(extra_arguments={'seconds_to_wait': 5})
+
+
+def bytes_as_list_of_hex(some_bytes):
+	# Append 8 bits together ie pair of 4 bits to get a byte
+	if not isinstance(some_bytes, bytes):
+		raise Exception("Expected 'some_bytes' to be of type 'bytes'.")
+
+	bytes_as_hex = some_bytes.hex()
+	array = []
+	for i in range(0, len(bytes_as_hex), 2):
+		array.append('0x' + bytes_as_hex[i] + bytes_as_hex[i+1])
+	return array
+
+
+def test_rq_pickling():
+	"""
+	Purpose: To verify the pickled binary produced by regular RQ Jobs.
+	"""
+	# pylint: disable=protected-access
+	from redis import Redis
+	from rq.job import Job
+
+	# Step 1: Create a new Job.
+	new_job = frappe.enqueue(
+			method="btu.manual_tests.ping_now",
+			queue="default",
+			job_name="Job Name Foo"
+	)
+	# print(dir(new_job))
+	print(f"Created new job with ID: {new_job._id}")
+	# print(f"Data:\n{new_job.data}\n")
+
+	# Step 2: Read it back from Redis
+	rq_conn = Redis(port=11003)
+	rq_job = Job.fetch(new_job._id, connection=rq_conn)
+
+	assert new_job.data == rq_job.data
+	print("Successfully validated RQ Data contents.")
+	print(f"Data ({type(rq_job.data)}):\n{rq_job.data}")
+
+	# NOTE: Despite being bytes, the Python REPL tries to display as ASCII, whether you like that or not.
+	#       Which is not great.  Python useds 'sys.displayhook' that uses repr()
+	# print(f"In Hex:\n{bytes_as_list_of_hex(rq_job.data)}")
+
+	from btu.btu_api.endpoints import test_pickler
+	test_pickler_results = test_pickler()
+	print(f"'Data' as produced by Sanchez Pickler:\n{test_pickler_results}")

@@ -1,4 +1,4 @@
-""" btu/btu_api/btu_email.py """
+""" btu/btu_core/btu_email.py """
 
 # Copyright (c) 2021, Datahenge LLC and contributors
 # For license information, please see license.txt
