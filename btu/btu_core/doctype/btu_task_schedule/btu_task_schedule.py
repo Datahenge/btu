@@ -22,9 +22,10 @@ from frappe.model.document import Document
 # BTU
 from btu import ( validate_cron_string, btu_core, Result)
 from btu.btu_core.task_runner import TaskRunner
+from btu.btu_api.scheduler import SchedulerAPI
 
 
-class BTUTaskSchedule(Document):
+class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
 
 	def on_trash(self):
 		"""
@@ -34,7 +35,7 @@ class BTUTaskSchedule(Document):
 			btu_core.redis_cancel_by_queue_job_id(self.redis_job_id)
 
 	def before_validate(self):
-		self.task_description = self.task_doc().desc_short
+		self.task_description = self.get_task_doc().desc_short
 		# Clear fields that are not relevant for this schedule type.
 		if self.run_frequency == "Cron Style":
 			self.day_of_week = None
@@ -92,29 +93,15 @@ class BTUTaskSchedule(Document):
 		elif self.redis_job_id:
 			self.cancel_schedule()
 
-	def reschedule_task(self, autosave=False):
+# -----end of standard controller methods-----
+
+	def resubmit_task_schedule(self, autosave=False):
 		"""
-		Rewrite this BTU Task Schedule to the Redis Queue.
+		Send a request to the BTU Scheduler background daemon to reload this Task Schedule in RQ.
 		"""
-		# 1. Cancel the current Task Schedule (if it exists) in Redis Queue.
-		btu_core.redis_cancel_by_queue_job_id(self.redis_job_id)
-
-		# 2. Schedule a new RQ job:
-		task_runner = TaskRunner(self.task,
-		                         site_name=frappe.local.site,
-		                         schedule_id=self.name,
-								 enable_debug_mode=True)
-		task_runner.redis_job_id = self.name  # This makes it easier to find the RQ Job, by making Job = Schedule's name
-
-		new_job_id = task_runner.schedule_task_in_redis(cron_string=self.cron_string, queue_name=self.queue_name)
-
-		if not new_job_id:
-			raise Exception("Failure to get new Job ID from Redis.")
-		# 3. Display message to User on on success.
-		frappe.msgprint(f"Task {self.task} rescheduled in Redis." +
-		                 f"\nFrequency: {self.schedule_description}" +
-						 "\nRedis Job: " + new_job_id)
-		self.redis_job_id = new_job_id
+		response = SchedulerAPI.reload_task_schedule(task_schedule_id=self.name)
+		print(f"Response from BTU Scheduler: {response}")
+		frappe.msgprint(f"Response from BTU Scheduler daemon: {response}")
 		if autosave:
 			self.save()
 
@@ -122,13 +109,16 @@ class BTUTaskSchedule(Document):
 		# Referenced By:  before_save()
 		btu_core.redis_cancel_by_queue_job_id(self.redis_job_id)
 		self.redis_job_id = ""
-		frappe.msgprint("Job disabled")
+		frappe.msgprint("RQ Job is now deleted.")
 
-	def task_doc(self):
+	def get_task_doc(self):
 		return frappe.get_doc("BTU Task", self.task)
 
 	@frappe.whitelist()
-	def get_last_job_results(self):
+	def get_last_execution_results(self):
+
+		# response = SchedulerAPI.reload_task_schedule(task_schedule_id=self.name)
+
 		import zlib
 		from frappe.utils.background_jobs import get_redis_conn
 		conn = get_redis_conn()
@@ -176,6 +166,32 @@ class BTUTaskSchedule(Document):
 			frappe.msgprint(f"Errors while testing Task Emails: {ex}")
 			raise ex
 
+	def OLD_reschedule_task(self, autosave=False):
+		"""
+		Rewrite this BTU Task Schedule to the Redis Queue.
+		"""
+		# 1. Cancel the current Task Schedule (if it exists) in Redis Queue.
+		btu_core.redis_cancel_by_queue_job_id(self.redis_job_id)
+
+		# 2. Schedule a new RQ job:
+		task_runner = TaskRunner(self.task,
+									site_name=frappe.local.site,
+									schedule_id=self.name,
+									enable_debug_mode=True)
+		task_runner.redis_job_id = self.name  # This makes it easier to find the RQ Job, by making Job = Schedule's name
+
+		new_job_id = task_runner.schedule_task_in_redis(cron_string=self.cron_string, queue_name=self.queue_name)
+
+		if not new_job_id:
+			raise Exception("Failure to get new Job ID from Redis.")
+		# 3. Display message to User on on success.
+		frappe.msgprint(f"Task {self.task} rescheduled in Redis." +
+							f"\nFrequency: {self.schedule_description}" +
+							"\nRedis Job: " + new_job_id)
+		self.redis_job_id = new_job_id
+		if autosave:
+			self.save()
+
 # ----------------
 # STATIC FUNCTIONS
 # ----------------
@@ -197,7 +213,7 @@ def check_day_of_month(run_frequency, day, month=None):
 	if run_frequency == "Monthly" and not day:
 		raise ValueError(_("Please select a day of the month"))
 
-	elif run_frequency == "Yearly":
+	if run_frequency == "Yearly":
 		if day and month:
 			m = {value: key for key, value in enumerate(calendar.month_abbr)}
 			last = monthrange(datetime.now().year,
@@ -241,39 +257,22 @@ def schedule_to_cron_string(doc_schedule):
 	validate_cron_string(result, error_on_invalid=True)
 	return result
 
-
 @frappe.whitelist()
 def resubmit_all_task_schedules():
-	import time as _time
-
-	# The following code kickstarts the BTU Scheduled Tasks during web server startup.
-	if not hasattr(frappe.local.flags, 'btu_jobs_loaded'):
-		frappe.local.flags.btu_jobs_loaded = False
-		message = "Creating a new flag 'frappe.local.flags.btu_jobs_loaded'"
-		print(message)
-
-	# Load jobs for the first time after server startup.
-	print(f"Value of 'frappe.local.flags.btu_jobs_loaded' = {frappe.local.flags.btu_jobs_loaded}")
-	_time.sleep(5)
-
-	if frappe.local.flags.btu_jobs_loaded is None:
-		frappe.local.flags.btu_jobs_loaded = False
-
-	if frappe.local.flags.btu_jobs_loaded is True:
-		return
-
+	"""
+	Purpose: Loop through all enabled Task Schedules, and ask the BTU Scheduler daemon to resubmit them for scheduling.
+	NOTE: This does -not- immediately execute an RQ Job; it only schedules it.
+	"""
 	filters = { "enabled": True }
-	job_schedules = frappe.db.get_all("BTU Task Schedule", filters=filters, pluck='name')
-
-	for name in job_schedules:
+	task_schedule_ids = frappe.db.get_all("BTU Task Schedule", filters=filters, pluck='name')
+	for task_schedule_id in task_schedule_ids:
 		try:
-			doc_schedule = frappe.get_doc("BTU Task Schedule", name)
+			doc_schedule = frappe.get_doc("BTU Task Schedule", task_schedule_id)
 			doc_schedule.validate()
-			doc_schedule.reschedule_task()
-			print(f"BTU Startup: Task Schedule '{doc_schedule.name}' stored in Redis.")
+			doc_schedule.resubmit_task_schedule()
 		except Exception as ex:
-			print(f"ERROR: Task {doc_schedule.name} : {ex}")
+			message = f"Error from BTU Scheduler while submitting Task {doc_schedule.name} : {ex}"
+			frappe.msgprint(message)
+			print(message)
 			doc_schedule.enabled = False
 			doc_schedule.save()
-
-	frappe.local.flags.btu_jobs_loaded = True

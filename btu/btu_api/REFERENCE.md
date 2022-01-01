@@ -1,8 +1,3 @@
-""" btu/btu_api """
-#
-# We Can Pickle That!
-#
-# This module creates an RQ Job, which pickles the BTU TaskRunner information
 
 import logging
 import signal
@@ -26,20 +21,6 @@ from redis import WatchError
 
 logger = logging.getLogger(__name__)
 
-class JobPickler():
-	job_class = rq_Job
-	def __init__(self, job_class=None, queue_class=None, name=None):
-		self.job_class = backend_class(self, 'job_class', override=job_class)
-
-	def create_job(self, func):
-		if args is None:
-			args = ()
-		if kwargs is None:
-			kwargs = {}
-		local_job = self.job_class.create(
-                func, args=args, connection=self.connection,
-                kwargs=kwargs, result_ttl=result_ttl, ttl=ttl, id=id,
-                description=description, timeout=timeout, meta=meta, depends_on=depends_on)
 
 class Scheduler(object):
     redis_scheduler_namespace_prefix = 'rq:scheduler_instance:'

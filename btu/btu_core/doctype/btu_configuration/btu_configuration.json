@@ -1,5 +1,6 @@
 {
  "actions": [],
+ "allow_copy": 1,
  "creation": "2021-11-03 20:53:46.334323",
  "doctype": "DocType",
  "editable_grid": 1,
@@ -11,6 +12,8 @@
   "btn_send_ping",
   "btu_scheduler_section",
   "path_to_btu_scheduler_uds",
+  "cb2",
+  "btn_resubmit_all_task_schedules",
   "email_section",
   "email_server",
   "email_server_port",
@@ -105,12 +108,21 @@
   {
    "fieldname": "cb1",
    "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "btn_resubmit_all_task_schedules",
+   "fieldtype": "Button",
+   "label": "Resubmit all Task Schedules",
+   "options": "button_resubmit_all_task_schedules"
+  },
+  {
+   "fieldname": "cb2",
+   "fieldtype": "Column Break"
   }
  ],
- "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2021-12-04 18:14:05.041280",
+ "modified": "2021-12-30 09:21:09.840944",
  "modified_by": "Administrator",
  "module": "BTU_Core",
  "name": "BTU Configuration",
@@ -118,7 +130,6 @@
  "permissions": [
   {
    "create": 1,
-   "delete": 1,
    "email": 1,
    "print": 1,
    "read": 1,

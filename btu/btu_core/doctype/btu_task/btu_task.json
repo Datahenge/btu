@@ -41,7 +41,7 @@
   },
   {
    "depends_on": "eval: doc.docstatus == 1",
-   "description": "Task will be pushed into the Redis Queue, and executed by the next available worker.",
+   "description": "Submit this Task to Redis Queue for immediate execution.<br><b>Note:</b> This is achieved using 'frappe.enqueue' and does not interact with the BTU Scheduler daemon.",
    "fieldname": "button_push_into_queue",
    "fieldtype": "Button",
    "label": "Run via Redis Worker",
@@ -130,7 +130,7 @@
    "link_fieldname": "task"
   }
  ],
- "modified": "2021-12-17 15:52:07.852934",
+ "modified": "2021-12-30 09:28:02.478879",
  "modified_by": "Administrator",
  "module": "BTU_Core",
  "name": "BTU Task",

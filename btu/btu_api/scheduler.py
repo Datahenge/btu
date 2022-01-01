@@ -1,49 +1,91 @@
 """ btu/but_api/scheduler.py """
+from enum import Enum
 
+import json
 import pathlib
 import socket
 import frappe
 
-
 # https://realpython.com/python-sockets/#application-protocol-header
 
-def send_message_to_scheduler_socket(message, debug=False):
+# pylint: disable=invalid-name
+class RequestType(Enum):
+	reload_task_schedule = 0
+	ping = 1
+
+class SchedulerAPI():
 	"""
-	Establish a connection to the Unix Domain Socket.
+	Static methods are for external use.
 	"""
-	if not isinstance(message, str):
-		raise TypeError("Argument 'message' must be a UTF-8 string.")
 
-	socket_str = frappe.db.get_single_value("BTU Configuration", "path_to_btu_scheduler_uds")
-	if not socket_str:
-		raise ValueError("BTU Configuration is missing a path to the Unix Domain Socket for the scheduler daemon.")
+	@frappe.whitelist()
+	@staticmethod
+	def send_ping():
+		"""
+		Ask the BTU Scheduler to reply with a 'pong'
+		"""
+		response = SchedulerAPI().send_message(RequestType.ping, content=None)
+		return response
 
-	# Create a UDS socket; connect to the port where the BTU Scheduler daemon is listening.
-	socket_path = pathlib.Path(socket_str)
-	if not socket_path.exists():
-		raise FileNotFoundError(f"Path to socket file does not exists: '{socket_path.absolute()}'")
+	@frappe.whitelist()
+	@staticmethod
+	def reload_task_schedule(task_schedule_id):
+		"""
+		Ask the BTU Scheduler to reload the Task Schedule in RQ, using the latest information.
+		NOTE: This does not perform an immediate Task execution; it only refreshes the JQ Job and CRON schedule.
+		"""
+		response = SchedulerAPI().send_message(RequestType.Reload_Task_Schedule,
+		                                           content=task_schedule_id)
+		return response
 
-	message_bytes = message.encode('utf-8')
-	scheduler_socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-	scheduler_socket.connect(str(socket_path.absolute()))
+	def send_message(self, request_type: RequestType, content):
 
-	if debug:
-		print(f"Connected to BTU Scheduler deamon via Unix Domain Socket at '{socket_path}'")
+		if not isinstance(request_type, RequestType):
+			raise Exception("Argument 'request_type' must be an enum of RequestType.")
+		new_message = {
+			'request_type': request_type.name,
+			'content': content
+		}
+		message_as_string = json.dumps(new_message)
+		return self._send_message_to_scheduler_socket(message_as_string)
 
-	response = scheduler_socket.sendall(message_bytes)
-	scheduler_socket.close()
-	if debug:
-		print(f"Response from socket: {response}")
-		print("Message transmitted; client connection to socket is now closed.")
-	return response
+	def _send_message_to_scheduler_socket(self, message, debug=False):
+		"""
+		Establish a connection to the BTU scheduler daemon's Unix Domain Socket, and send a message.
+		"""
+		if not isinstance(message, str):
+			raise TypeError("Argument 'message' must be a UTF-8 string.")
+
+		socket_str = frappe.db.get_single_value("BTU Configuration", "path_to_btu_scheduler_uds")
+		if not socket_str:
+			raise ValueError("BTU Configuration is missing a path to the Unix Domain Socket for the scheduler daemon.")
+
+		# Create a UDS socket; connect to the port where the BTU Scheduler daemon is listening.
+		socket_path = pathlib.Path(socket_str)
+		if not socket_path.exists():
+			raise FileNotFoundError(f"Path to socket file does not exists: '{socket_path.absolute()}'")
+
+		message_bytes = message.encode('utf-8')
+		scheduler_socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+		scheduler_socket.connect(str(socket_path.absolute()))
+
+		if debug:
+			print(f"Connected to BTU Scheduler deamon via Unix Domain Socket at '{socket_path}'")
+
+		response = scheduler_socket.sendall(message_bytes)
+		scheduler_socket.close()
+		if debug:
+			print(f"Response from socket: {response}")
+			print("Message transmitted; client connection to socket is now closed.")
+		return response
 
 
+'''
 import sys
 import selectors
 import json
 import io
 import struct
-
 
 class Message:
     def __init__(self, selector, sock, addr, request):
@@ -246,3 +288,4 @@ class Message:
             self._process_response_binary_content()
         # Close when response has been processed
         self.close()
+'''

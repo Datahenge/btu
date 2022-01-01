@@ -170,8 +170,8 @@ def bytes_as_list_of_hex(some_bytes):
 
 	bytes_as_hex = some_bytes.hex()
 	array = []
-	for i in range(0, len(bytes_as_hex), 2):
-		array.append('0x' + bytes_as_hex[i] + bytes_as_hex[i+1])
+	for index in range(0, len(bytes_as_hex), 2):
+		array.append('0x' + bytes_as_hex[index] + bytes_as_hex[index + 1])
 	return array
 
 
@@ -189,8 +189,9 @@ def test_rq_pickling():
 			queue="default",
 			job_name="Job Name Foo"
 	)
-	# print(dir(new_job))
+
 	print(f"Created new job with ID: {new_job._id}")
+	# print(dir(new_job))
 	# print(f"Data:\n{new_job.data}\n")
 
 	# Step 2: Read it back from Redis

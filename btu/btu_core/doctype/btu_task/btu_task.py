@@ -178,5 +178,6 @@ class BTUTask(Document):
 							stdout=stdout_buffer_for_log or None,
 							date_time_started=start_datetime)
 
+		self.reload()
 		# Return a tuple to (probably) btu_task.js.
 		return (self._callable_function().__name__, success, new_log_id)
