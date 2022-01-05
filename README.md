@@ -43,5 +43,5 @@ These are some of project tasks I intend want to finish:
 ### Copyright and License
 Background Tasks Unleasehd (BTU) is licensed MIT.  See LICENSE.md file.
 
-Copyright 2022, Datahenge LLC
+Copyright 2022, Datahenge LLC\
 Maintainer: Brian Pond <brian@datahenge.com>
