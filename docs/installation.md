@@ -32,7 +32,7 @@ The scheduler is provided as a 64-bit Linux binary executable.  It does not requ
 
 [Download a binary from the 'Releases' web page](https://github.com/Datahenge/btu_scheduler_daemon/releases)
 
-##### Where to save the binary?
+#### Where to save the binary?
 Technically, you -can- save anywhere you want.  Especially if you're comfortable with creating symlinks in Linux.
 
 However, for simplicity, I suggest you save **btu_scheduler** somewhere on your **[PATH](https://en.wikipedia.org/wiki/PATH_(variable))**, such as:
@@ -40,6 +40,7 @@ However, for simplicity, I suggest you save **btu_scheduler** somewhere on your 
 /usr/local/bin
 ```
 
+#### Running the Scheduler
 After you download and save, execute by opening a terminal and typing:
 ```
 btu-scheduler
@@ -47,7 +48,7 @@ btu-scheduler
 
 The BTU Scheduler keeps running forever, until you force it to stop.  When running in a terminal, just enter **CTRL+C**
 
-#### Starting the BTU Scheduler automatically
+#### How To Start the Scheduler automatically?
 While you "could" just keep BTU Scheduler running all the time in a terminal?  It was really designed to be run as a background daemon.  There are many ways you can accomplish this, but I recommend using systemd and writing a Systemd Unit File.
 
 1. Use your favorite text editor (vim, nano, [micro](https://micro-editor.github.io/)) to create a new Unit file: `/etc/systemd/system/erpnext_rqscheduler.service`
