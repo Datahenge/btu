@@ -30,12 +30,17 @@ This is the *back end* application.  It's an "always on" Linux daemon, responsib
 
 The scheduler is provided as a 64-bit Linux binary executable.  It does not require Python, Frappe, or any 3rd party libraries or dependencies.
 
-Releases:
-[]
+[Download a binary from the 'Releases' web page](https://github.com/Datahenge/btu_scheduler_daemon/releases)
 
-I recommend you download and save the btu_scheduler somewhere on your PATH, such as: `/usr/local/bin`
+##### Where to save the binary?
+Technically, you -can- save anywhere you want.  Especially if you're comfortable with creating symlinks in Linux.
 
-To execute, just open a terminal and type:
+However, for simplicity, I suggest you save **btu_scheduler** somewhere on your **[PATH](https://en.wikipedia.org/wiki/PATH_(variable))**, such as:
+```
+/usr/local/bin
+```
+
+After you download and save, execute by opening a terminal and typing:
 ```
 btu-scheduler
 ```
