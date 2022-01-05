@@ -4,7 +4,7 @@ Background Task Unleashed consists of 2 separate (but cooperating) applications:
 1. **[BTU](https://github.com/Datahenge/btu)** : A Frappe web application.
 2. **[BTU Scheduler](https://github.com/Datahenge/btu_scheduler_daemon)** : A background daemon for Linux that schedules tasks, and acts as a liason between BTU and Python RQ.
 
-To use the BTU, you *must* install both.
+To use the BTU, you *must* install both applications on the same Linux device.
 
 ----
 
@@ -30,15 +30,23 @@ This is the *back end* application.  It's an "always on" Linux daemon, responsib
 
 The scheduler is provided as a 64-bit Linux binary executable.  It does not require Python, Frappe, or any 3rd party libraries or dependencies.
 
-[Download a binary from the 'Releases' web page](https://github.com/Datahenge/btu_scheduler_daemon/releases)
+##### 1. Download the binary executable file.
+The latest versions can be found [on the 'Releases' web page](https://github.com/Datahenge/btu_scheduler_daemon/releases)
 
-#### Where to save the binary?
-Technically, you -can- save anywhere you want.  Especially if you're comfortable with creating symlinks in Linux.
+##### 2. Save the binary file.
+You can save anywhere you want.  Especially if you're comfortable with creating symlinks in Linux.
 
-However, for simplicity, I suggest you save **btu_scheduler** somewhere on your **[PATH](https://en.wikipedia.org/wiki/PATH_(variable))**, such as:
+However, I recommend saving **btu_scheduler** file somewhere on your **[PATH](https://en.wikipedia.org/wiki/PATH_(variable))**.  A good place is this directory:
 ```
-/usr/local/bin
+/usr/local/bin/
 ```
+
+So, a complete path to the Scheduler would be: `/usr/local/bin/btu-scheduler`
+
+##### 3. Test your work
+
+* To verify the Scheduler is accessible on your Linux PATH?  Type: `which btu-scheduler`
+* To check the version you're using?  `btu-scheduler --version`
 
 #### Running the Scheduler
 After you download and save, execute by opening a terminal and typing:
