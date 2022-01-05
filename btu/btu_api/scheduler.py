@@ -44,7 +44,7 @@ class SchedulerAPI():
 			raise Exception("Argument 'request_type' must be an enum of RequestType.")
 		new_message = {
 			'request_type': request_type.name,
-			'content': content
+			'request_content': content
 		}
 		message_as_string = json.dumps(new_message)
 		return self._send_message_to_scheduler_socket(message_as_string)
@@ -72,12 +72,21 @@ class SchedulerAPI():
 		if debug:
 			print(f"Connected to BTU Scheduler deamon via Unix Domain Socket at '{socket_path}'")
 
-		response = scheduler_socket.sendall(message_bytes)
+		import time
+		uds_reply = None
+		try:
+			scheduler_socket.sendall(message_bytes)
+			time.sleep(0.5)
+			uds_reply = scheduler_socket.recv(131072)
+		except Exception as ex:
+			print(f"Exception while communicating with the BTU Scheduler daemon's Unix Domain Socket: {ex}")
 		scheduler_socket.close()
+
 		if debug:
-			print(f"Response from socket: {response}")
+			print(f"Received this reply from the BTU Scheduler daemon: {uds_reply}")
 			print("Message transmitted; client connection to socket is now closed.")
-		return response
+
+		return uds_reply
 
 
 '''
