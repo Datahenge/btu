@@ -48,7 +48,9 @@ So, a complete path to the Scheduler would be: `/usr/local/bin/btu-scheduler`
 * To verify the Scheduler is accessible on your Linux PATH?  Type: `which btu-scheduler`
 * To check the version you're using?  `btu-scheduler --version`
 
-#### Running the Scheduler
+----
+
+### Running the Scheduler
 After you download and save, execute by opening a terminal and typing:
 ```
 btu-scheduler
