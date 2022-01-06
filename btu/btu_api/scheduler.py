@@ -1,5 +1,7 @@
 """ btu/but_api/scheduler.py """
+
 from enum import Enum
+import time
 
 import json
 import pathlib
@@ -49,7 +51,7 @@ class SchedulerAPI():
 		message_as_string = json.dumps(new_message)
 		return self._send_message_to_scheduler_socket(message_as_string)
 
-	def _send_message_to_scheduler_socket(self, message, debug=False):
+	def _send_message_to_scheduler_socket(self, message, debug=True):
 		"""
 		Establish a connection to the BTU scheduler daemon's Unix Domain Socket, and send a message.
 		"""
@@ -65,29 +67,34 @@ class SchedulerAPI():
 		if not socket_path.exists():
 			raise FileNotFoundError(f"Path to socket file does not exists: '{socket_path.absolute()}'")
 
-		message_bytes = message.encode('utf-8')
-		scheduler_socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-		scheduler_socket.connect(str(socket_path.absolute()))
-
-		if debug:
-			print(f"Connected to BTU Scheduler deamon via Unix Domain Socket at '{socket_path}'")
-
-		import time
-		uds_reply = None
 		try:
-			scheduler_socket.sendall(message_bytes)
-			time.sleep(0.5)
-			uds_reply = scheduler_socket.recv(131072)
+			scheduler_socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+			scheduler_socket.settimeout(5)  # Very important, otherwise indefinite wait time.
+			scheduler_socket.connect(str(socket_path.absolute()))
+			if debug:
+				print(f"Connected to BTU Scheduler daemon via Unix Domain Socket at '{socket_path}'")
+				print(f"Blocking: {scheduler_socket.getblocking()}")
+				print(f"Timeout: {scheduler_socket.gettimeout()}")
+		except Exception as ex:
+			return f"Exception while connecting to BTU Scheduler socket: {str(ex)}"
+
+		message_bytes = message.encode('utf-8')
+		uds_response = None
+		try:
+			bytes_sent = scheduler_socket.send(message_bytes)
+			if debug:
+				print(f"Transmitted this quantity of bytes to UDS server: {bytes_sent}")
+			time.sleep(0.5)  # brief wait for server to reply
+			uds_response = scheduler_socket.recv(2048)  # response should be much smaller than 2kb
+			if debug:
+				print(f"Byte response from BTU Scheduler: {uds_response}")
 		except Exception as ex:
 			print(f"Exception while communicating with the BTU Scheduler daemon's Unix Domain Socket: {ex}")
-		scheduler_socket.close()
-
-		if debug:
-			print(f"Received this reply from the BTU Scheduler daemon: {uds_reply}")
-			print("Message transmitted; client connection to socket is now closed.")
-
-		return uds_reply
-
+		finally:
+			scheduler_socket.close()
+			if debug:
+				print(f"Socket connection to BTU Scheduler daemon is now closed.")
+		return uds_response.decode('utf-8')  # return UTF-8 string
 
 '''
 import sys
