@@ -180,8 +180,10 @@ def test_rq_pickling():
 	Purpose: To verify the pickled binary produced by regular RQ Jobs.
 	"""
 	# pylint: disable=protected-access
-	from redis import Redis
 	from rq.job import Job
+	from btu.btu_api.endpoints import test_function_ping_now_bytes
+
+	queue_conn = frappe.utils.background_jobs.get_redis_conn()
 
 	# Step 1: Create a new Job.
 	new_job = frappe.enqueue(
@@ -195,17 +197,19 @@ def test_rq_pickling():
 	# print(f"Data:\n{new_job.data}\n")
 
 	# Step 2: Read it back from Redis
-	rq_conn = Redis(port=11003)
-	rq_job = Job.fetch(new_job._id, connection=rq_conn)
+	# from redis import Redis
+	# rq_conn = Redis(port=11003)
+	rq_job = Job.fetch(new_job._id, connection=queue_conn)
 
 	assert new_job.data == rq_job.data
 	print("Successfully validated RQ Data contents.")
 	print(f"Data ({type(rq_job.data)}):\n{rq_job.data}")
 
-	# NOTE: Despite being bytes, the Python REPL tries to display as ASCII, whether you like that or not.
-	#       Which is not great.  Python useds 'sys.displayhook' that uses repr()
+	# NOTE: The Python REPL tries to bytes as ASCII.  Whether you like that, or not.
+	#       For me this, is not great.  So I created a short function to display them as hexidecimals.
 	# print(f"In Hex:\n{bytes_as_list_of_hex(rq_job.data)}")
 
-	from btu.btu_api.endpoints import test_pickler
-	test_pickler_results = test_pickler()
-	print(f"'Data' as produced by Sanchez Pickler:\n{test_pickler_results}")
+	test_pickler_results = test_function_ping_now_bytes()
+	print(f"Function 'data' as produced by Sanchez Pickler:\n{test_pickler_results}")
+
+	assert test_pickler_results == new_job.data

@@ -9,6 +9,10 @@
 #   https://github.com/meeerp/jobtaskscheduler
 #   Copyright (c) 2015, Codrotech Inc. and contributors
 
+from datetime import datetime  # standard Python library
+import re  # standard Python library
+from dateutil.tz import tzutc
+import pytz  # https://pypi.org/project/pytz/
 import frappe
 
 __version__ = '0.3.0'
@@ -61,7 +65,7 @@ def validate_cron_string(cron_string, error_on_invalid=False):
 	"""
 	Validate that a string is a Unix cron string.
 	"""
-	import re
+
 
 	# Note: This is also a Temporal function, but I'm trying to avoid making Temporal a dependency of BTU.
 	crontab_time_format_regex = re.compile(
@@ -87,7 +91,6 @@ def get_system_timezone():
 	"""
 	Returns the Time Zone of the Site.
 	"""
-	import pytz
 	system_time_zone = frappe.db.get_system_setting('time_zone')
 	if not system_time_zone:
 		raise Exception("Please configure a Time Zone under 'System Settings'.")
@@ -95,8 +98,6 @@ def get_system_timezone():
 
 
 def get_system_datetime_now():
-	from datetime import datetime
-	from dateutil.tz import tzutc
 	utc_datetime = datetime.now(tzutc())  # Get the current UTC datetime.
 	return utc_datetime.astimezone( get_system_timezone())  # Convert to the site's Time Zone:
 

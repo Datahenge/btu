@@ -12,8 +12,9 @@ import frappe
 
 # pylint: disable=invalid-name
 class RequestType(Enum):
-	reload_task_schedule = 0
+	create_task_schedule = 0
 	ping = 1
+	cancel_task_schedule = 2
 
 class SchedulerAPI():
 	"""
@@ -36,9 +37,20 @@ class SchedulerAPI():
 		Ask the BTU Scheduler to reload the Task Schedule in RQ, using the latest information.
 		NOTE: This does not perform an immediate Task execution; it only refreshes the JQ Job and CRON schedule.
 		"""
-		response = SchedulerAPI().send_message(RequestType.Reload_Task_Schedule,
-		                                           content=task_schedule_id)
+		response = SchedulerAPI().send_message(RequestType.create_task_schedule,
+		                                       content=task_schedule_id)
 		return response
+
+	@frappe.whitelist()
+	@staticmethod
+	def cancel_task_schedule(task_schedule_id):
+		"""
+		Ask the BTU Scheduler to cancel the Task Schedule in RQ.
+		"""
+		response = SchedulerAPI().send_message(RequestType.cancel_task_schedule,
+		                                       content=task_schedule_id)
+		return response
+
 
 	def send_message(self, request_type: RequestType, content):
 
@@ -93,8 +105,11 @@ class SchedulerAPI():
 		finally:
 			scheduler_socket.close()
 			if debug:
-				print(f"Socket connection to BTU Scheduler daemon is now closed.")
-		return uds_response.decode('utf-8')  # return UTF-8 string
+				print("Socket connection to BTU Scheduler daemon is now closed.")
+
+		if uds_response:
+			uds_response = uds_response.decode('utf-8')  # return UTF-8 string
+		return uds_response
 
 '''
 import sys

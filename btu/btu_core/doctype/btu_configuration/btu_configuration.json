@@ -6,14 +6,14 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "sb_testing",
-  "btn_send_hello_email",
+  "btn_resubmit_all_task_schedules",
   "cb1",
-  "btn_send_ping",
   "btu_scheduler_section",
   "path_to_btu_scheduler_uds",
+  "tests",
+  "btn_send_ping",
   "cb2",
-  "btn_resubmit_all_task_schedules",
+  "cron_time_zone",
   "email_section",
   "email_server",
   "email_server_port",
@@ -22,7 +22,9 @@
   "column_break_5",
   "email_encryption",
   "email_body_is_html",
-  "environment_name"
+  "environment_name",
+  "tests_section",
+  "btn_send_hello_email"
  ],
  "fields": [
   {
@@ -69,11 +71,6 @@
    "label": "Send email Body as HTML"
   },
   {
-   "fieldname": "sb_testing",
-   "fieldtype": "Section Break",
-   "label": "Testing"
-  },
-  {
    "default": "STARTTLS",
    "description": "Starts the negotiation between server and client, to begin encryption.",
    "fieldname": "email_encryption",
@@ -100,9 +97,10 @@
    "label": "Path to BTU Scheduler Unix socket"
   },
   {
+   "description": "Sends a 'ping' request to the BTU Scheduler background daemon.",
    "fieldname": "btn_send_ping",
    "fieldtype": "Button",
-   "label": "Send 'ping' to Scheduler Daemon",
+   "label": "Send 'ping' to Schedule Bot",
    "options": "button_send_ping"
   },
   {
@@ -118,11 +116,30 @@
   {
    "fieldname": "cb2",
    "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "tests",
+   "fieldtype": "Heading",
+   "label": "Tests"
+  },
+  {
+   "fieldname": "tests_section",
+   "fieldtype": "Section Break",
+   "label": "Tests"
+  },
+  {
+   "default": "UTC",
+   "description": "Time zone of cron jobs, used to calculated Run Times for scheduling.<br>A complete list can be found <b><a href=\"https://en.wikipedia.org/wiki/List_of_tz_database_time_zones\" target=\"_blank\">here</a></b>",
+   "fieldname": "cron_time_zone",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Time Zone for Scheduling",
+   "reqd": 1
   }
  ],
  "issingle": 1,
  "links": [],
- "modified": "2021-12-30 09:21:09.840944",
+ "modified": "2022-01-08 08:15:02.466190",
  "modified_by": "Administrator",
  "module": "BTU_Core",
  "name": "BTU Configuration",

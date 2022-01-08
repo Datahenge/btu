@@ -31,8 +31,8 @@ class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
 		"""
 		After deleting this Task Schedule, delete the corresponding Redis data.
 		"""
-		if self.redis_job_id:
-			btu_core.redis_cancel_by_queue_job_id(self.redis_job_id)
+		self.cancel_schedule()
+		# btu_core.redis_cancel_by_queue_job_id(self.redis_job_id)
 
 	def before_validate(self):
 		self.task_description = self.get_task_doc().desc_short
@@ -89,8 +89,8 @@ class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
 		# Create a friendly, human-readable description based on the cron string:
 		self.schedule_description = cron_descriptor.get_description(self.cron_string)
 		if self.enabled:
-			self.reschedule_task()
-		elif self.redis_job_id:
+			self.resubmit_task_schedule()
+		else:
 			self.cancel_schedule()
 
 # -----end of standard controller methods-----
@@ -106,10 +106,13 @@ class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
 			self.save()
 
 	def cancel_schedule(self):
-		# Referenced By:  before_save()
-		btu_core.redis_cancel_by_queue_job_id(self.redis_job_id)
+		"""
+		Ask the BTU Scheduler daemon to cancel this Task Schedule in the Redis Queue.
+		"""
+		response = SchedulerAPI.cancel_task_schedule(task_schedule_id=self.name)
+		print(f"Response from BTU Scheduler: {response}")
+		frappe.msgprint(f"Response from BTU Scheduler daemon: {response}")
 		self.redis_job_id = ""
-		frappe.msgprint("RQ Job is now deleted.")
 
 	def get_task_doc(self):
 		return frappe.get_doc("BTU Task", self.task)
@@ -195,6 +198,7 @@ class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
 # ----------------
 # STATIC FUNCTIONS
 # ----------------
+
 def check_minutes(minute):
 	if not minute or not 0 <= minute < 60:
 		raise ValueError(_("Minute value must be between 0 and 59"))

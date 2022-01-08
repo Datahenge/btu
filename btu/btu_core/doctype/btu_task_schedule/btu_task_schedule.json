@@ -15,8 +15,8 @@
   "sb_argument_overrides",
   "argument_overrides",
   "sb_schedule",
-  "schedule_description",
   "cron_string",
+  "schedule_description",
   "cb2",
   "run_frequency",
   "day_of_week",
@@ -188,7 +188,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2021-11-07 02:07:25.265009",
+ "modified": "2022-01-07 20:18:30.612902",
  "modified_by": "Administrator",
  "module": "BTU_Core",
  "name": "BTU Task Schedule",
@@ -217,5 +217,5 @@
  ],
  "sort_field": "task",
  "sort_order": "DESC",
- "title_field": "task"
+ "title_field": "task_description"
 }

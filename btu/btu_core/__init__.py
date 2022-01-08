@@ -1,7 +1,5 @@
 """ btu.btu_core """
 
-# Third Party
-from rq_scheduler import Scheduler
 # Frappe
 import frappe
 
@@ -10,20 +8,7 @@ def get_redis_queue_conn():
 	from frappe.utils.background_jobs import get_redis_conn
 	return get_redis_conn()
 
-
-def redis_cancel_by_queue_job_id(queue_job_id):
-	# Note: The Redis Queue's Job ID is currently the same as BTU Task Scheduler ID.
-	#       This is a design decision; not a Redis Queue requirement.
-	if not queue_job_id:
-		return
-	scheduler = Scheduler(connection=get_redis_queue_conn())
-	if queue_job_id not in scheduler:
-		return
-	scheduler.cancel(queue_job_id)
-	print(f"Deleted Redis Job ID '{queue_job_id}' from queue.")
-
-
-def schedule_job_in_redis(path_to_function, cron_string, queue_name,
+def OLD_schedule_job_in_redis(path_to_function, cron_string, queue_name,
                           description, job_id, kwarg_dict):
 	"""
 	For official documentation, see this article:
@@ -36,7 +21,8 @@ def schedule_job_in_redis(path_to_function, cron_string, queue_name,
 	if not queue_name:
 		raise Exception("Cannot schedule a job without a valid 'queue_name'")
 
-	scheduler = Scheduler(connection=get_redis_queue_conn())
+	# scheduler = Scheduler(connection=get_redis_queue_conn())
+	scheduler = None
 
 	job = scheduler.cron(
 		id=job_id,

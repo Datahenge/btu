@@ -1,4 +1,4 @@
-# Copyright (c) 2021, Datahenge LLC and contributors
+# Copyright (c) 2022, Datahenge LLC and contributors
 # For license information, please see license.txt
 
 import frappe
@@ -8,6 +8,14 @@ from btu.manual_tests import send_hello_email_to_user
 from btu.btu_api.scheduler import SchedulerAPI
 
 class BTUConfiguration(Document):
+
+	def validate(self):
+		from pytz import timezone
+		try:
+			timezone(self.cron_time_zone)
+		except Exception:
+			link_text = '<a href="https://en.wikipedia.org/wiki/List_of_tz_database_time_zones" target="_blank"><u>this website.</u></a>'
+			raise ValueError(f"Invalid name for Time Zone.  For a list of available names, visit {link_text}")  # pylint: disable=raise-missing-from
 
 	@frappe.whitelist()
 	def button_send_hello_email(self):
