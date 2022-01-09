@@ -20,8 +20,7 @@ from frappe import _
 from frappe.model.document import Document
 
 # BTU
-from btu import ( validate_cron_string, btu_core, Result)
-from btu.btu_core.task_runner import TaskRunner
+from btu import ( validate_cron_string, Result)
 from btu.btu_api.scheduler import SchedulerAPI
 
 
@@ -158,7 +157,7 @@ class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
 
 		try:
 			result_obj = Result(success=True, message="This test demonstrates how Task Logs can trigger an email on completion.")
-			log_key = write_log_for_task(self.task,
+			log_key = write_log_for_task(task_id=self.task,
 			                             result=result_obj,
 										 schedule_id=self.name)
 			frappe.db.commit()
@@ -168,32 +167,6 @@ class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
 		except Exception as ex:
 			frappe.msgprint(f"Errors while testing Task Emails: {ex}")
 			raise ex
-
-	def OLD_reschedule_task(self, autosave=False):
-		"""
-		Rewrite this BTU Task Schedule to the Redis Queue.
-		"""
-		# 1. Cancel the current Task Schedule (if it exists) in Redis Queue.
-		btu_core.redis_cancel_by_queue_job_id(self.redis_job_id)
-
-		# 2. Schedule a new RQ job:
-		task_runner = TaskRunner(self.task,
-									site_name=frappe.local.site,
-									schedule_id=self.name,
-									enable_debug_mode=True)
-		task_runner.redis_job_id = self.name  # This makes it easier to find the RQ Job, by making Job = Schedule's name
-
-		new_job_id = task_runner.schedule_task_in_redis(cron_string=self.cron_string, queue_name=self.queue_name)
-
-		if not new_job_id:
-			raise Exception("Failure to get new Job ID from Redis.")
-		# 3. Display message to User on on success.
-		frappe.msgprint(f"Task {self.task} rescheduled in Redis." +
-							f"\nFrequency: {self.schedule_description}" +
-							"\nRedis Job: " + new_job_id)
-		self.redis_job_id = new_job_id
-		if autosave:
-			self.save()
 
 # ----------------
 # STATIC FUNCTIONS

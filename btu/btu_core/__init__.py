@@ -8,6 +8,7 @@ def get_redis_queue_conn():
 	from frappe.utils.background_jobs import get_redis_conn
 	return get_redis_conn()
 
+'''
 def OLD_schedule_job_in_redis(path_to_function, cron_string, queue_name,
                           description, job_id, kwarg_dict):
 	"""
@@ -42,20 +43,4 @@ def OLD_schedule_job_in_redis(path_to_function, cron_string, queue_name,
 
 	print(" ** Added job to Redis Queue '" + queue_name + "' with Job ID: " + job.get_id() + " at " + cron_string)
 	return job.get_id()
-
-
-@frappe.whitelist()
-def are_tasks_scheduled():
-	"""
-	Called by hooks.py
-	Callable by REST API at any time.
-	"""
-	return frappe.local.flags.btu_tasks_scheduled or False
-
-
-@frappe.whitelist()
-def mark_tasks_as_scheduled():
-	"""
-	Once the worker has submitted all Tasks as Redis jobs, set this flag on the webserver.
-	"""
-	frappe.local.flags.btu_tasks_scheduled = True
+'''

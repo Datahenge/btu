@@ -14,18 +14,22 @@ from btu.btu_core.task_runner import TaskRunner
 from btu.btu_api import Sanchez, execute_job
 
 @frappe.whitelist()
-def get_pickled_task(task_id):
+def get_pickled_task(task_id, task_schedule_id=None):
 	"""
 	RPC HTTP Endpoint called by BTU Scheduler daemon and CLI.
 	Given a BTU Task identifier:
 		1. Create some pickled, binary data for that Task's function.
 		2. Return the binary data to the caller.
 	"""
+
 	# Step 1: Retrieve the BTU Task Document.
 	doc_task = frappe.get_doc("BTU Task", task_id)
 
 	# Step 2: Wrap it in the TaskRunner class.  This handles logging, capturing Standard Output, and much more.
-	this_taskrunner = TaskRunner(btu_task=doc_task, site_name=frappe.local.site, enable_debug_mode=True)
+	this_taskrunner = TaskRunner(btu_task=doc_task,
+	                             site_name=frappe.local.site,
+								 schedule_id=task_schedule_id,	# very important, so TaskRunner can Log per Schedule!
+								 enable_debug_mode=True)
 
 	# This allows for adding additional keyword arguments to a Task:
 	extra_arguments = doc_task.built_in_arguments()

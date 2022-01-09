@@ -81,21 +81,6 @@ class TaskRunner():
 			self.kwarg_dict = None
 		self.dprint(f"Task Runner now has these keyword arguments: {self.kwarg_dict}")
 
-	def schedule_task_in_redis(self, cron_string, queue_name='default'):
-		"""
-		Given a valid cron string, schedule this Task in the Redis Queue for future execution.
-		"""
-		from btu.btu_core import schedule_job_in_redis
-
-		ret = schedule_job_in_redis(path_to_function=self.function_wrapper,
-		                            cron_string=cron_string,
-		                            queue_name=queue_name,
-		                            description='Task Runner',
-		                            job_id=self.redis_job_id,
-		                            kwarg_dict=None  # do not pass inner arguments to function_wrapper, which takes no arguments.
-		)
-		return ret
-
 	def function_wrapper(self):  # pylint: disable=too-many-locals, too-many-statements
 		"""
 		This function is effectively a 'decorator' or 'wrapper' around some other Python function.
