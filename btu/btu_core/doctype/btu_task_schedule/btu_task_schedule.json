@@ -1,6 +1,6 @@
 {
  "actions": [],
- "autoname": "TS.######",
+ "autoname": "TS-.######",
  "creation": "2021-08-14 14:16:17.422988",
  "doctype": "DocType",
  "editable_grid": 1,
@@ -188,7 +188,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2022-01-08 12:22:30.498544",
+ "modified": "2022-01-11 21:25:59.939525",
  "modified_by": "Administrator",
  "module": "BTU_Core",
  "name": "BTU Task Schedule",

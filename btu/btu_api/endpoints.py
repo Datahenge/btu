@@ -95,5 +95,5 @@ def test_function_ping_now_bytes():
 
 	new_sanchez = Sanchez()
 	new_sanchez.build_internals(func=execute_job, _args=None, _kwargs=queue_args)
-	http_result = new_sanchez.create_serialized_rq_job()
+	http_result: bytes = new_sanchez.get_serialized_rq_job()
 	return http_result

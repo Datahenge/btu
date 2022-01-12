@@ -34,7 +34,12 @@ class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
 		# btu_core.redis_cancel_by_queue_job_id(self.redis_job_id)
 
 	def before_validate(self):
+
 		self.task_description = self.get_task_doc().desc_short
+
+		# Create a friendly, human-readable description based on the cron string:
+		self.schedule_description = cron_descriptor.get_description(self.cron_string)
+
 		# Clear fields that are not relevant for this schedule type.
 		if self.run_frequency == "Cron Style":
 			self.day_of_week = None
@@ -84,13 +89,13 @@ class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
 			validate_cron_string(str(self.cron_string))
 
 	def before_save(self):
-
-		# Create a friendly, human-readable description based on the cron string:
-		self.schedule_description = cron_descriptor.get_description(self.cron_string)
-		if self.enabled:
+		if bool(self.enabled) is True:
 			self.resubmit_task_schedule()
 		else:
-			self.cancel_schedule()
+			doc_orig = self.get_doc_before_save()
+			if doc_orig and doc_orig.enabled != self.enabled:
+				# Request the BTU Scheduler to cancel (if status was not previously Disabled)
+				self.cancel_schedule()
 
 # -----end of standard controller methods-----
 
@@ -99,8 +104,10 @@ class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
 		Send a request to the BTU Scheduler background daemon to reload this Task Schedule in RQ.
 		"""
 		response = SchedulerAPI.reload_task_schedule(task_schedule_id=self.name)
+		if response.startswith('Exception while connecting'):
+			raise ConnectionError(response)
 		print(f"Response from BTU Scheduler: {response}")
-		frappe.msgprint(f"Response from BTU Scheduler daemon: {response}")
+		frappe.msgprint(f"Response from BTU Scheduler daemon:<br>{response}")
 		if autosave:
 			self.save()
 
@@ -109,8 +116,9 @@ class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
 		Ask the BTU Scheduler daemon to cancel this Task Schedule in the Redis Queue.
 		"""
 		response = SchedulerAPI.cancel_task_schedule(task_schedule_id=self.name)
-		print(f"Response from BTU Scheduler: {response}")
-		frappe.msgprint(f"Response from BTU Scheduler daemon: {response}")
+		message = f"Request = Cancel Subscription.\nResponse from BTU Scheduler: {response}"
+		print(message)
+		frappe.msgprint(message)
 		self.redis_job_id = ""
 
 	def get_task_doc(self):
