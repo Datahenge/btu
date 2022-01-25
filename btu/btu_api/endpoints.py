@@ -13,6 +13,7 @@ import frappe
 from btu.btu_core.task_runner import TaskRunner
 from btu.btu_api import Sanchez, execute_job
 
+
 @frappe.whitelist()
 def get_pickled_task(task_id, task_schedule_id=None):
 	"""

@@ -27,13 +27,13 @@ function delete_log_records(listview) {
 				'fieldtype': 'Date',
 				'label': __('From Date'),
 				'fieldname': 'from_date',
-				'mandatory': true
+				reqd: 1
 			},
 			{
 				'fieldtype': 'Date',
 				'label': __('To Date'),
 				'fieldname': 'to_date',
-				'mandatory': true
+				reqd: 1
 			}
 		]
 	});

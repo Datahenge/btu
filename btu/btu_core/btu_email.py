@@ -158,9 +158,9 @@ def email_task_log_summary(doc_task_log, send_via_queue=False, debug=True):
 
 	# Create the email "Subject" string:
 	if doc_task_log.success_fail == 'Success':
-		subject = f"Success: BTU Task {doc_task_log.task_description}"
+		subject = f"Success: BTU Task {doc_task_log.task_desc_short}"
 	else:
-		subject = f"Failure: BTU Task {doc_task_log.task_description}"
+		subject = f"Failure: BTU Task {doc_task_log.task_desc_short}"
 
 	# Create the email "Body" string:
 	body = f"Task Description: '{doc_task_log.task_desc_short}'\n\n"
