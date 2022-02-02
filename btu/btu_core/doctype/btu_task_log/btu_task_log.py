@@ -4,9 +4,8 @@
 import frappe
 from frappe.model.document import Document
 
-from btu import Result
+from btu import Result, get_system_datetime_now
 from btu.btu_core import btu_email
-from temporal.core import get_system_datetime_now
 
 class BTUTaskLog(Document):
 
