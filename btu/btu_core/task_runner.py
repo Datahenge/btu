@@ -121,8 +121,9 @@ class TaskRunner():
 			stdout_buffer_for_log = None
 			self.dprint(f"Keyword arguments are as follows: {self.kwarg_dict}")
 			# Option 1: Function will output to console.
+			datetime_string = get_system_datetime_now().strftime("%m/%d/%Y, %H:%M:%S %Z")
 			if self.standard_output == StandardOutput.STDOUT:
-				print(f"--------\nBTU Task {self.btu_task.name} starting at: {get_system_datetime_now()}")
+				print(f"--------\nBTU Task {self.btu_task.name} starting at: {datetime_string}")
 				if self.kwarg_dict:
 					ret = function_to_call(**self.kwarg_dict)  # ----call the underlying function----
 				else:
@@ -130,7 +131,7 @@ class TaskRunner():
 			elif self.standard_output == StandardOutput.DB_LOG:
 				buffer = io.StringIO()
 				with redirect_stdout(buffer):
-					print(f"--------\nBTU Task {self.btu_task.name} starting at: {get_system_datetime_now()}")
+					print(f"--------\nBTU Task {self.btu_task.name} starting at: {datetime_string}")
 					if self.kwarg_dict:
 						ret = function_to_call(**self.kwarg_dict)  # ----call the underlying function----
 					else:

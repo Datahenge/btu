@@ -3,7 +3,7 @@
 
 import ast
 from contextlib import redirect_stdout
-from datetime import datetime
+# from datetime import datetime
 import importlib
 import inspect
 import io
@@ -155,8 +155,8 @@ class BTUTask(Document):
 
 		try:
 			with redirect_stdout(buffer):
-				time_now_string = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
-				print(f"Task '{self.name}' starting at: {time_now_string}")
+				datetime_string = get_system_datetime_now().strftime("%m/%d/%Y, %H:%M:%S %Z")
+				print(f"Task '{self.name}' starting at: {datetime_string}")
 				if self.built_in_arguments():
 					any_result = callable_function(**self.built_in_arguments())  # read function string, create callable function, and run it.
 				else:

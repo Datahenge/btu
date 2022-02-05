@@ -66,7 +66,6 @@ def validate_cron_string(cron_string, error_on_invalid=False):
 	Validate that a string is a Unix cron string.
 	"""
 
-
 	# Note: This is also a Temporal function, but I'm trying to avoid making Temporal a dependency of BTU.
 	crontab_time_format_regex = re.compile(
 		r"{0}\s+{1}\s+{2}\s+{3}\s+{4}".format(
@@ -98,6 +97,9 @@ def get_system_timezone():
 
 
 def get_system_datetime_now():
+	"""
+	Return a timezone-aware DateTime value, using the Frappe webserver's System Settings.
+	"""
 	utc_datetime = datetime.now(tzutc())  # Get the current UTC datetime.
 	return utc_datetime.astimezone( get_system_timezone())  # Convert to the site's Time Zone:
 
