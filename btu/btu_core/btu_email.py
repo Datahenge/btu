@@ -1,6 +1,6 @@
 """ btu/btu_core/btu_email.py """
 
-# Copyright (c) 2021, Datahenge LLC and contributors
+# Copyright (c) 2022, Datahenge LLC and contributors
 # For license information, please see license.txt
 
 #
@@ -9,6 +9,9 @@
 
 # NOTE: The Python standard library already has a module named 'email'
 #       So, I am deliberately naming this module "btu_email" to avoid namespace collision or mistakes.
+
+# Note: Avoiding spam detection.  When sending HTML, it's important to send both the plain text -and- HTML parts.
+
 
 # Standard Library
 from email.mime.text import MIMEText
@@ -52,8 +55,6 @@ class Emailer():
 			return recipients
 		raise TypeError(recipients)
 
-
-
 	@frappe.whitelist()
 	def send(self):
 
@@ -64,14 +65,11 @@ class Emailer():
 										  fieldname="email_auth_password")
 
 		if use_html:
-			# 1. Replace newlines with breaks:
-			self.body = self.body.replace('\n', '<br>')
-			# 2. Create MIMEMultipart object
+			# 1. Create a new MIMEMultipart object
 			message = MIMEMultipart("alternative")
 			message["Subject"] = self.subject
 			message["From"] = self.sender
-
-			# Add various recipients as necessary:
+			# 2. Add various recipients as necessary:
 			if self.to_as_string:
 				message["To"] = self.to_as_string
 			if self.cc_as_string:
@@ -79,8 +77,14 @@ class Emailer():
 			if self.bcc_as_string:
 				message["Bcc"] = self.bcc_as_string
 
-			part = MIMEText(self.body, "html")
-			message.attach(part)
+			text_part = MIMEText(self.body, "plain")
+			# 3. Create the HTML part of the message.
+			html_body = self.body.replace('\n', '<br>')
+			html_body = '<html> <head></head> <body>' + html_body + '</body></html>'
+			html_part = MIMEText(html_body, "html")
+			# 4. Attach the plain text and HTML parts.
+			message.attach(text_part)
+			message.attach(html_part)
 			message = message.as_string()
 		else:
 			message = self._create_plaintext_message()
@@ -122,7 +126,7 @@ class Emailer():
 
 	def _apply_subject_prefix(self, subject):
 		"""
-		Given an email subject, apply a prefix (if applicable)
+		Given an email subject, apply a Environment prefix (if applicable)
 		"""
 		if not self.environment_name:
 			return subject
@@ -130,12 +134,16 @@ class Emailer():
 
 	def _apply_body_prefix(self, body):
 		"""
-		Given an email subject, apply a prefix (if applicable)
+		Given an email body, apply an Environment prefix (if applicable)
 		"""
-		if not self.environment_name:
-			return body
-		return f"(sent from the ERPNext {self.environment_name} environment)\n\n" + body
+		if not body:
+			body = ""
+		if self.environment_name:
+			body = f"(sent from the ERPNext {self.environment_name} environment)\n\n" + body
+		return body
 
+
+# Non-Class Methods
 
 def email_task_log_summary(doc_task_log, send_via_queue=False, debug=True):
 	"""
