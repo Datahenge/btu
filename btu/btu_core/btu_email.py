@@ -145,7 +145,7 @@ class Emailer():
 
 # Non-Class Methods
 
-def email_task_log_summary(doc_task_log, send_via_queue=False, debug=True):
+def email_task_log_summary(doc_task_log, send_via_queue=False, debug=False):
 	"""
 	Send an email about the Task's success or failure.
 	"""
