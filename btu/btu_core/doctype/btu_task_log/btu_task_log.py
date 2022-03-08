@@ -40,16 +40,22 @@ def write_log_for_task(task_id, result, stdout=None, date_time_started=None, sch
 	#     5.  schedule
 	#     6.  result_message
 	#     7.  success_fail
-	#     8. date_time_started
+	#     8.  date_time_started
 
 	if not isinstance(result, Result):
 		raise ValueError(f"Argument 'result' should be an instance of BTU class 'Result'. Found '{type(result)}' instead.")
 	if stdout and not isinstance(stdout, str):
 		raise ValueError(f"Argument 'stdout' should be a Python string.  Found '{type(result)}' instead.")
 
+	# Slightly faster than 'get_doc()', which would return a complete Document.
+	task_values = frappe.db.get_values('BTU Task', filters={'name': task_id},
+	                                   fieldname=["name", "desc_short", "repeat_log_in_stdout"], as_dict=True)
+	if task_values:
+		task_values = task_values[0]  # get first Dictionary in the List.
+
 	new_log = frappe.new_doc("BTU Task Log")  # Create a new Log.
 	new_log.task = task_id  # Field 1
-	new_log.task_desc_short = frappe.get_doc("BTU Task", task_id).desc_short  # Field 2.
+	new_log.task_desc_short = task_values['desc_short']  # Field 2.
 	if result.execution_time:
 		new_log.execution_time = result.execution_time  # Field 3
 	new_log.stdout = stdout  # Field 4
@@ -67,6 +73,10 @@ def write_log_for_task(task_id, result, stdout=None, date_time_started=None, sch
 	#       Use save() instead.
 	new_log.save(ignore_permissions=True)  # Not even System Administrators are supposed to create and save these.
 	frappe.db.commit()
+
+	if task_values["repeat_log_in_stdout"]:
+		print(new_log.stdout)
+
 	return new_log.name
 
 

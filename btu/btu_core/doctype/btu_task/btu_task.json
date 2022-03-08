@@ -10,17 +10,18 @@
  "field_order": [
   "desc_short",
   "task_group",
-  "last_runtime",
+  "desc_long",
   "cb1",
+  "last_runtime",
   "button_run_on_webserver",
   "button_push_into_queue",
   "sb_definition",
   "function_string",
-  "desc_long",
-  "cb2",
   "arguments",
+  "cb2",
   "run_only_as_worker",
   "max_task_duration",
+  "repeat_log_in_stdout",
   "amended_from"
  ],
  "fields": [
@@ -117,6 +118,13 @@
    "label": "Last Runtime",
    "length": 10,
    "read_only": 1
+  },
+  {
+   "default": "0",
+   "description": "By default, all stdout is capture in the BTU Task Log.  When this box is marked, stdout will -also- get logged to stdout.",
+   "fieldname": "repeat_log_in_stdout",
+   "fieldtype": "Check",
+   "label": "Repeat log in stdout"
   }
  ],
  "is_submittable": 1,
@@ -130,7 +138,7 @@
    "link_fieldname": "task"
   }
  ],
- "modified": "2021-12-30 09:28:02.478879",
+ "modified": "2022-03-07 18:30:40.281646",
  "modified_by": "Administrator",
  "module": "BTU_Core",
  "name": "BTU Task",

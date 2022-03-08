@@ -107,28 +107,59 @@ class BTUTask(Document):
 
 	def _can_run_on_webserver(self):
 		"""
-		Check if the Tasks's function requires arguments.
-		If the Task does not specify these 'arguments', warn about this to the user.
+		Returns a boolean True if the Task can be executed by the Web Server, otherwise False.
 		"""
+		# First, check if the Tasks's function requires any arguments.
+		# Next, if the Task doesn't provide values for these arguments, return a Boolean false with errors.
+
 		callable_function = self._callable_function()
-		function_arguments = inspect.getfullargspec(callable_function).args
-		has_missing_arguments = False
+		function_argument_keys = inspect.getfullargspec(callable_function).args
+		function_arguments = []
+
+		for index, each in enumerate(function_argument_keys):
+			function_arguments.append({
+				'argument_name': each,
+				'position': index,
+				'has_default_value': False,
+				'default_value': None
+			})
+		# Sort by reverse order
+		if function_arguments:
+			function_arguments.sort(key=lambda item: item.get("position"), reverse=True)  # inline sort
+
+		# Are there default values for these function arguments?
+		function_argument_defaults = inspect.getfullargspec(callable_function).defaults
+		if function_argument_defaults:
+			list(function_argument_defaults).reverse()  # inline reverse and convert to a List.
+			for index, argument in enumerate(function_arguments):
+				if len(function_argument_defaults) >= index + 1:
+					argument['has_default_value'] = True
+					argument['default_value'] = function_argument_defaults[index]
+					# print(f"Argument {argument['argument_name']} has a default value  = {function_argument_defaults[index]}")
+
+		if function_arguments:
+			function_arguments.sort(key=lambda item: item.get("position"))  # inline sort
+
+		mandatory_argument_names = [ arg['argument_name'] for arg in function_arguments if arg['has_default_value'] is False ]
+
+		number_of_missing_arguments = 0
 		message = None
 
-		if self.built_in_arguments():
-			for argument in function_arguments:
-				if argument not in self.built_in_arguments().keys():
-					if not has_missing_arguments:
-						# If this is the 1st error, begin with a header row.
-						has_missing_arguments = True
-						message = "----ERROR----\n"
-					message += f"\nTask's function requires argument <b>'{argument}'</b> but this is not defined on the Task."
+		if self.built_in_arguments():  # arguments specifically annotated on the BTU Task
 
-		if has_missing_arguments:
-			message += "\n\nYou might be able to run this via a Task Schedule, but not directly here."
+			for mandatory_argument in mandatory_argument_names:
+				if mandatory_argument not in self.built_in_arguments().keys():
+					if number_of_missing_arguments == 0:
+						# If this is the 1st error, begin with a header row.
+						message = "----ERROR----\n"
+					message += f"\nTask's function has mandatory argument <b>'{mandatory_argument}'</b>, but this is undefined on the Task."
+					number_of_missing_arguments += 1
+
+		if number_of_missing_arguments:
+			message += "\n\nTask is missing mandatory arguments.  It might be runnable as a Task Schedule, but not directly from the web server."
 			frappe.msgprint(message)
 
-		return not has_missing_arguments
+		return number_of_missing_arguments == 0
 
 
 	@frappe.whitelist()
