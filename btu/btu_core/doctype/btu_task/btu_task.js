@@ -6,7 +6,7 @@ frappe.ui.form.on('BTU Task', {
 	refresh: function(frm) {
 		if (frm.doc.docstatus == 1) {
 			// This button reverts the Task from Submitted (read only) back to Draft.
-			frm.add_custom_button(__('Unlock (revert to Draft'), () => frm.events._revert_to_draft(frm));
+			frm.add_custom_button(__('Unlock (revert to Draft)'), () => frm.events._revert_to_draft(frm));
 		}
 	},
 
