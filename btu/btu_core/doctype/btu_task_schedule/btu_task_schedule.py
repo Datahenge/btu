@@ -104,6 +104,8 @@ class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
 		Send a request to the BTU Scheduler background daemon to reload this Task Schedule in RQ.
 		"""
 		response = SchedulerAPI.reload_task_schedule(task_schedule_id=self.name)
+		if not response:
+			raise ConnectionError("Error, no response from BTU Task Scheduler daemon.  Check logs in directory '/etc/btu_scheduler.logs'")
 		if response.startswith('Exception while connecting'):
 			raise ConnectionError(response)
 		print(f"Response from BTU Scheduler: {response}")
