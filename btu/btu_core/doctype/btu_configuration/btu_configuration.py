@@ -31,7 +31,7 @@ class BTUConfiguration(Document):
 		Button sends a 'ping' to the BTU Scheduler daemon on its Unix Domain Socket.
 		"""
 		response = SchedulerAPI.send_ping()
-		frappe.msgprint(f"Response from BTU Scheduler daemon: {response}")
+		frappe.msgprint(f"Response from BTU Scheduler daemon:<br>{response}")
 
 	@frappe.whitelist()
 	def button_resubmit_all_task_schedules(self):

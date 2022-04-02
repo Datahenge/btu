@@ -11,6 +11,7 @@
   "desc_short",
   "task_group",
   "desc_long",
+  "is_transient",
   "cb1",
   "last_runtime",
   "button_run_on_webserver",
@@ -125,6 +126,15 @@
    "fieldname": "repeat_log_in_stdout",
    "fieldtype": "Check",
    "label": "Repeat log in stdout"
+  },
+  {
+   "default": "0",
+   "description": "A transient Task exists for a short time, before automatic deletion.  An alternative to 'frappe.enqueue()'",
+   "fieldname": "is_transient",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Transient",
+   "read_only": 1
   }
  ],
  "is_submittable": 1,
@@ -138,7 +148,7 @@
    "link_fieldname": "task"
   }
  ],
- "modified": "2022-03-07 18:30:40.281646",
+ "modified": "2022-04-02 18:45:31.662323",
  "modified_by": "Administrator",
  "module": "BTU_Core",
  "name": "BTU Task",

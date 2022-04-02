@@ -115,3 +115,64 @@ def execute_job(site, method, event, job_name, kwargs, user=None, is_async=True,
 		frappe.monitor.stop()
 		if is_async:
 			frappe.destroy()
+
+
+class TransientTask():
+	"""
+	The Transient Task is a kind of temporary BTU Task.  It only runs 1 time, then is discarded.
+
+	Usage:
+
+		from btu.btu_api import TransientTask
+		TransientTask.create_new_transient(
+			function_path = "ftp.ftp_module.doctype.farm_box.farm_box.expand_by_parent_item",
+			description = f"Farm Box Expansion: {some_name}",
+			max_task_duration='6000s',
+			farmbox_parent_item_code=some_item_code,
+			from_date=some_date_from,
+			to_date=some_date_to
+		).enqueue(queue_name='long')
+
+	"""
+
+	@staticmethod
+	def create_new_transient(function_path, description, task_group="Transient", max_task_duration='600s', **kwargs):
+
+		kwargs_as_string = str(kwargs)
+		print(kwargs_as_string)
+
+		doc_task = frappe.new_doc("BTU Task")
+		doc_task.desc_short = description
+		doc_task.task_group = task_group
+		doc_task.is_transient = True
+		doc_task.function_string = function_path
+		doc_task.arguments = str(kwargs)
+		doc_task.run_only_as_worker = True
+		doc_task.max_task_duration = max_task_duration
+		doc_task.repeat_log_in_stdout = True
+		document_name = frappe.generate_hash("BTU", 12)  # Don't use the Naming Series; transient documents just get hash names.
+		doc_task.insert(set_name=document_name)
+		doc_task.submit()
+
+		transient_task = TransientTask(doc_task)
+		return transient_task
+
+	def __init__(self, doc_task):
+		from btu.btu_core.doctype.btu_task.btu_task import BTUTask
+		if not isinstance(doc_task, BTUTask):
+			raise Exception("Class instantiation argument 'doc_task' must be an instance of BTUTask document.")
+		self.doc_task = doc_task
+
+	def enqueue(self, queue_name='default'):
+		"""
+		Called via button on document's main page.
+		Sends a function call into the Redis Queue named 'default'
+		"""
+		if not self.doc_task.is_transient:
+			raise Exception(f"BTU Task {self.doc_task.name} is not transient.")
+
+		self.doc_task.push_task_into_queue(queue_name=queue_name, extra_arguments=self.doc_task.built_in_arguments())
+
+		message = f"Transient Task {self.doc_task.name} has been submitted to the Redis Queue."
+		print(message)
+		frappe.msgprint(message)

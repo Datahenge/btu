@@ -62,7 +62,7 @@ def send_hello_email_to_user(debug=False):
 	# Construct a small message Body for the email.
 	message_body = f"Hello, {user_doc.full_name}."
 	message_body += f"\n\nThis function was initiated by '{caller_name}'"
-	message_body += f"\nThe current, local time is {datetime_now_string}"
+	message_body += f"\nThe current, server time is {datetime_now_string}"
 	message_body += "\n\n--------\n"
 
 	if debug:

@@ -15,7 +15,7 @@ from dateutil.tz import tzutc
 import pytz  # https://pypi.org/project/pytz/
 import frappe
 
-__version__ = '0.3.0'
+__version__ = '0.4.0'
 
 
 class Result():
@@ -32,8 +32,9 @@ class Result():
 		"""
 		if not isinstance(success, bool):
 			raise TypeError("Result class argument 'success' must be a boolean.")
-		if message and (not isinstance(message, str)):
-			raise TypeError("Result class argument 'message' must be a Python string.")
+		if message:
+			if not isinstance(message, (str, dict, list)):
+				raise TypeError(f"Result class argument 'message' must be a Python String, List, or Dictionary.  Found value '{message}' instead.")
 		self.okay = success
 		self.message = message or None
 		self.execution_time = round(execution_time,2) if execution_time else None

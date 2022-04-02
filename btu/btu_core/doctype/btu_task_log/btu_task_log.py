@@ -61,7 +61,7 @@ def write_log_for_task(task_id, result, stdout=None, date_time_started=None, sch
 	new_log.stdout = stdout  # Field 4
 	if schedule_id:
 		new_log.schedule = schedule_id  # Field 5
-	new_log.result_message = result.message  # Field 6
+	new_log.result_message = str(result.message)  # Field 6.  Could be a List or Dictionary, so must convert to a String.
 	if result.okay:
 		new_log.success_fail = 'Success'
 	else:

@@ -161,7 +161,6 @@ class BTUTask(Document):
 
 		return number_of_missing_arguments == 0
 
-
 	@frappe.whitelist()
 	def run_task_on_webserver(self):
 		"""
