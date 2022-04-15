@@ -55,7 +55,7 @@ def write_log_for_task(task_id, result, stdout=None, date_time_started=None, sch
 
 	new_log = frappe.new_doc("BTU Task Log")  # Create a new Log.
 	new_log.task = task_id  # Field 1
-	new_log.task_desc_short = task_values['desc_short']  # Field 2.
+	new_log.task_desc_short = task_values['desc_short'] if task_values else "Unknown"  # Field 2.
 	if result.execution_time:
 		new_log.execution_time = result.execution_time  # Field 3
 	new_log.stdout = stdout  # Field 4
@@ -74,7 +74,7 @@ def write_log_for_task(task_id, result, stdout=None, date_time_started=None, sch
 	new_log.save(ignore_permissions=True)  # Not even System Administrators are supposed to create and save these.
 	frappe.db.commit()
 
-	if task_values["repeat_log_in_stdout"]:
+	if task_values and task_values["repeat_log_in_stdout"]:
 		print(new_log.stdout)
 
 	return new_log.name
