@@ -16,7 +16,7 @@ import pytz  # https://pypi.org/project/pytz/
 
 import frappe
 
-__version__ = '0.5.0'
+__version__ = '0.5.1'
 
 
 class Result():

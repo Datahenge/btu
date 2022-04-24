@@ -67,7 +67,8 @@ class TaskRunner():
 		self.kwarg_dict = self.btu_task.built_in_arguments() or {}
 		if self.schedule_id:
 			# Override any keys with those specified by the Task Schedule's arguments:
-			self.kwarg_dict = self.kwarg_dict | frappe.get_doc("BTU Task Schedule", self.schedule_id).built_in_arguments()  # merge the 2 dictionaries.
+			schedule_arguments = frappe.get_doc("BTU Task Schedule", self.schedule_id).built_in_arguments() or {}
+			self.kwarg_dict = self.kwarg_dict | schedule_arguments # merge the 2 dictionaries.
 
 	def function_name(self):
 		"""
