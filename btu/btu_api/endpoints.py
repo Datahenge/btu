@@ -18,8 +18,13 @@ from btu.btu_api import Sanchez, execute_job
 def get_pickled_task(task_id, task_schedule_id=None):
 	"""
 	RPC HTTP Endpoint called by BTU Scheduler daemon and CLI.
-	Given a BTU Task identifier:
-		1. Create some pickled, binary data for that Task's function.
+
+	args:
+		task_id:				primary key of a BTU Task
+		task_schedule_id:		primary key of a BTU Task Schedule
+
+	Steps:
+		1. Create some pickled, binary data for a Task's function.
 		2. Return the binary data to the caller.
 	"""
 
@@ -48,6 +53,7 @@ def get_pickled_task(task_id, task_schedule_id=None):
 		"kwargs": None  # if function requires keyword arguments, this is where you'd store them.
 	}
 
+	# Step 4. Use the Sanchez class to pickle the Task Runner
 	new_sanchez = Sanchez()
 	new_sanchez.build_internals(func=execute_job, _args=None, _kwargs=queue_args)
 

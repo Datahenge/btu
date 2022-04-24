@@ -19,9 +19,15 @@ from btu.btu_core.task_runner import TaskRunner
 from btu.btu_core.doctype.btu_task_log.btu_task_log import write_log_for_task
 
 
+class BTU_AWARE_FUNCTION():  # pylint: disable=invalid-name
+
+	def __init__(self, btu_task_id):
+		self.btu_task_id = btu_task_id
+
+
 class BTUTask(Document):
 	"""
-	A SQL records that contains a path to a class of type TaskWrapper
+	A SQL record that contains a path to a class of type TaskWrapper
 	"""
 	@frappe.whitelist()
 	def revert_to_draft(self):
@@ -42,7 +48,10 @@ class BTUTask(Document):
 		"""
 		Return the callable function associated with this BTU Task.
 		"""
-		return getattr( self._imported_module(), self._function_name())
+		result = getattr( self._imported_module(), self._function_name())
+		if not hasattr(result, '__call__'):
+			raise Exception(f"The function string '{self.function_string}' is not a callable function.")
+		return result
 
 	def validate(self, debug=False):
 		"""
@@ -62,48 +71,10 @@ class BTUTask(Document):
 		# 	raise Exception(f"Function '{self. _function_name()}' is not an instance of btu.task_runner.TaskWrapper()")
 		# frappe.msgprint("\u2713 Task module and function exist and are valid.")
 
-	def push_task_into_queue(self, queue_name='default', extra_arguments=None):
-		"""
-		Create an instance of TaskRunner() class, and put 'function_wrapper' into the queue.
-		Execution will happen immediately (not on a schedule)
-		"""
-		task_runner = TaskRunner(self, site_name=frappe.local.site, enable_debug_mode=True)
-
-		# This supports the idea of passing special keyword arguments to a Task:
-		if extra_arguments:
-			task_runner.add_keyword_arguments(**extra_arguments)  # pass them as kwargs
-
-		# Use standard frappe.enqueue() to place the 'function_wrapper' into RQ.
-		frappe.enqueue(method=task_runner.function_wrapper,
-			queue=queue_name,
-			timeout=self.max_task_duration or "1h",
-			is_async=True)
-
 	def built_in_arguments(self):
 		if not self.arguments:
 			return None
 		return ast.literal_eval(self.arguments)
-
-	@frappe.whitelist()
-	def btn_push_into_queue(self, queue_name='default'):
-		"""
-		Called via button on document's main page.
-		Sends a function call into the Redis Queue named 'default'
-		"""
-		if not self._can_run_on_webserver():
-			# Cannot run without defining the appropriate arguments on the Task.
-			return
-
-		if not queue_name:
-			# Workaround: I suspect the DocType button Options are overriding
-			#             the default argument in the function signature?
-			queue_name='default'
-
-		self.push_task_into_queue(queue_name=queue_name, extra_arguments=self.built_in_arguments())
-
-		message = f"Task {self.name} has been submitted to the Redis Queue. No callback alerts are possible."
-		message += "\nTo see the status of this Task, review the Task Logs."
-		frappe.msgprint(message)
 
 	def _can_run_on_webserver(self):
 		"""
@@ -161,6 +132,24 @@ class BTUTask(Document):
 
 		return number_of_missing_arguments == 0
 
+	def is_this_btu_aware_function(self, debug=True):
+		"""
+		Returns True if the 'function_string' is actually the path to a BTU-Aware class.
+		"""
+		result = False
+		callable_function = self._callable_function()
+		if isinstance(callable_function, type):
+			# To find out if this is a subclass of BTU_AWARE_FUNCTION, we have to instantiate it.
+			# If it's not a subclass, it's going to throw a hard Exception.  So we should catch it and just return False.
+			try:
+				if isinstance(callable_function(btu_task_id=self.name), BTU_AWARE_FUNCTION):
+					result = True
+			except Exception as ex:
+				print(ex)
+		if debug:
+			print(f"Is this a BTU-Aware function = {result}")
+		return result
+
 	@frappe.whitelist()
 	def run_task_on_webserver(self):
 		"""
@@ -178,6 +167,7 @@ class BTUTask(Document):
 
 		# If the target function has arguments, and the Task does not define them, this isn't going to work.
 		callable_function = self._callable_function()
+
 		buffer = io.StringIO()
 		success = False
 		execution_start = time.time()
@@ -188,9 +178,16 @@ class BTUTask(Document):
 				datetime_string = get_system_datetime_now().strftime("%m/%d/%Y, %H:%M:%S %Z")
 				print(f"Task '{self.name}' starting at: {datetime_string}")
 				if self.built_in_arguments():
-					any_result = callable_function(**self.built_in_arguments())  # read function string, create callable function, and run it.
+					if self.is_this_btu_aware_function():
+						any_result = callable_function(self.name).run(**self.built_in_arguments())  # create an instance of the BTU-aware class, and call its run() method.
+					else:
+						any_result = callable_function(**self.built_in_arguments())  # read function string, create callable function, and run it.
 				else:
-					any_result = callable_function()  # read function string, create callable function, and run it.
+					# No keyword arguments for this Task:
+					if self.is_this_btu_aware_function():
+						any_result = callable_function(self.name).run()  # create an instance of the BTU-aware class, and call its run() method.
+					else:
+						any_result = callable_function()  # read function string, create callable function, and run it.
 			success = True
 		except Exception as ex:
 			any_result = str(ex)
@@ -211,3 +208,42 @@ class BTUTask(Document):
 		self.reload()
 		# Return a tuple to (probably) btu_task.js.
 		return (self._callable_function().__name__, success, new_log_id)
+
+	@frappe.whitelist()
+	def btn_push_into_queue(self, queue_name='default'):
+		"""
+		Called via button on BTU Task document's main page.
+		Sends a function call into the Redis Queue named 'default'
+		"""
+		self.reload()
+
+		if not self._can_run_on_webserver():
+			return  # Cannot run without defining the appropriate arguments on the Task.
+
+		if not queue_name:
+			# Workaround: I suspect the DocType button 'Options' are overriding
+			#             the default argument in the function signature?
+			queue_name='default'
+
+		self.push_task_into_queue(queue_name=queue_name, extra_arguments=self.built_in_arguments())
+
+		message = f"Task {self.name} has been submitted to the Redis Queue. No callback alerts are possible."
+		message += "\nTo see the status of this Task, review the Task Logs."
+		frappe.msgprint(message)
+
+	def push_task_into_queue(self, queue_name='default', extra_arguments=None):
+		"""
+		Create an instance of TaskRunner() class, and put 'function_wrapper' into the queue.
+		Execution will happen immediately (not on a schedule)
+		"""
+		task_runner = TaskRunner(self, site_name=frappe.local.site, enable_debug_mode=True)
+
+		# This supports the idea of passing special keyword arguments to a Task:
+		if extra_arguments:
+			task_runner.add_keyword_arguments(**extra_arguments)  # pass them as kwargs
+
+		# Use standard frappe.enqueue() to place the 'function_wrapper' into RQ.
+		frappe.enqueue(method=task_runner.function_wrapper,
+			queue=queue_name,
+			timeout=self.max_task_duration or "1h",
+			is_async=True)

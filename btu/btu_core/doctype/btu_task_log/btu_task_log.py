@@ -24,12 +24,17 @@ class BTUTaskLog(Document):
 			frappe.set_value("BTU Task Log", self.name, "stdout", message + (self.stdout or ""))
 
 
-def write_log_for_task(task_id, result, stdout=None, date_time_started=None, schedule_id=None):
+def write_log_for_task(task_id, result, log_name=None, stdout=None, date_time_started=None, schedule_id=None):
 	"""
 	Given a Task and Result, write to SQL table 'BTU Task Log'
 	References:
 		* btu_task.run_task_on_webserver()
 		* TaskRunner().function_wrapper()
+
+	Arguments
+		task_id	: 	Primary key (name) of a BTU Task.
+		result	:	A Result object.
+		log_name :	Optional.  The name of the Task Log.  Useful when updating an existing, pending log.
 	"""
 
 	# Important Fields in BTU Task Log:
@@ -53,21 +58,25 @@ def write_log_for_task(task_id, result, stdout=None, date_time_started=None, sch
 	if task_values:
 		task_values = task_values[0]  # get first Dictionary in the List.
 
-	new_log = frappe.new_doc("BTU Task Log")  # Create a new Log.
-	new_log.task = task_id  # Field 1
-	new_log.task_desc_short = task_values['desc_short'] if task_values else "Unknown"  # Field 2.
+	if log_name:
+		new_log = frappe.get_doc("BTU Task Log", log_name)
+	else:
+		new_log = frappe.new_doc("BTU Task Log")  # Create a new Log.
+		new_log.task = task_id  # Field 1
+		new_log.task_desc_short = task_values['desc_short'] if task_values else "Unknown"  # Field 2.
+		if schedule_id:
+			new_log.schedule = schedule_id  # Field 5
+		if date_time_started:
+			new_log.date_time_started = date_time_started  # Field 8
+
 	if result.execution_time:
 		new_log.execution_time = result.execution_time  # Field 3
 	new_log.stdout = stdout  # Field 4
-	if schedule_id:
-		new_log.schedule = schedule_id  # Field 5
 	new_log.result_message = str(result.message)  # Field 6.  Could be a List or Dictionary, so must convert to a String.
 	if result.okay:
 		new_log.success_fail = 'Success'
 	else:
 		new_log.success_fail = 'Failed'  # Field 7
-	if 	date_time_started:
-		new_log.date_time_started = date_time_started  # Field 8
 
 	# NOTE: Calling new_log.insert() will --not-- trigger Document class controller methods, like 'after_insert'
 	#       Use save() instead.

@@ -2,7 +2,7 @@
 #
 # Background Tasks Unleashed: A Frappe Framework task scheduling App.
 #
-# Copyright (c) 2021, Datahenge LLC and contributors
+# Copyright (c) 2022, Datahenge LLC and contributors
 # For license information, please see LICENSE.txt
 #
 # Inspired by and initially based on:
@@ -13,9 +13,10 @@ from datetime import datetime  # standard Python library
 import re  # standard Python library
 from dateutil.tz import tzutc
 import pytz  # https://pypi.org/project/pytz/
+
 import frappe
 
-__version__ = '0.4.0'
+__version__ = '0.5.0'
 
 
 class Result():
@@ -62,19 +63,26 @@ class Result():
 		return msg
 
 
+# Some date and time functions are included below.
+#
+#   * It's tempting to use my own Temporal App for handling Date and Time functions.
+#   * But for now, I don't want to create a cross-dependency with another App.
+
+
 def validate_cron_string(cron_string, error_on_invalid=False):
 	"""
 	Validate that a string is a Unix cron string.
 	"""
 
 	# Note: This is also a Temporal function, but I'm trying to avoid making Temporal a dependency of BTU.
+	minute_component = r"(?P<minute>\*(\/[0-5]?\d)?|[0-5]?\d)"
+	hour_component = r"(?P<hour>\*|[01]?\d|2[0-3])"
+	day_component = r"(?P<day>\*|0?[1-9]|[12]\d|3[01])"
+	month_component = r"(?P<month>\*|0?[1-9]|1[012])"
+	day_of_week_component = r"(?P<day_of_week>\*|[0-6](\-[0-6])?)"  # end of str.format()
+
 	crontab_time_format_regex = re.compile(
-		r"{0}\s+{1}\s+{2}\s+{3}\s+{4}".format(
-			r"(?P<minute>\*(\/[0-5]?\d)?|[0-5]?\d)",
-			r"(?P<hour>\*|[01]?\d|2[0-3])",
-			r"(?P<day>\*|0?[1-9]|[12]\d|3[01])",
-			r"(?P<month>\*|0?[1-9]|1[012])",
-			r"(?P<day_of_week>\*|[0-6](\-[0-6])?)")  # end of str.format()
+		rf"{minute_component}\s+{hour_component}\s+{day_component}\s+{month_component}\s+{day_of_week_component}"
 	)  # end of re.compile()
 
 	if crontab_time_format_regex.match(cron_string) is None:
@@ -83,9 +91,6 @@ def validate_cron_string(cron_string, error_on_invalid=False):
 		return False
 	return True
 
-
-# While tempting to use the Temporal App for handling Date and Time functions,
-# at least for now, I want to avoid creating a dependency with another Frappe App.
 
 def get_system_timezone():
 	"""

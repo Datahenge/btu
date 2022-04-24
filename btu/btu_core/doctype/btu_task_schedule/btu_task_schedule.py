@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015, Codrotech Inc. and contributors
 #
-# Copyright (c) 2021, Datahenge LLC and contributors
+# Copyright (c) 2022, Datahenge LLC and contributors
 # For license information, please see license.txt
 
 from __future__ import unicode_literals
 
+import ast
 import calendar
 from calendar import monthrange, timegm
 from datetime import datetime
@@ -38,7 +39,8 @@ class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
 		self.task_description = self.get_task_doc().desc_short
 
 		# Create a friendly, human-readable description based on the cron string:
-		self.schedule_description = cron_descriptor.get_description(self.cron_string)
+		if self.cron_string:
+			self.schedule_description = cron_descriptor.get_description(self.cron_string)
 
 		# Clear fields that are not relevant for this schedule type.
 		if self.run_frequency == "Cron Style":
@@ -178,6 +180,11 @@ class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
 			frappe.msgprint(f"Errors while testing Task Emails: {ex}")
 			raise ex
 
+	def built_in_arguments(self):
+		if not self.argument_overrides:
+			return None
+		return ast.literal_eval(self.argument_overrides)
+
 # ----------------
 # STATIC FUNCTIONS
 # ----------------
@@ -202,9 +209,9 @@ def check_day_of_month(run_frequency, day, month=None):
 
 	if run_frequency == "Yearly":
 		if day and month:
-			m = {value: key for key, value in enumerate(calendar.month_abbr)}
+			month_dict = {value: key for key, value in enumerate(calendar.month_abbr)}
 			last = monthrange(datetime.now().year,
-							  m.get(str(month).title()))[1]
+							  month_dict.get(str(month).title()))[1]
 			if int(day) > last:
 				raise ValueError(
 					_("Day value for {0} must be between 1 and {1}").format(month, last))
