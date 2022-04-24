@@ -74,7 +74,7 @@
    "description": "The module path and function will be validated during Save.",
    "fieldname": "function_string",
    "fieldtype": "Data",
-   "label": "Path to Function",
+   "label": "Path to Function or BTU-aware Class",
    "reqd": 1
   },
   {
@@ -148,7 +148,7 @@
    "link_fieldname": "task"
   }
  ],
- "modified": "2022-04-02 18:45:31.662323",
+ "modified": "2022-04-24 13:00:51.188251",
  "modified_by": "Administrator",
  "module": "BTU_Core",
  "name": "BTU Task",

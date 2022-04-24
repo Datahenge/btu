@@ -28,7 +28,7 @@ def split_function_path(function_path):
 class TaskComponent():
 
 	def __init__(self, btu_task_id, btu_component_id, btu_task_schedule_id, frappe_site_name,
-				 function, queue='default', timeout=None, debug_mode=True, **kwargs):
+				 function, queue='default', timeout=None, debug_mode=False, **kwargs):
 		"""
 		Initialize the class instance.
 		"""

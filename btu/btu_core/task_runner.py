@@ -237,6 +237,7 @@ class TaskRunner():
 		new_log.task = self.btu_task.name
 		new_log.task_desc_short = self.btu_task.desc_short
 		new_log.schedule = self.schedule_id
+		new_log.task_component = 'Main'
 		new_log.date_time_started = date_time_started
 		new_log.success_fail = 'In-Progress'
 		new_log.save(ignore_permissions=True)  # Not even System Administrators are supposed to create and save these.

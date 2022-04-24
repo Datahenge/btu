@@ -23,6 +23,7 @@ class BTU_AWARE_FUNCTION():  # pylint: disable=invalid-name
 
 	def __init__(self, btu_task_id):
 		self.btu_task_id = btu_task_id
+		self.btu_task_schedule_id = None
 
 
 class BTUTask(Document):
@@ -111,12 +112,16 @@ class BTUTask(Document):
 		if function_arguments:
 			function_arguments.sort(key=lambda item: item.get("position"))  # inline sort
 
-		mandatory_argument_names = [ arg['argument_name'] for arg in function_arguments if arg['has_default_value'] is False ]
+		if not self.is_this_btu_aware_function():
+			mandatory_argument_names = [ arg['argument_name'] for arg in function_arguments if arg['has_default_value'] is False ]
+		else:
+			# TODO: Find the mandatory arguments by examining the run() method on the BTU-aware class function.
+			mandatory_argument_names = []
 
 		number_of_missing_arguments = 0
 		message = None
 
-		if self.built_in_arguments():  # arguments specifically annotated on the BTU Task
+		if self.built_in_arguments():  # there are arguments specifically annotated on the BTU Task
 
 			for mandatory_argument in mandatory_argument_names:
 				if mandatory_argument not in self.built_in_arguments().keys():

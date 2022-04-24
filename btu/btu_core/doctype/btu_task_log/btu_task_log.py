@@ -11,17 +11,18 @@ class BTUTaskLog(Document):
 
 	def after_insert(self):
 
-		# Update the "Last Result" column on the BTU Task.
-		frappe.db.set_value("BTU Task", self.task, "last_runtime", get_system_datetime_now())
-
-		try:
-			btu_email.email_task_log_summary(self)
-		except Exception as ex:
-			message = "Error in BTU Task Log while attempting to send email about Task Log."
-			message += f"\n{str(ex)}\n"
-			frappe.msgprint(message)
-			print(message)
-			frappe.set_value("BTU Task Log", self.name, "stdout", message + (self.stdout or ""))
+		if not self.task_component:
+			# Update the "Last Result" column on the BTU Task.
+			frappe.db.set_value("BTU Task", self.task, "last_runtime", get_system_datetime_now())
+			# Email a summary of the Task to Users:
+			try:
+				btu_email.email_task_log_summary(self)
+			except Exception as ex:
+				message = "Error in BTU Task Log while attempting to send email about Task Log."
+				message += f"\n{str(ex)}\n"
+				frappe.msgprint(message)
+				print(message)
+				frappe.set_value("BTU Task Log", self.name, "stdout", message + (self.stdout or ""))
 
 
 def write_log_for_task(task_id, result, log_name=None, stdout=None, date_time_started=None, schedule_id=None):

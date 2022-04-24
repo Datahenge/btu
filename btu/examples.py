@@ -1,3 +1,5 @@
+""" examples.py """
+
 import frappe
 
 # --------------------
@@ -9,7 +11,6 @@ from btu.btu_core.btu_task_component import TaskComponent
 
 class btu_aware_example1(BTU_AWARE_FUNCTION):  # pylint: disable=invalid-name
 
-	@frappe.whitelist()
 	def run(self, **kwargs):
 
 		print(f"I'm a BTU-aware function.  I know I was run by BTU Task = {self.btu_task_id}")
@@ -29,7 +30,7 @@ class btu_aware_example1(BTU_AWARE_FUNCTION):  # pylint: disable=invalid-name
 						  number_to_count=30).enqueue()
 		return "I am the result of 'btu_aware_example1'"
 
-@frappe.whitelist()
+
 def ordinary_function(number_to_count):
 	"""
 	This is an ordinary function, with no knowledge of BTU.
