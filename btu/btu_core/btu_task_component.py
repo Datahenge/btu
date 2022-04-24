@@ -7,23 +7,11 @@
 # --------
 
 from contextlib import redirect_stdout
-# from enum import Enum
 import io
 import time
-# import uuid
-
 import frappe
 
 # pylint: disable=too-many-instance-attributes
-
-def split_function_path(function_path):
-	"""
-	Takes a complete function path like this:    'btu.manual_tests.ping_with_wait'
-	And splits into 'module_path' and 'function_name':    (btu.manual_tests, ping_with_wait)
-	"""
-	module_path = '.'.join(function_path.split('.')[:-1])
-	function_name = function_path.split('.')[-1]
-	return (module_path, function_name)
 
 class TaskComponent():
 
@@ -170,7 +158,7 @@ class TaskComponentWrapper():
 			function_result = Result(True, ret, execution_time=execution_time)
 
 		except Exception as ex:
-			self.dprint(f"Error in call to function '{self.function_name()}'\n{ex}")
+			self.dprint(f"Error in call to function '{self.function_to_run.__name__}'\n{ex}")
 			execution_time = round(time.time() - execution_start,3)
 			function_result = Result(False, str(ex), execution_time=execution_time)
 
