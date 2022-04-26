@@ -75,7 +75,8 @@ class BTUTask(Document):
 	def built_in_arguments(self):
 		if not self.arguments:
 			return None
-		return ast.literal_eval(self.arguments)
+		ret = ast.literal_eval(self.arguments)
+		return ret
 
 	def _can_run_on_webserver(self):
 		"""
