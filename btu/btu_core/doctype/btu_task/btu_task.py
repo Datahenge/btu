@@ -3,7 +3,6 @@
 
 import ast
 from contextlib import redirect_stdout
-# from datetime import datetime
 import importlib
 import inspect
 import io
@@ -73,10 +72,13 @@ class BTUTask(Document):
 		# frappe.msgprint("\u2713 Task module and function exist and are valid.")
 
 	def built_in_arguments(self):
+		"""
+		Converts an argument String into an argument Dictionary.
+		"""
 		if not self.arguments:
 			return None
-		ret = ast.literal_eval(self.arguments)
-		return ret
+		args_dict = ast.literal_eval(self.arguments)
+		return args_dict
 
 	def _can_run_on_webserver(self):
 		"""
