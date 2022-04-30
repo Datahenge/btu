@@ -120,7 +120,7 @@ class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
 		Ask the BTU Scheduler daemon to cancel this Task Schedule in the Redis Queue.
 		"""
 		response = SchedulerAPI.cancel_task_schedule(task_schedule_id=self.name)
-		message = f"Request = Cancel Subscription.\nResponse from BTU Scheduler: {response}"
+		message = f"Request = Cancel Task Schedule.\nResponse from BTU Scheduler: {response}"
 		print(message)
 		frappe.msgprint(message)
 		self.redis_job_id = ""
