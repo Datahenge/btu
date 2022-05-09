@@ -148,7 +148,7 @@
    "link_fieldname": "task"
   }
  ],
- "modified": "2022-04-24 13:00:51.188251",
+ "modified": "2022-05-07 21:35:25.753447",
  "modified_by": "Administrator",
  "module": "BTU_Core",
  "name": "BTU Task",
@@ -171,5 +171,6 @@
  ],
  "sort_field": "name",
  "sort_order": "DESC",
- "title_field": "desc_short"
+ "title_field": "desc_short",
+ "track_changes": 1
 }

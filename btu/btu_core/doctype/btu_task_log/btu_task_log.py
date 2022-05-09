@@ -11,7 +11,7 @@ class BTUTaskLog(Document):
 
 	def after_insert(self):
 
-		if not self.task_component:
+		if (not self.task_component) or (self.task_component) == 'Main':
 			# Update the "Last Result" column on the BTU Task.
 			frappe.db.set_value("BTU Task", self.task, "last_runtime", get_system_datetime_now())
 			# Email a summary of the Task to Users:
