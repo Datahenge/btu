@@ -40,3 +40,14 @@ def ordinary_function(number_to_count):
 	for _ in range(0, number_to_count):
 		time.sleep(0.1)
 	print(f"An ordinary function finished counting to {number_to_count}.")
+
+
+@frappe.whitelist()
+def wait_then_throw_error():
+	"""
+	Wait 10 seconds, then throw an Exception.
+	"""
+	import time
+	print("Waiting 10 seconds, then throwing an Exception ...")
+	time.sleep(10)
+	raise Exception("Simulating a serious error while executing this function.")

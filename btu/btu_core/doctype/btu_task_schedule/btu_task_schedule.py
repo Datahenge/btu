@@ -92,7 +92,10 @@ class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
 
 	def before_save(self):
 		if bool(self.enabled) is True:
-			self.resubmit_task_schedule()
+			try:
+				self.resubmit_task_schedule()
+			except Exception as ex:
+				frappe.msgprint(ex, indicator='red')
 		else:
 			doc_orig = self.get_doc_before_save()
 			if doc_orig and doc_orig.enabled != self.enabled:

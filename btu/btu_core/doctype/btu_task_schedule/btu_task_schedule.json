@@ -55,6 +55,7 @@
    "default": "0",
    "fieldname": "enabled",
    "fieldtype": "Check",
+   "in_standard_filter": 1,
    "label": "Enabled"
   },
   {
@@ -166,7 +167,7 @@
    "fieldname": "btn_get_last_job_results",
    "fieldtype": "Button",
    "label": "Get Last Job Results",
-   "options": "get_last_job_results"
+   "options": "get_last_execution_results"
   },
   {
    "fieldname": "email_recipients",
@@ -193,7 +194,7 @@
    "link_fieldname": "schedule"
   }
  ],
- "modified": "2022-01-25 14:24:06.245684",
+ "modified": "2022-05-11 22:18:40.019831",
  "modified_by": "Administrator",
  "module": "BTU_Core",
  "name": "BTU Task Schedule",

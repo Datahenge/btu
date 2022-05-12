@@ -26,17 +26,6 @@ def ping_with_wait(seconds_to_wait):
 
 
 @frappe.whitelist()
-def ping_and_error():
-	"""
-	Wait 10 seconds, then throw an Exception.
-	"""
-	import time
-	print("Waiting 10 seconds, then throwing an Exception ...")
-	time.sleep(10)
-	raise Exception("Simulating a serious error while executing this function.")
-
-
-@frappe.whitelist()
 def send_hello_email_to_user(debug=False):
 	"""
 		NOTE: When via Bench Execute, this will email the Administrator's email address.

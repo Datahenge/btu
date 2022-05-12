@@ -16,11 +16,11 @@
   "last_runtime",
   "button_run_on_webserver",
   "button_push_into_queue",
+  "run_only_as_worker",
   "sb_definition",
   "function_string",
   "arguments",
   "cb2",
-  "run_only_as_worker",
   "max_task_duration",
   "repeat_log_in_stdout",
   "amended_from"
@@ -43,7 +43,7 @@
   },
   {
    "depends_on": "eval: doc.docstatus == 1",
-   "description": "Submit this Task to Redis Queue for immediate execution.<br><b>Note:</b> This is achieved using 'frappe.enqueue' and does not interact with the BTU Scheduler daemon.",
+   "description": "Task is immediately enqueued in a Redis Queue.<br><b>Note:</b>&nbsp;Equivalent to calling 'frappe.enqueue' (does not use BTU Scheduler daemon)",
    "fieldname": "button_push_into_queue",
    "fieldtype": "Button",
    "label": "Run via Redis Worker",
@@ -60,7 +60,7 @@
   },
   {
    "depends_on": "eval: doc.run_only_as_worker == 0",
-   "description": "Function will execute asynchronously on the Web Server.",
+   "description": "Function will execute within a gunicorn web server thread.",
    "fieldname": "button_run_on_webserver",
    "fieldtype": "Button",
    "label": "Run on Web Server"
@@ -98,9 +98,10 @@
   },
   {
    "default": "600s",
+   "description": "After this many seconds, Task Logs still \"In-Progress\" will be remarked as \"Failed\".  This may trigger an email (configurable per Schedule)",
    "fieldname": "max_task_duration",
    "fieldtype": "Data",
-   "label": "Max Task Duration"
+   "label": "Max Task Duration (secs)"
   },
   {
    "bold": 1,
@@ -129,7 +130,7 @@
   },
   {
    "default": "0",
-   "description": "A transient Task exists for a short time, before automatic deletion.  An alternative to 'frappe.enqueue()'",
+   "description": "Transient Tasks are not reusable: they only execute once.  They are created automatically by BTU-aware classes.  Similar to using 'frappe.enqueue()'",
    "fieldname": "is_transient",
    "fieldtype": "Check",
    "in_list_view": 1,
@@ -148,7 +149,7 @@
    "link_fieldname": "task"
   }
  ],
- "modified": "2022-05-07 21:35:25.753447",
+ "modified": "2022-05-11 19:50:00.970068",
  "modified_by": "Administrator",
  "module": "BTU_Core",
  "name": "BTU Task",

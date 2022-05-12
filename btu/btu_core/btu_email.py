@@ -9,17 +9,20 @@
 
 # NOTE: The Python standard library already has a module named 'email'
 #       So, I am deliberately naming this module "btu_email" to avoid namespace collision or mistakes.
-
-# Note: Avoiding spam detection.  When sending HTML, it's important to send both the plain text -and- HTML parts.
+# NOTE: To avoiding spam detection, when sending HTML, it's important to send both the plain text --and-- HTML parts.
 
 
 # Standard Library
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import smtplib
-
+# Frappe Library
 import frappe
 from frappe.utils.password import get_decrypted_password
+# BTU
+from btu import dprint
+
+DEBUG_ENV_VARIABLE="BTU_DEBUG"  # if this OS environment variable = 1, then dprint() messages will print to stdout.
 
 
 class Emailer():
@@ -144,64 +147,88 @@ class Emailer():
 
 
 # Non-Class Methods
+def email_on_task_start(doc_task_log, send_via_queue=False):
+	"""
+	Sent immediately when a Task Log is first inserted into the database.
+	"""
+	from btu.btu_core.doctype.btu_task_log.btu_task_log import BTUTaskLog as BTUTaskLogType  # late import to avoid any circular reference problems.
 
-def email_task_log_summary(doc_task_log, send_via_queue=False, debug=False):
-	"""
-	Send an email about the Task's success or failure.
-	"""
+	if not doc_task_log or not isinstance(doc_task_log, BTUTaskLogType):
+		raise Exception("Function requires argument 'doc_task_log', which should be an instance of BTU Task Log document.")
+
 	if not doc_task_log.schedule:
-		if debug:
-			print("Warning: BTU Task Log does not reference a Task Schedule.  No email can be transmitted.")
+		dprint("Warning: BTU Task Log does not reference a Task Schedule.  No email can be transmitted.")
 		return  # only send emails for Tasks that were scheduled.
 
 	doc_schedule = frappe.get_doc("BTU Task Schedule", doc_task_log.schedule)
-	if not doc_schedule.email_recipients:
-		if debug:
-			print("BTU Task Schedule has no email recipients.")
-		return  # no email recipients defined
+	recipients = [ each for each in doc_schedule.email_recipients if each.email_on_start ]
 
-	recipient_list = [ row.email_address for row in doc_schedule.email_recipients if row.recipient_type == 'TO' ]
-	cc_list = [ row.email_address for row in doc_schedule.email_recipients if row.recipient_type == 'CC' ]
-	bcc_list = [ row.email_address for row in doc_schedule.email_recipients if row.recipient_type == 'BCC' ]
+	for each_recipient in recipients:
+		subject = f"Started: BTU Task {doc_task_log.task_desc_short}"
+		body = f"Task Schedule {doc_task_log.schedule} for Task {doc_task_log.task} ({doc_task_log.task_desc_short}) is now In-Progress."
+		sender = frappe.get_doc("BTU Configuration").email_auth_username
 
-	# Create the email "Subject" string:
-	if doc_task_log.success_fail == 'Success':
-		subject = f"Success: BTU Task {doc_task_log.task_desc_short}"
-	else:
-		subject = f"Failure: BTU Task {doc_task_log.task_desc_short}"
+		dprint(f"Sending email to {each_recipient.email_address} because Task Schedule {doc_task_log.schedule} has started.")
+		if not send_via_queue:
+			Emailer(sender=sender,
+					emailto_list=each_recipient.email_address or None,
+					subject=subject,
+					body=body).send()
+		else:
+			raise Exception("Not Yet Implemented: Sending email via Redis Queue.")
 
-	# Create the email "Body" string:
-	body = f"Task Description: '{doc_task_log.task_desc_short}'\n\n"
-	if doc_task_log.result_message:
-		body += f"Function returned this Result:\n'{doc_task_log.result_message}'\n\n"
-	if doc_task_log.stdout:
-		body += f"Standard Output:\n{doc_task_log.stdout}"
+	dprint(f"Sent email message to Task Schedule's recipient {doc_schedule.email_recipients}", DEBUG_ENV_VARIABLE)
 
-	sender = frappe.get_doc("BTU Configuration").email_auth_username
-	if not send_via_queue:
-		Emailer(sender=sender,
-				emailto_list=recipient_list or None,
-				ccto_list=cc_list or None,
-				bccto_list=bcc_list or None,
-				subject=subject,
-				body=body).send()
-	else:
-		raise Exception("Sending email via Redis Queue is not-yet-implemented")
 
-	if debug:
-		print("Sent email message to Task Schedule's recipients.")
-
-	# pylint: disable=pointless-string-statement
+def email_on_task_conclusion(doc_task_log, send_via_queue=False):
 	"""
-	email_args = {
-		"recipients": ";".join(recipient_list) if recipient_list else None,
-		"cc": ";".join(cc_list) if cc_list else None,
-		"bcc": ";".join(bcc_list) if bcc_list else None,
-		"sender": "technology@farmtopeople.com",
-		"subject": subject,
-		"message": self.result_message + self.stdout,
-		"now": True,
-		"attachments": None
-	}
-	# frappe.enqueue(method=frappe.sendmail, queue='short', timeout=300, is_async=True, **email_args)
+	Send an email about the Task Log's success or failure.
 	"""
+	from btu.btu_core.doctype.btu_task_log.btu_task_log import BTUTaskLog as BTUTaskLogType  # late import to avoid any circular reference problems.
+
+	if not doc_task_log or not isinstance(doc_task_log, BTUTaskLogType):
+		raise Exception("Function requires argument 'doc_task_log', which should be an instance of BTU Task Log document.")
+
+	if not doc_task_log.schedule:
+		dprint("Warning: BTU Task Log does not reference a Task Schedule.  No email can be transmitted.")
+		return  # only send emails for Tasks that were scheduled.
+
+	doc_schedule = frappe.get_doc("BTU Task Schedule", doc_task_log.schedule)
+	for each_recipient in doc_schedule.email_recipients:
+
+		if doc_task_log.success_fail == 'Success' and not each_recipient.email_on_success:
+			continue
+		if doc_task_log.success_fail == 'Failed' and not each_recipient.email_on_error:
+			continue
+		if doc_task_log.success_fail == 'Timeout' and not each_recipient.email_on_timeout:
+			continue
+
+		# Create the email "Subject" string:
+		if doc_task_log.success_fail == 'Success':
+			subject = f"Success: BTU Task {doc_task_log.task_desc_short}"
+		elif doc_task_log.success_fail == 'Failed':
+			subject = f"Failure: BTU Task {doc_task_log.task_desc_short}"
+		elif doc_task_log.success_fail == 'Timeout':
+			subject = f"Timeout: BTU Task {doc_task_log.task_desc_short}"
+
+		# Create the email "Body" string:
+		if  doc_task_log.success_fail in ('Success', 'Failed'):
+			body = f"Task Description: '{doc_task_log.task_desc_short}'\n\n"
+			if doc_task_log.result_message:
+				body += f"Function returned this Result:\n'{doc_task_log.result_message}'\n\n"
+			if doc_task_log.stdout:
+				body += f"Standard Output:\n{doc_task_log.stdout}"
+		elif doc_task_log.success_fail == 'Timeout':
+			body = f"Timeout for Task Description: '{doc_task_log.task_desc_short}'\n\n"
+			body += "Task has not returned results in a timely manner; it may have timed-out or died inside Python RQ."
+
+		sender = frappe.get_doc("BTU Configuration").email_auth_username
+		if not send_via_queue:
+			Emailer(sender=sender,
+					emailto_list=each_recipient.email_address or None,
+					subject=subject,
+					body=body).send()
+		else:
+			raise Exception("Not Yet Implemented: Sending email via Redis Queue.")
+
+	dprint(f"Sent email message to Task Schedule's recipient {doc_schedule.email_recipients}", DEBUG_ENV_VARIABLE)

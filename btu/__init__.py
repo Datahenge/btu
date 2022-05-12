@@ -10,13 +10,15 @@
 #   Copyright (c) 2015, Codrotech Inc. and contributors
 
 from datetime import datetime  # standard Python library
+import os  # standard Python library
 import re  # standard Python library
+
 from dateutil.tz import tzutc
 import pytz  # https://pypi.org/project/pytz/
 
 import frappe
 
-__version__ = '0.5.2'
+__version__ = '0.6.0'
 
 
 class Result():
@@ -116,3 +118,29 @@ def make_datetime_naive(any_datetime):
 	Useful because Frappe is not storing timezone-aware datetimes in MySQL.
 	"""
 	return any_datetime.replace(tzinfo=None)
+
+
+def is_env_var_set(variable_name):
+	"""
+	Returns true if an Environment Variable is set to 1.
+	"""
+	if not variable_name:
+		return False
+	variable_value = os.environ.get(variable_name)
+	if not variable_value:
+		return False
+	try:
+		return int(variable_value) == 1
+	except Exception:
+		return False
+
+
+def dprint(msg, check_env=None, force=None):
+	"""
+	A print() that only prints when an environment variable is set.
+	Very useful for conditional printing, depending on whether you want to debug code, or not.
+	"""
+	if force:
+		print(msg)
+	elif is_env_var_set(check_env):
+		print(msg)

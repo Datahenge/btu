@@ -6,7 +6,10 @@
  "engine": "InnoDB",
  "field_order": [
   "email_address",
-  "recipient_type"
+  "email_on_start",
+  "email_on_success",
+  "email_on_error",
+  "email_on_timeout"
  ],
  "fields": [
   {
@@ -18,19 +21,39 @@
    "search_index": 1
   },
   {
-   "default": "TO",
-   "fieldname": "recipient_type",
-   "fieldtype": "Select",
+   "default": "0",
+   "fieldname": "email_on_start",
+   "fieldtype": "Check",
    "in_list_view": 1,
-   "label": "Recipient Type",
-   "length": 10,
-   "options": "TO\nCC\nBCC",
-   "reqd": 1
+   "label": "On Start"
+  },
+  {
+   "columns": 2,
+   "default": "0",
+   "fieldname": "email_on_success",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "On Success"
+  },
+  {
+   "default": "1",
+   "fieldname": "email_on_error",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "On Error"
+  },
+  {
+   "columns": 2,
+   "default": "0",
+   "fieldname": "email_on_timeout",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "On Timeout"
   }
  ],
  "istable": 1,
  "links": [],
- "modified": "2021-11-05 05:18:32.458460",
+ "modified": "2022-05-11 19:53:35.182910",
  "modified_by": "Administrator",
  "module": "BTU_Core",
  "name": "BTU Email Recipient",
