@@ -210,6 +210,8 @@ def email_on_task_conclusion(doc_task_log, send_via_queue=False):
 			subject = f"Failure: BTU Task {doc_task_log.task_desc_short}"
 		elif doc_task_log.success_fail == 'Timeout':
 			subject = f"Timeout: BTU Task {doc_task_log.task_desc_short}"
+		else:
+			subject = f"Unhandled Subject {doc_task_log.success_fail}"
 
 		# Create the email "Body" string:
 		if  doc_task_log.success_fail in ('Success', 'Failed'):

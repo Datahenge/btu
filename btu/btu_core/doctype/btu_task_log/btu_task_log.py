@@ -22,7 +22,7 @@ class BTUTaskLog(Document):
 				if self.success_fail != "In-Progress":
 					btu_email.email_on_task_conclusion(self)
 			except Exception as ex:
-				message = "Error in BTU Task Log while attempting to send emails about Task Log."
+				message = "Error in BTU Task Log (after_insert) while attempting to send email about Task Log."
 				message += f"\n{str(ex)}\n"
 				frappe.msgprint(message)
 				print(message)
@@ -37,7 +37,7 @@ class BTUTaskLog(Document):
 			try:
 				btu_email.email_on_task_conclusion(self)
 			except Exception as ex:
-				message = "Error in BTU Task Log while attempting to send email about Task Log."
+				message = "Error in function email_on_task_conclusion(), during attempt to send email about Task Log."
 				message += f"\n{str(ex)}\n"
 				frappe.msgprint(message)
 				print(message)
