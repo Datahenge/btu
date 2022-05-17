@@ -272,6 +272,9 @@ def remove_failed_jobs(date_from, date_to, wildcard_text=None):
 		fail_registry = each_queue.failed_job_registry
 		for job_id in fail_registry.get_job_ids():
 			job = each_queue.fetch_job(job_id)
+			if not job:
+				frappe.msgprint(f"Unable to find details for Job with identifier = '{job_id}'")
+				continue
 			if job.last_heartbeat and (job.last_heartbeat.date() >= date_from) and (job.last_heartbeat.date() <= date_to):
 				# Delete this job:
 				fail_registry.remove(job, delete_job=True)
