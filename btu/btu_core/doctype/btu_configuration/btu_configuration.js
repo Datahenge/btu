@@ -18,10 +18,9 @@ frappe.ui.form.on('BTU Configuration', {
 					type:"GET",
 					method:"btu.list_failed_jobs",
 				}).done(() => {
-					console.log("Done");
 					frm.reload_doc();
 				}).fail(() => {
-					frappe.msgprint(__("Could not generate Secret"));
+					console.log("Error while listing Failed RQ Jobs.")					
 				});
 		}, 'Redis Queue');
 	}

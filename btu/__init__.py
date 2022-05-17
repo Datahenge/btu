@@ -225,8 +225,11 @@ def list_failed_jobs():
 		fail_registry = each_queue.failed_job_registry
 		for job_id in fail_registry.get_job_ids():
 			job = each_queue.fetch_job(job_id)
-			failed_jobs.append(job_id)
-			message += f"Queue={each_queue.name} : Job={job_id} : {job.description}<br>"
+			if job:
+				failed_jobs.append(job_id)
+				message += f"Queue={each_queue.name} : Job={job_id} : {job.description}<br>"
+			else:
+				message += f"Unable to retrieve details for Queue={each_queue.name} : Job={job_id}<br>"
 	frappe.msgprint(message)
 
 @frappe.whitelist()
