@@ -5,6 +5,7 @@ btu.task_runner.py
 from contextlib import redirect_stdout
 from enum import Enum
 import io
+import sys
 import time
 import uuid
 
@@ -68,7 +69,10 @@ class TaskRunner():
 		if self.schedule_id:
 			# Override any keys with those specified by the Task Schedule's arguments:
 			schedule_arguments = frappe.get_doc("BTU Task Schedule", self.schedule_id).built_in_arguments() or {}
-			self.kwarg_dict = self.kwarg_dict | schedule_arguments # merge the 2 dictionaries.
+			if sys.version_info >= (3,9,0):
+				self.kwarg_dict = self.kwarg_dict | schedule_arguments # merge the 2 dictionaries.
+			else:
+				self.kwarg_dict = {**self.kwarg_dict, **schedule_arguments}
 
 	def function_name(self):
 		"""

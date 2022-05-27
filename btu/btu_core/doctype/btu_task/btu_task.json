@@ -46,7 +46,7 @@
    "description": "Task is immediately enqueued in a Redis Queue.<br><b>Note:</b>&nbsp;Equivalent to calling 'frappe.enqueue' (does not use BTU Scheduler daemon)",
    "fieldname": "button_push_into_queue",
    "fieldtype": "Button",
-   "label": "Run via Redis Worker",
+   "label": "Run via RQ Worker",
    "options": "btn_push_into_queue"
   },
   {
@@ -149,7 +149,7 @@
    "link_fieldname": "task"
   }
  ],
- "modified": "2022-05-11 19:50:00.970068",
+ "modified": "2022-05-21 10:16:18.940716",
  "modified_by": "Administrator",
  "module": "BTU_Core",
  "name": "BTU Task",
