@@ -165,7 +165,7 @@ def email_on_task_start(doc_task_log, send_via_queue=False):
 
 	for each_recipient in recipients:
 		subject = f"Started: BTU Task {doc_task_log.task_desc_short}"
-		body = f"Task Schedule {doc_task_log.schedule} for Task {doc_task_log.task} ({doc_task_log.task_desc_short}) is now In-Progress."
+		body = f"Task Schedule {doc_task_log.schedule}\nTask {doc_task_log.task} ({doc_task_log.task_desc_short}) is now In-Progress."
 		sender = frappe.get_doc("BTU Configuration").email_auth_username
 
 		dprint(f"Sending email to {each_recipient.email_address} because Task Schedule {doc_task_log.schedule} has started.")
@@ -204,24 +204,17 @@ def email_on_task_conclusion(doc_task_log, send_via_queue=False):
 			continue
 
 		# Create the email "Subject" string:
-		if doc_task_log.success_fail == 'Success':
-			subject = f"Success: BTU Task {doc_task_log.task_desc_short}"
-		elif doc_task_log.success_fail == 'Failed':
-			subject = f"Failure: BTU Task {doc_task_log.task_desc_short}"
-		elif doc_task_log.success_fail == 'Timeout':
-			subject = f"Timeout: BTU Task {doc_task_log.task_desc_short}"
-		else:
-			subject = f"Unhandled Subject {doc_task_log.success_fail}"
+		subject = f"{doc_task_log.success_fail}: BTU Task {doc_task_log.task_desc_short}"
 
-		# Create the email "Body" string:
-		if  doc_task_log.success_fail in ('Success', 'Failed'):
-			body = f"Task Description: '{doc_task_log.task_desc_short}'\n\n"
-			if doc_task_log.result_message:
-				body += f"Function returned this Result:\n'{doc_task_log.result_message}'\n\n"
-			if doc_task_log.stdout:
-				body += f"Standard Output:\n{doc_task_log.stdout}"
-		elif doc_task_log.success_fail == 'Timeout':
-			body = f"Timeout for Task Description: '{doc_task_log.task_desc_short}'\n\n"
+		# Create a string that represents the "Body" of the email:
+		body = f"Task {doc_task_log.task} : '{doc_task_log.task_desc_short}'\n"
+		body += f"Outcome: {doc_task_log.success_fail}\n\n"
+		if doc_task_log.result_message:
+			body += f"Function returned this Result:\n'{doc_task_log.result_message}'\n\n"
+		if doc_task_log.stdout:
+			body += f"Standard Output:\n{doc_task_log.stdout}"
+		if doc_task_log.success_fail == 'Timeout':
+			body += "\nTimeout!\n"
 			body += "Task has not returned results in a timely manner; it may have timed-out or died inside Python RQ."
 
 		sender = frappe.get_doc("BTU Configuration").email_auth_username
