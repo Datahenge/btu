@@ -163,7 +163,7 @@ class TransientTask():
 			raise Exception("Class instantiation argument 'doc_task' must be an instance of BTUTask document.")
 		self.doc_task = doc_task
 
-	def enqueue(self, queue_name='default'):
+	def enqueue(self):
 		"""
 		Called via button on document's main page.
 		Sends a function call into the Redis Queue named 'default'
@@ -171,7 +171,7 @@ class TransientTask():
 		if not self.doc_task.is_transient:
 			raise Exception(f"BTU Task {self.doc_task.name} is not transient.")
 
-		self.doc_task.push_task_into_queue(queue_name=queue_name, extra_arguments=self.doc_task.built_in_arguments())
+		self.doc_task.push_task_into_queue(extra_arguments=self.doc_task.built_in_arguments())
 
 		message = f"Transient Task {self.doc_task.name} has been submitted to the Redis Queue."
 		print(message)

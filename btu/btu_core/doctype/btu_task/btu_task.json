@@ -16,13 +16,14 @@
   "last_runtime",
   "button_run_on_webserver",
   "button_push_into_queue",
-  "run_only_as_worker",
   "sb_definition",
   "function_string",
   "arguments",
-  "cb2",
-  "max_task_duration",
   "repeat_log_in_stdout",
+  "cb2",
+  "queue_name",
+  "run_only_as_worker",
+  "max_task_duration",
   "amended_from"
  ],
  "fields": [
@@ -136,6 +137,15 @@
    "in_list_view": 1,
    "label": "Transient",
    "read_only": 1
+  },
+  {
+   "default": "default",
+   "fieldname": "queue_name",
+   "fieldtype": "Select",
+   "label": "Queue Name",
+   "options": "default\nshort\nlong",
+   "reqd": 1,
+   "reqd_in_database": 1
   }
  ],
  "is_submittable": 1,
@@ -149,7 +159,7 @@
    "link_fieldname": "task"
   }
  ],
- "modified": "2022-05-21 10:16:18.940716",
+ "modified": "2022-05-30 16:25:08.203163",
  "modified_by": "Administrator",
  "module": "BTU_Core",
  "name": "BTU Task",

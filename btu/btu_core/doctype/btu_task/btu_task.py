@@ -218,28 +218,23 @@ class BTUTask(Document):
 		return (self._callable_function().__name__, success, new_log_id)
 
 	@frappe.whitelist()
-	def btn_push_into_queue(self, queue_name='default'):
+	def btn_push_into_queue(self):
 		"""
-		Called via button on BTU Task document's main page.
-		Sends a function call into the Redis Queue named 'default'
+		Runs the BTU Task in the context of a Redis Queue (RQ) Worker.
 		"""
-		self.reload()
+		# Called via button on BTU Task document's main page.
 
+		self.reload()
 		if not self._can_run_on_webserver():
 			return  # Cannot run without defining the appropriate arguments on the Task.
 
-		if not queue_name:
-			# Workaround: I suspect the DocType button 'Options' are overriding
-			#             the default argument in the function signature?
-			queue_name='default'
-
-		self.push_task_into_queue(queue_name=queue_name, extra_arguments=self.built_in_arguments())
+		self.push_task_into_queue(extra_arguments=self.built_in_arguments())
 
 		message = f"Task {self.name} has been submitted to the Redis Queue. No callback alerts are possible."
 		message += "\nTo see the status of this Task, review the Task Logs."
 		frappe.msgprint(message)
 
-	def push_task_into_queue(self, queue_name='default', extra_arguments=None):
+	def push_task_into_queue(self, extra_arguments=None):
 		"""
 		Create an instance of TaskRunner() class, and put 'function_wrapper' into the queue.
 		Execution will happen immediately (not on a schedule)
@@ -250,8 +245,8 @@ class BTUTask(Document):
 		if extra_arguments:
 			task_runner.add_keyword_arguments(**extra_arguments)  # pass them as kwargs
 
-		# Use standard frappe.enqueue() to place the 'function_wrapper' into RQ.
+		# Using standard frappe.enqueue() to place the 'function_wrapper' into RQ.
 		frappe.enqueue(method=task_runner.function_wrapper,
-			queue=queue_name,
-			timeout=self.max_task_duration or "1h",
+			queue=self.queue_name,
+			timeout=self.max_task_duration or "3600",
 			is_async=True)
