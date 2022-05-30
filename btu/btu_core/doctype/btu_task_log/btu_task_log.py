@@ -35,7 +35,8 @@ class BTUTaskLog(Document):
 			frappe.db.set_value("BTU Task", self.task, "last_runtime", get_system_datetime_now())
 			# Email a summary of the Task to Users:
 			try:
-				btu_email.email_on_task_conclusion(self)
+				if self.success_fail != "In-Progress":
+					btu_email.email_on_task_conclusion(self)
 			except Exception as ex:
 				message = "Error in function email_on_task_conclusion(), during attempt to send email about Task Log."
 				message += f"\n{str(ex)}\n"
