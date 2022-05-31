@@ -128,15 +128,17 @@ class TransientTask():
 			function_path = "ftp.ftp_module.doctype.farm_box.farm_box.expand_by_parent_item",
 			description = f"Farm Box Expansion: {some_name}",
 			max_task_duration='6000s',
+			queue_name='short',
 			farmbox_parent_item_code=some_item_code,
 			from_date=some_date_from,
 			to_date=some_date_to
-		).enqueue(queue_name='long')
+		).enqueue()
 
 	"""
 
 	@staticmethod
-	def create_new_transient(function_path, description, task_group="Transient", max_task_duration='600s', **kwargs):
+	def create_new_transient(function_path, description, task_group="Transient",
+	                         max_task_duration='600s', queue_name='short', **kwargs):
 
 		kwargs_as_string = str(kwargs)
 		print(kwargs_as_string)
@@ -150,10 +152,10 @@ class TransientTask():
 		doc_task.run_only_as_worker = True
 		doc_task.max_task_duration = max_task_duration
 		doc_task.repeat_log_in_stdout = True
+		doc_task.queue_name = queue_name
 		document_name = frappe.generate_hash("BTU", 12)  # Don't use the Naming Series; transient documents just get hash names.
 		doc_task.insert(set_name=document_name)
 		doc_task.submit()
-
 		transient_task = TransientTask(doc_task)
 		return transient_task
 
