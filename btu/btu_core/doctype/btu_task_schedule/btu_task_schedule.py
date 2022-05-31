@@ -91,6 +91,10 @@ class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
 			validate_cron_string(str(self.cron_string))
 
 	def before_save(self):
+
+		if '|' in self.name:
+			raise ValueError("Task Schedules cannot have the pipe character (|) in their primary key 'name'.")
+
 		if bool(self.enabled) is True:
 			try:
 				self.resubmit_task_schedule()
