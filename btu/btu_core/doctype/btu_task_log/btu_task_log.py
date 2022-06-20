@@ -14,7 +14,8 @@ class BTUTaskLog(Document):
 
 		if (not self.task_component) or (self.task_component) == 'Main':
 			# Update the "Last Result" column on the BTU Task.
-			frappe.db.set_value("BTU Task", self.task, "last_runtime", get_system_datetime_now())
+			# NOTE: Setting update_modified prevents "Refresh" errors on the web page.
+			frappe.db.set_value("BTU Task", self.task, "last_runtime", get_system_datetime_now(), update_modified=False)
 			try:
 				# First, may need to send an email when the task begins.
 				btu_email.email_on_task_start(self)
@@ -32,7 +33,8 @@ class BTUTaskLog(Document):
 
 		if (not self.task_component) or (self.task_component) == 'Main':
 			# Update the "Last Result" column on the BTU Task.
-			frappe.db.set_value("BTU Task", self.task, "last_runtime", get_system_datetime_now())
+			# NOTE: Setting update_modified prevents "Refresh" errors on the web page.
+			frappe.db.set_value("BTU Task", self.task, "last_runtime", get_system_datetime_now(), update_modified=False)
 			# Email a summary of the Task to Users:
 			try:
 				if self.success_fail != "In-Progress":
@@ -76,7 +78,7 @@ def write_log_for_task(task_id, result, log_name=None, stdout=None, date_time_st
 
 	# Slightly faster than 'get_doc()', which would return a complete Document.
 	task_values = frappe.db.get_values('BTU Task', filters={'name': task_id},
-	                                   fieldname=["name", "desc_short", "repeat_log_in_stdout"], as_dict=True)
+	                                   fieldname=["name", "desc_short", "repeat_log_in_stdout"], cache=True, as_dict=True)
 	if task_values:
 		task_values = task_values[0]  # get first Dictionary in the List.
 
