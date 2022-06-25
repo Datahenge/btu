@@ -9,12 +9,14 @@ To use the BTU, you *must* install both applications on the same Linux device.
 ----
 
 ### Part One: BTU (the Frappe App)
-The *front-end* of BTU is a Frappe web application. It's your command & control center for BTU.  From your web browser you will:
+The *front-end* of BTU is a Frappe web application. It is the command & control center for BTU.  From your web browser you will:
 
-* Create **Tasks**
-* **Schedule** those tasks to run automatically.
-* View your **Logs** to see what happened.
+* Create **Tasks**:  Tasks are pointers to Python code that your web server will run in the background.
+* **Schedule** those tasks to run automatically, on certain days or times of the day.
+* View your **Logs** to see what happened.  Did the Task succeed or fail?  What messages did it print?
 
+
+#### Instructions
 Installing BTU is just like installing any other Frappe web application. You use [Bench](https://github.com/frappe/bench) to download and install it.
 
 From your Frappe web server, in a terminal:
