@@ -31,7 +31,7 @@ bench --site your_site_name install-app btu
 ### Part Two: BTU Scheduler (the Linux daemon)
 This is the *backend* application.  It is "always on" Linux daemon that you install on your Frappe web server.  The Scheduler is responsible for monitoring the Tasks, placing them into Queues at the correct datetime, and performing some light communication with the Frappe web server and Python RQ.
 
-Unlike Frappe Apps, this Scheduler is a 64-bit Linux binary executable.  It does not require Python, Frappe, or any 3rd party libraries or dependencies.
+Unlike Frappe Apps, this Scheduler is a 64-bit Linux binary executable.  It does not require Python, JS, Frappe, or any 3rd party libraries or dependencies.
 
 #### Instructions:
 
