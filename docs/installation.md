@@ -42,7 +42,7 @@ The latest versions can be found [on the 'Releases' web page](https://github.com
 * Ubuntu 20/21 or Debian 11 "Bullseye" users should choose a **Debian 11** release.
 
 ##### 2. Save the binary file.
-You can save anywhere the binary executable where you want on your server (*especially if you're comfortable creating symlinks*).  However, I recommend saving **btu_scheduler** file somewhere on your **[PATH](https://en.wikipedia.org/wiki/PATH_(variable))**.  A good place is this directory:
+You can save anywhere the binary executable anywhere on your server (*especially if you're comfortable creating symlinks*).  However, I recommend saving **btu_scheduler** file somewhere on your **[PATH](https://en.wikipedia.org/wiki/PATH_(variable))**.  A good place is this directory:
 ```
 /usr/local/bin/
 ```
