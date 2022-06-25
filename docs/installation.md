@@ -16,7 +16,8 @@ The *front-end* of BTU is a Frappe web application. It is the command & control 
 * View your **Logs** to see what happened.  Did the Task succeed or fail?  What messages did it print?
 
 
-#### Instructions
+#### Instructions:
+
 Installing BTU is just like installing any other Frappe web application. You use [Bench](https://github.com/frappe/bench) to download and install it.
 
 From your Frappe web server, in a terminal:
@@ -28,11 +29,13 @@ bench --site your_site_name install-app btu
 ----
 
 ### Part Two: BTU Scheduler (the Linux daemon)
-This is the *back end* application.  It's an "always on" Linux daemon, responsible for scheduling your Tasks and communicating with both Frappe and Python RQ.
+This is the *backend* application.  It is "always on" Linux daemon that you install on your Frappe web server.  The Scheduler is responsible for monitoring the Tasks, placing them into Queues at the correct datetime, and performing some light communication with the Frappe web server and Python RQ.
 
-The scheduler is provided as a 64-bit Linux binary executable.  It does not require Python, Frappe, or any 3rd party libraries or dependencies.
+Unlike Frappe Apps, this Scheduler is a 64-bit Linux binary executable.  It does not require Python, Frappe, or any 3rd party libraries or dependencies.
 
-##### 1. Download the binary executable file.
+#### Instructions:
+
+##### 1. Download the binary executable file from GitHub.
 The latest versions can be found [on the 'Releases' web page](https://github.com/Datahenge/btu_scheduler_daemon/releases)
 
 ##### 2. Save the binary file.
