@@ -38,6 +38,11 @@ Unlike Frappe Apps, this Scheduler is a 64-bit Linux binary executable.  It does
 ##### 1. Download the binary executable file from GitHub.
 The latest versions can be found [on the 'Releases' web page](https://github.com/Datahenge/btu_scheduler_daemon/releases)
 
+You need to choose the correct Release for your Linux distribution:
+
+* Ubuntu 18/19 or Debian 10 "Buster" should use the **Debian 10** releases.
+* Ubuntu 20/21 or Debian 11 "Bullseye" should use the **Debian 11** releases.
+
 ##### 2. Save the binary file.
 You can save anywhere you want.  Especially if you're comfortable with creating symlinks in Linux.
 
