@@ -13,10 +13,10 @@ The BTU git branches will stay synchronized with the LTS branches of Frappe Fram
 
 ----
 
-### Part One: BTU (the Frappe App)
+### Installation #1: BTU (the Frappe App)
 The *front-end* of BTU is a Frappe web application. It is the command & control center for BTU.  From your web browser you will:
 
-* **Create Tasks**:  Tasks are pointers to Python code that your web server will run in the background.
+* **Create Tasks**:  Tasks are pointers to Python code that your web server will run in the background (via Python RQ worker threads)
 * **Schedule Tasks**: Schedules might be once per week, or every 5 minutes, or Mondays and Wednesdays at 7 AM and 4 PM.  It's very flexible.
 * **View Logs** to see what happened when you ran a Task.  Did it succeed or fail?  What messages did it print to standard output?
 
@@ -32,7 +32,7 @@ bench --site your_site_name install-app btu
 
 ----
 
-### Part Two: BTU Scheduler (the Linux daemon)
+### Installation #2: BTU Scheduler (the Linux daemon)
 This is the *backend* application.  It is "always on" Linux daemon that you install on your Frappe web server.  The Scheduler is responsible for monitoring the Tasks, placing them into Queues at the correct datetime, and performing some light communication with the Frappe web server and Python RQ.
 
 Unlike Frappe Apps, this Scheduler is a 64-bit Linux binary executable.  It does not require Python, JS, Frappe, or any 3rd party libraries or dependencies.
