@@ -22,7 +22,7 @@ The *front-end* of BTU is a Frappe web application. It is the command & control 
 
 #### Instructions:
 
-You installing BTU like any other Frappe web application. You use the [Bench](https://github.com/frappe/bench) CLI application to download, install, and assign to your Sites.
+You install BTU like any other Frappe web application. You use the [Bench](https://github.com/frappe/bench) CLI application to download, install, and assign to your Sites.
 
 From your Frappe web server, in a terminal:
 ```bash
