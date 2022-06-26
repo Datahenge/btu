@@ -96,3 +96,5 @@ WantedBy=multi-user.target
 
 ## Next Up:  Configuration
 Now that you have installed BTU and BTU Scheduler, you must **configure** them to communicate with each other, and Python RQ.
+
+[Configuration](https://datahenge.github.io/btu/configuration.html)
