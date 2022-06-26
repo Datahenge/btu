@@ -1,10 +1,10 @@
 ### Installation
-Background Task Unleashed consists of 2 separate (but cooperating) applications:
+Background Task Unleashed consists of 2 separate (but cooperating) open source applications:
 
-1. **[BTU](https://github.com/Datahenge/btu)** : A Frappe web application.
-2. **[BTU Scheduler](https://github.com/Datahenge/btu_scheduler_daemon)** : A background daemon for Linux that schedules tasks, and acts as a liason between BTU and Python RQ.
+1. **BTU** : A Frappe web application (link to [GitHub repository](https://github.com/Datahenge/btu))
+2. **BTU Scheduler** : A background daemon that schedules tasks by integrating BTU and Python RQ. (link to [GitHub repository](https://github.com/Datahenge/btu_scheduler_daemon))
 
-To use the BTU, you *must* install both applications on the same Linux device.
+To use the BTU, you *must* install both applications on the same device that hosts your Frappe web server.
 
 ----
 
