@@ -4,21 +4,25 @@ Background Task Unleashed consists of 2 separate (but cooperating) open source a
 1. **BTU** : A Frappe web application (link to [GitHub repository](https://github.com/Datahenge/btu))
 2. **BTU Scheduler** : A background daemon that schedules tasks by integrating BTU and Python RQ. (link to [GitHub repository](https://github.com/Datahenge/btu_scheduler_daemon))
 
-To use the BTU, you *must* install both applications on the same device that hosts your Frappe web server.
+To use the BTU, you *-must-* install both applications on the same device that hosts your Frappe web server.
+
+##### Version/Branch
+The BTU git branches will stay synchronized with the LTS branches of Frappe Framework.  The current support versions are:
+
+* `version-13`
 
 ----
 
 ### Part One: BTU (the Frappe App)
 The *front-end* of BTU is a Frappe web application. It is the command & control center for BTU.  From your web browser you will:
 
-* Create **Tasks**:  Tasks are pointers to Python code that your web server will run in the background.
-* **Schedule** those tasks to run automatically, on certain days or times of the day.
-* View your **Logs** to see what happened.  Did the Task succeed or fail?  What messages did it print?
-
+* **Create Tasks**:  Tasks are pointers to Python code that your web server will run in the background.
+* **Schedule Tasks**: Schedules might be once per week, or every 5 minutes, or Mondays and Wednesdays at 7 AM and 4 PM.  It's very flexible.
+* **View Logs** to see what happened when you ran a Task.  Did it succeed or fail?  What messages did it print to standard output?
 
 #### Instructions:
 
-Installing BTU is just like installing any other Frappe web application. You use [Bench](https://github.com/frappe/bench) to download and install it.
+You installing BTU like any other Frappe web application. You use the [Bench](https://github.com/frappe/bench) CLI application to download, install, and assign to your Sites.
 
 From your Frappe web server, in a terminal:
 ```bash
