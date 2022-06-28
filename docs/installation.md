@@ -1,21 +1,28 @@
 ### Installation
-Background Task Unleashed consists of 2 separate (but cooperating) applications:
+Background Task Unleashed consists of 2 separate (but cooperating) open source applications:
 
-1. **[BTU](https://github.com/Datahenge/btu)** : A Frappe web application.
-2. **[BTU Scheduler](https://github.com/Datahenge/btu_scheduler_daemon)** : A background daemon for Linux that schedules tasks, and acts as a liason between BTU and Python RQ.
+1. **BTU** : A Frappe web application (link to [GitHub repository](https://github.com/Datahenge/btu))
+2. **BTU Scheduler** : A background daemon that schedules tasks by integrating BTU and Python RQ. (link to [GitHub repository](https://github.com/Datahenge/btu_scheduler_daemon))
 
-To use the BTU, you *must* install both applications on the same Linux device.
+To use the BTU, you *-must-* install both applications on the same device that hosts your Frappe web server.
+
+##### Version/Branch
+The BTU git branches will stay synchronized with the LTS branches of Frappe Framework.  The current support versions are:
+
+* `version-13`
 
 ----
 
-### Part One: BTU (the Frappe App)
-The *front-end* of BTU is a Frappe web application. It's your command & control center for BTU.  From your web browser you will:
+### Installation #1: BTU (the Frappe App)
+The *front-end* of BTU is a Frappe web application. It is the command & control center for BTU.  From your web browser you will:
 
-* Create **Tasks**
-* **Schedule** those tasks to run automatically.
-* View your **Logs** to see what happened.
+* **Create Tasks**:  Tasks are pointers to Python code that your web server will run in the background (via Python RQ worker threads)
+* **Schedule Tasks**: Schedules might be once per week, or every 5 minutes, or Mondays and Wednesdays at 7 AM and 4 PM.  It's very flexible.
+* **View Logs** to see what happened when you ran a Task.  Did it succeed or fail?  What messages did it print to standard output?
 
-Installing BTU is just like installing any other Frappe web application. You use [Bench](https://github.com/frappe/bench) to download and install it.
+#### Instructions:
+
+You install BTU like any other Frappe web application. You use the [Bench](https://github.com/frappe/bench) CLI application to download, install, and assign to your Sites.
 
 From your Frappe web server, in a terminal:
 ```bash
@@ -25,18 +32,21 @@ bench --site your_site_name install-app btu
 
 ----
 
-### Part Two: BTU Scheduler (the Linux daemon)
-This is the *back end* application.  It's an "always on" Linux daemon, responsible for scheduling your Tasks and communicating with both Frappe and Python RQ.
+### Installation #2: BTU Scheduler (the Linux daemon)
+This is the *backend* application.  It is "always on" Linux daemon that you install on your Frappe web server.  The Scheduler is responsible for monitoring the Tasks, placing them into Queues at the correct datetime, and performing some light communication with the Frappe web server and Python RQ.
 
-The scheduler is provided as a 64-bit Linux binary executable.  It does not require Python, Frappe, or any 3rd party libraries or dependencies.
+Unlike Frappe Apps, this Scheduler is a 64-bit Linux binary executable.  It does not require Python, JS, Frappe, or any 3rd party libraries or dependencies.
 
-##### 1. Download the binary executable file.
-The latest versions can be found [on the 'Releases' web page](https://github.com/Datahenge/btu_scheduler_daemon/releases)
+#### Instructions:
+
+##### 1. Download the binary executable file from GitHub.
+The latest versions can be found [on the 'Releases' web page](https://github.com/Datahenge/btu_scheduler_daemon/releases).  It's important to choose the correct release for your Linux distribution:
+
+* Ubuntu 18/19 or Debian 10 "Buster" users should choose a **Debian 10** release.
+* Ubuntu 20/21 or Debian 11 "Bullseye" users should choose a **Debian 11** release.
 
 ##### 2. Save the binary file.
-You can save anywhere you want.  Especially if you're comfortable with creating symlinks in Linux.
-
-However, I recommend saving **btu_scheduler** file somewhere on your **[PATH](https://en.wikipedia.org/wiki/PATH_(variable))**.  A good place is this directory:
+You can save anywhere the binary executable anywhere on your server (*especially if you're comfortable creating symlinks*).  However, I recommend saving **btu_scheduler** file somewhere on your **[PATH](https://en.wikipedia.org/wiki/PATH_(variable))**.  A good place is this directory:
 ```
 /usr/local/bin/
 ```
@@ -90,3 +100,5 @@ WantedBy=multi-user.target
 
 ## Next Up:  Configuration
 Now that you have installed BTU and BTU Scheduler, you must **configure** them to communicate with each other, and Python RQ.
+
+[Configuration](https://datahenge.github.io/btu/configuration.html)

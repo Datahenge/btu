@@ -1,7 +1,8 @@
 ## Background Tasks Unleashed (BTU)
 
-* For more in-depth information, please read the project's [Official Documentation](https://datahenge.github.io/btu/).
-* If you're looking for its companion application, the **BTU Scheduler**, that project is maintained <a href="https://github.com/Datahenge/btu_scheduler_daemon" target='_blank'>on a separate GitHub site</a>.
+For details, please read the project's **[Official Documentation](https://datahenge.github.io/btu/)**.
+
+If you're looking for its companion application, the **BTU Scheduler**, that project is maintained <a href="https://github.com/Datahenge/btu_scheduler_daemon" target='_blank'>on a separate GitHub site</a>.
 
 ### What is this?
 Background Tasks Unleashed is:
@@ -41,7 +42,6 @@ These are some of project tasks I intend want to finish:
     * However, these tools don't help non-Admins to understand whether everything is running okay, or not.
 
 ### Copyright and License
-Background Tasks Unleasehd (BTU) is licensed MIT.  See LICENSE.md file.
-
-Copyright 2022, Datahenge LLC\
-Maintainer: Brian Pond <brian@datahenge.com>
+* Background Tasks Unleashed (BTU) is licensed MIT. (*See LICENSE.md file*)
+* Copyright 2022, Datahenge LLC
+* Maintainer: Brian Pond <brian@datahenge.com>
