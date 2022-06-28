@@ -51,3 +51,8 @@ def wait_then_throw_error():
 	print("Waiting 10 seconds, then throwing an Exception ...")
 	time.sleep(10)
 	raise Exception("Simulating a serious error while executing this function.")
+
+
+def cleanup_transient_tasks():
+	pass
+	# TODO: Delete Transient Tasks/Logs older than a certain date/time.

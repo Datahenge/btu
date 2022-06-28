@@ -125,13 +125,13 @@ class TransientTask():
 
 		from btu.btu_api import TransientTask
 		TransientTask.create_new_transient(
-			function_path = "ftp.ftp_module.doctype.farm_box.farm_box.expand_by_parent_item",
-			description = f"Farm Box Expansion: {some_name}",
+			function_path = "path.to_some.function",
+			description = "Description of this Function",
 			max_task_duration='6000s',
 			queue_name='short',
-			farmbox_parent_item_code=some_item_code,
-			from_date=some_date_from,
-			to_date=some_date_to
+			argument1='foo',
+			argument2='bar',
+			argument3='baz'
 		).enqueue()
 
 	"""
