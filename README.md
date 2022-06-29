@@ -32,15 +32,6 @@ You can also:
 ### Installation
 A complete [Installation Guide](https://datahenge.github.io/btu/installation.html) is available on BTU's GitHub Pages site.
 
-### Project "To Do List"
-These are some of project tasks I intend want to finish:
-
-* Create a *User Guide* here on GitHub.
-* Create some HTML that displays what is happening on RQ.
-    * It's rather difficult to **know** what is happening in Redis Queue.
-    * Administrator can install GUI tools like [Another Redis Desktop Manager](https://www.electronjs.org/apps/anotherredisdesktopmanager) or [RQ Monitor](https://pypi.org/project/rqmonitor/).
-    * However, these tools don't help non-Admins to understand whether everything is running okay, or not.
-
 ### Copyright and License
 * Background Tasks Unleashed (BTU) is licensed MIT. (*See LICENSE.md file*)
 * Copyright 2022, Datahenge LLC
