@@ -1,6 +1,8 @@
 """ examples.py """
 
 import frappe
+from frappe.modules.patch_handler import block_user
+from frappe.model.sync import sync_for
 
 # --------------------
 # BTU-Aware Functions
@@ -53,6 +55,32 @@ def wait_then_throw_error():
 	raise Exception("Simulating a serious error while executing this function.")
 
 
-def cleanup_transient_tasks():
+@frappe.whitelist()
+def perform_full_db_sync():
+
+	print("Performing a full DB synchronization (JSON --> DocType/MariaDB).  Please standby...")
+	block_user(True)
+
+	for app in frappe.get_installed_apps():
+		try:
+			sync_for(app, force=True, reset_permissions=False)
+		except Exception as ex:
+			print(ex)
+
+	block_user(False)
+	frappe.clear_cache()
+	print("DB synchronization complete")
+
+
+def test_get_list():
+	customers = frappe.get_list("ToDo")
+	print("I got a list of customers.")
+	if frappe.exist_uncommitted_sql_changes():
+		print("Why are there uncommitted SQL changes?")
+
+	print(f"Found {len(customers)} 'To Do' documents.")
+
+
+def cleanup_transient_tasks(age_in_days=30):
 	pass
 	# TODO: Delete Transient Tasks/Logs older than a certain date/time.
