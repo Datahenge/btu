@@ -4,7 +4,7 @@ Along with the background scheduler daemon, BTU ships with a small CLI program.\
 
 The name of this program is `btu`, and is usually found in the directory `/usr/local/bin`
 
-![image](https://user-images.githubusercontent.com/19827963/177933600-e6d693f9-2834-4605-b40e-dfe906220f66.png)
+<img src="https://github.com/Datahenge/btu/blob/version-13/docs/images/btu_cli_1.png" width="75%" height="75%" />
 
 ### Available Commands
 
