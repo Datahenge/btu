@@ -98,10 +98,10 @@
    "fieldtype": "Column Break"
   },
   {
-   "default": "600s",
+   "default": "600",
    "description": "After this many seconds, Task Logs still \"In-Progress\" will be remarked as \"Failed\".  This may trigger an email (configurable per Schedule)",
    "fieldname": "max_task_duration",
-   "fieldtype": "Data",
+   "fieldtype": "Int",
    "label": "Max Task Duration (secs)"
   },
   {
@@ -159,7 +159,7 @@
    "link_fieldname": "task"
   }
  ],
- "modified": "2022-05-30 16:25:08.203163",
+ "modified": "2022-07-01 14:57:00.138883",
  "modified_by": "Administrator",
  "module": "BTU_Core",
  "name": "BTU Task",

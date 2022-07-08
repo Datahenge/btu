@@ -1,0 +1,23 @@
+{
+ "content": null,
+ "creation": "2022-07-01 17:26:12.374275",
+ "docstatus": 0,
+ "doctype": "Page",
+ "idx": 0,
+ "modified": "2022-07-01 18:05:01.385858",
+ "modified_by": "Administrator",
+ "module": "BTU_Core",
+ "name": "btu-redis-queue",
+ "owner": "Administrator",
+ "page_name": "BTU Redis Queue",
+ "roles": [
+  {
+   "role": "System Manager"
+  }
+ ],
+ "script": null,
+ "standard": "Yes",
+ "style": null,
+ "system_page": 0,
+ "title": "Redis Queues"
+}

@@ -8,12 +8,13 @@ from __future__ import unicode_literals
 
 import ast
 import calendar
-from calendar import monthrange, timegm
-from datetime import datetime
-from time import gmtime, localtime, mktime
+from calendar import monthrange
+from datetime import datetime as datetime_type
+# from time import gmtime, localtime, mktime
 
 # Third Party
 import cron_descriptor
+import pytz
 
 # Frappe
 import frappe
@@ -21,8 +22,11 @@ from frappe import _
 from frappe.model.document import Document
 
 # BTU
-from btu import ( validate_cron_string, Result)
+from btu import ( validate_cron_string, Result, get_system_datetime_now)
 from btu.btu_api.scheduler import SchedulerAPI
+
+NoneType = type(None)
+cron_day_dictionary = {'Sun': 0, 'Mon': 1, 'Tue': 2, 'Wed': 3, 'Thu': 4, 'Fri': 5, 'Sat': 6}
 
 
 class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
@@ -37,10 +41,6 @@ class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
 	def before_validate(self):
 
 		self.task_description = self.get_task_doc().desc_short
-
-		# Create a friendly, human-readable description based on the cron string:
-		if self.cron_string:
-			self.schedule_description = cron_descriptor.get_description(self.cron_string)
 
 		# Clear fields that are not relevant for this schedule type.
 		if self.run_frequency == "Cron Style":
@@ -89,6 +89,9 @@ class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
 
 		elif self.run_frequency == "Cron Style":
 			validate_cron_string(str(self.cron_string))
+
+		# Create a friendly, human-readable description based on the cron string:
+		self.schedule_description = cron_descriptor.get_description(self.cron_string)
 
 	def before_save(self):
 
@@ -197,7 +200,7 @@ class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
 # ----------------
 
 def check_minutes(minute):
-	if not minute or not 0 <= minute < 60:
+	if isinstance(minute, NoneType) or not 0 <= int(minute) < 60:
 		raise ValueError(_("Minute value must be between 0 and 59"))
 
 def check_hours(hour):
@@ -217,7 +220,7 @@ def check_day_of_month(run_frequency, day, month=None):
 	if run_frequency == "Yearly":
 		if day and month:
 			month_dict = {value: key for key, value in enumerate(calendar.month_abbr)}
-			last = monthrange(datetime.now().year,
+			last = monthrange(datetime_type.now().year,
 							  month_dict.get(str(month).title()))[1]
 			if int(day) > last:
 				raise ValueError(
@@ -234,27 +237,49 @@ def schedule_to_cron_string(doc_schedule):
 	Output:   A Unix cron string.
 	"""
 
-	def get_utc_time_diff():
-		current_time = localtime()
-		return (timegm(current_time) - timegm(gmtime(mktime(current_time)))) / 3600
-
-
 	if not isinstance(doc_schedule, BTUTaskSchedule):
 		raise ValueError("Function argument 'doc_schedule' should be a BTU Task Schedule document.")
 
 	if doc_schedule.run_frequency == 'Cron Style':
 		return doc_schedule.cron_string
 
+	datetime_now = get_system_datetime_now()  # Local datetime using System's time zone settings.
+	new_datetime = datetime_type(year=datetime_now.year,
+									month=datetime_now.month,
+									day=datetime_now.day,
+									hour=int(doc_schedule.hour) if doc_schedule.hour else 0,
+									minute=int(doc_schedule.minute) if doc_schedule.minute else 0,
+									second=0, microsecond=0, tzinfo=datetime_now.tzinfo)
+	utc_datetime = new_datetime.astimezone(get_utc_timezone())
+
 	cron = [None] * 5
-	cron[0] = "*" if doc_schedule.minute is None else str(doc_schedule.minute)
-	cron[1] = "*" if doc_schedule.hour is None else str(
-		int(doc_schedule.hour) - get_utc_time_diff())
-	cron[2] = "*" if doc_schedule.day_of_month is None else str(doc_schedule.day_of_month)
+
+	# Minute of the day
+	if isinstance(doc_schedule.minute, NoneType):
+		cron[0] = "*"
+	else:
+		cron[0] = str(utc_datetime.minute)
+
+	# Hour of the day
+	if not doc_schedule.hour:
+		cron[1] = "*"
+	else:
+		cron[1] = str(utc_datetime.hour)
+
+	# Day of the Month
+	if not doc_schedule.day_of_month:
+		cron[2] = "*"
+	else:
+		str(doc_schedule.day_of_month)
+
 	cron[3] = "*" if doc_schedule.month is None else doc_schedule.month
-	cron[4] = "*" if doc_schedule.day_of_week is None else doc_schedule.day_of_week[:3]
+
+	if not doc_schedule.day_of_week:
+		cron[4] = "*"
+	else:
+		cron[4] = str(cron_day_dictionary[doc_schedule.day_of_week[:3]])
 
 	result = " ".join(cron)
-
 	validate_cron_string(result, error_on_invalid=True)
 	return result
 
@@ -277,3 +302,39 @@ def resubmit_all_task_schedules():
 			print(message)
 			doc_schedule.enabled = False
 			doc_schedule.save()
+
+def get_utc_timezone():
+	return pytz.timezone('UTC')
+
+def get_system_timezone():
+	"""
+	Returns the Time Zone of the Site.
+	"""
+	system_time_zone = frappe.db.get_system_setting('time_zone')
+	if not system_time_zone:
+		raise Exception("Please configure a Time Zone under 'System Settings'.")
+	return pytz.timezone(system_time_zone)
+
+def localize_datetime(any_datetime):
+	"""
+	Given a naive datetime and time zone, return the localized datetime.
+
+	Necessary because Python is -extremely- confusing when it comes to datetime + timezone.
+	"""
+
+	time_zone = get_system_timezone()
+	if not isinstance(any_datetime, datetime_type):
+		raise TypeError("Argument 'any_datetime' must be a Python datetime object.")
+
+	if any_datetime.tzinfo:
+		raise Exception(f"Datetime value {any_datetime} is already localized and time zone aware (tzinfo={any_datetime.tzinfo})")
+
+	# What kind of time zone object was passed?
+	type_name = type(time_zone).__name__
+
+	if type_name == 'ZoneInfo':
+		# Only available in Python 3.9+
+		# DO NOT USE:  naive_datetime.astimezone(timezone).  This implicitly shifts you the UTC offset.
+		return any_datetime.replace(tzinfo=time_zone)
+
+	return time_zone.localize(any_datetime)

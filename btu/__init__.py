@@ -24,7 +24,7 @@ from rq import Queue
 import frappe
 from frappe.utils.background_jobs import get_redis_conn
 
-__version__ = '0.7.0'
+__version__ = '0.8.0'
 
 
 class Result():
