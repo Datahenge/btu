@@ -1,7 +1,7 @@
 ## Background Tasks Unleashed (BTU)
 Background Tasks Unleashed is:
 
-* a  <a href="https://frappeframework.com" target="_blank">Frappe Framework</a> application for Task Scheduling and Automation.
+* a <a href="https://frappeframework.com" target="_blank">Frappe Framework</a> application for Task Scheduling and Automation.
 * a tool for running tasks or processes automatically, on a repeating schedule, in the background of your Frappe web application.
 * a robust alternative to the out-of-the-box Scheduled Job Types feature in Frappe v13+
 * an pair of open source projects on GitHub
