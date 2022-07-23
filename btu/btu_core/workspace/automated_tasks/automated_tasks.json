@@ -102,7 +102,7 @@
    "type": "Link"
   }
  ],
- "modified": "2022-07-01 14:33:32.656611",
+ "modified": "2022-07-08 20:46:43.099152",
  "modified_by": "Administrator",
  "module": "BTU_Core",
  "name": "Automated Tasks",
@@ -127,6 +127,13 @@
    "label": "Logs",
    "link_to": "BTU Task Log",
    "type": "DocType"
+  },
+  {
+   "doc_view": "",
+   "icon": "tool",
+   "label": "Redis Queue",
+   "link_to": "btu-redis-queue",
+   "type": "Page"
   }
  ]
 }

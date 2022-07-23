@@ -267,18 +267,24 @@ def remove_failed_jobs(date_from, date_to, wildcard_text=None):
 	queues = Queue.all(conn)
 
 	jobs_deleted = 0
-	frappe.msgprint(f"Searching for Failed Jobs from {date_from} to {date_to} ...")
+	frappe.msgprint(f"Searching for Failed Jobs from {date_from} to {date_to}, with a description containing '{wildcard_text}' ...")
 	for each_queue in queues:
 		fail_registry = each_queue.failed_job_registry
 		for job_id in fail_registry.get_job_ids():
+			# Get the details about this particular Job.
 			job = each_queue.fetch_job(job_id)
 			if not job:
 				frappe.msgprint(f"Unable to find details for Job with identifier = '{job_id}'")
 				continue
 			if job.last_heartbeat and (job.last_heartbeat.date() >= date_from) and (job.last_heartbeat.date() <= date_to):
 				# Delete this job:
-				fail_registry.remove(job, delete_job=True)
-				jobs_deleted += 1
+				if not wildcard_text:
+					fail_registry.remove(job, delete_job=True)
+					jobs_deleted += 1
+				else:
+					if job.description.find(wildcard_text) >= 0:
+						fail_registry.remove(job, delete_job=True)
+						jobs_deleted += 1
 
 	if not jobs_deleted:
 		frappe.msgprint("No RQ Jobs found that match this criteria.")

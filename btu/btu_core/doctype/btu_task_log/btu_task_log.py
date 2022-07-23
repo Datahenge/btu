@@ -144,10 +144,12 @@ def check_in_progress_logs_for_timeout():
 	"""
 	Examine all logs that are In-Progress.  If they have exceeded the BTU Timeout Minutes, mark them as 'Failed'.
 	"""
+
 	# This function is called via a cron schedule in BTU hooks.py
 	print("Checking for any BTU Task Logs that are 'In-Progress' and have exceeded their Max Task Duration...")
 	in_progress_logs = frappe.get_list("BTU Task Log", filters={"success_fail": "In-Progress"}, pluck="name")
 
+	print(f"Found {len(in_progress_logs)} BTU Task Logs that are In-Progress.")
 	for each_document_name in in_progress_logs:
 		doc_log = frappe.get_doc("BTU Task Log", each_document_name)
 		max_task_duration = frappe.get_value("BTU Task", doc_log.task, "max_task_duration")
@@ -161,3 +163,5 @@ def check_in_progress_logs_for_timeout():
 			doc_log.success_fail = 'Failed'
 			doc_log.save()
 			frappe.db.commit()
+		else:
+			print(f"BTU Task Log {doc_log.name}.  {seconds_since_log_creation} seconds have passed since creation, but 'max_task_duration' is {max_task_duration}")
