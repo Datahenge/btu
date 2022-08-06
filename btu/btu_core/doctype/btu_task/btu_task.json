@@ -120,6 +120,7 @@
    "in_list_view": 1,
    "label": "Last Runtime",
    "length": 10,
+   "no_copy": 1,
    "read_only": 1
   },
   {
@@ -159,7 +160,7 @@
    "link_fieldname": "task"
   }
  ],
- "modified": "2022-07-01 14:57:00.138883",
+ "modified": "2022-07-31 19:32:30.896781",
  "modified_by": "Administrator",
  "module": "BTU_Core",
  "name": "BTU Task",
