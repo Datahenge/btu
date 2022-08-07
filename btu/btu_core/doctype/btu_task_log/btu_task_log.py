@@ -14,9 +14,9 @@ class BTUTaskLog(Document):
 
 		if (not self.task_component) or (self.task_component) == 'Main':
 			# Update the "Last Result" column on the BTU Task.
-			# NOTE: Setting update_modified prevents "Refresh" errors on the web page.
+			# NOTE: Setting 'update_modified' to False prevents "Refresh" errors on the web page.
 			datetime_string = frappe.utils.data.get_datetime_str( get_system_datetime_now())
-			frappe.db.set_value("BTU Task", self.task, "last_runtime", get_system_datetime_now(), update_modified=False)
+			frappe.db.set_value("BTU Task", self.task, "last_runtime", datetime_string, update_modified=False)
 			try:
 				# First, may need to send an email when the task begins.
 				btu_email.email_on_task_start(self)
@@ -34,8 +34,9 @@ class BTUTaskLog(Document):
 
 		if (not self.task_component) or (self.task_component) == 'Main':
 			# Update the "Last Result" column on the BTU Task.
-			# NOTE: Setting update_modified prevents "Refresh" errors on the web page.
-			frappe.db.set_value("BTU Task", self.task, "last_runtime", get_system_datetime_now(), update_modified=False)
+			# NOTE: Setting 'update_modified' to False prevents "Refresh" errors on the web page.
+			datetime_string = frappe.utils.data.get_datetime_str( get_system_datetime_now())
+			frappe.db.set_value("BTU Task", self.task, "last_runtime", datetime_string, update_modified=False)
 			# Email a summary of the Task to Users:
 			try:
 				if self.success_fail != "In-Progress":

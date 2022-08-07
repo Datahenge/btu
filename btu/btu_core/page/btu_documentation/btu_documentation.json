@@ -1,0 +1,23 @@
+{
+ "content": null,
+ "creation": "2022-08-06 11:54:11.326144",
+ "docstatus": 0,
+ "doctype": "Page",
+ "idx": 0,
+ "modified": "2022-08-06 11:55:11.575289",
+ "modified_by": "Administrator",
+ "module": "btu_core",
+ "name": "btu-documentation",
+ "owner": "Administrator",
+ "page_name": "btu-documentation",
+ "roles": [
+  {
+   "role": "System Manager"
+  }
+ ],
+ "script": null,
+ "standard": "Yes",
+ "style": null,
+ "system_page": 0,
+ "title": "BTU Documentation"
+}

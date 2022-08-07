@@ -26,10 +26,7 @@
   "minute",
   "sb_email",
   "email_recipients",
-  "btn_test_email_via_log",
-  "sb_help",
-  "cron_help",
-  "btn_get_last_job_results"
+  "btn_test_email_via_log"
  ],
  "fields": [
   {
@@ -60,6 +57,7 @@
   },
   {
    "default": "Cron Style",
+   "description": "https://crontab.guru/examples.html",
    "fieldname": "run_frequency",
    "fieldtype": "Select",
    "label": "Run Frequency",
@@ -67,11 +65,12 @@
    "reqd": 1
   },
   {
-   "description": "UNIX crontab format: \"minute hour day-of-month month day-of-week\"<br>Example:  0 22 * * 1-5.",
+   "description": "UNIX crontab format.  Examples found <a href=\"https://crontab.guru/examples.html\" style=\"color: blue;\" target=\"_blank\">\nhere.</a>",
    "fieldname": "cron_string",
    "fieldtype": "Data",
    "label": "Cron String",
-   "read_only_depends_on": "eval:doc.run_frequency != \"Cron Style\""
+   "mandatory_depends_on": "eval:doc.run_frequency == \"Cron Style\";",
+   "read_only_depends_on": "eval:doc.run_frequency != \"Cron Style\";"
   },
   {
    "depends_on": "eval:doc.run_frequency === 'Weekly'",
@@ -142,17 +141,6 @@
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "sb_help",
-   "fieldtype": "Section Break",
-   "label": "Help"
-  },
-  {
-   "fieldname": "cron_help",
-   "fieldtype": "HTML",
-   "label": "Cron Help",
-   "options": "<div>\nCron examples from the makers of Cronitor\n<b>\n<a href=\"https://crontab.guru/examples.html\" style=\"color: blue;\" target=\"_blank\">\nhere.\n</a>\n</b>\n</div>"
-  },
-  {
    "collapsible": 1,
    "fieldname": "sb_argument_overrides",
    "fieldtype": "Section Break",
@@ -162,12 +150,6 @@
    "fieldname": "argument_overrides",
    "fieldtype": "Long Text",
    "label": "Function Arguments"
-  },
-  {
-   "fieldname": "btn_get_last_job_results",
-   "fieldtype": "Button",
-   "label": "Get Last Job Results",
-   "options": "get_last_execution_results"
   },
   {
    "fieldname": "email_recipients",
@@ -194,10 +176,11 @@
    "link_fieldname": "schedule"
   }
  ],
- "modified": "2022-05-11 22:18:40.019831",
+ "modified": "2022-08-06 18:59:24.613029",
  "modified_by": "Administrator",
- "module": "BTU_Core",
+ "module": "btu_core",
  "name": "BTU Task Schedule",
+ "naming_rule": "Expression (old style)",
  "owner": "Administrator",
  "permissions": [
   {
@@ -223,5 +206,6 @@
  ],
  "sort_field": "task",
  "sort_order": "DESC",
+ "states": [],
  "title_field": "task_description"
 }

@@ -1,0 +1,35 @@
+
+/*
+	NOTE: This CSS is loaded automatically, because its file name has the same 'stem' as the HTML file's name.
+*/
+
+.main_page {
+
+}
+
+hr {
+	border: 0;
+	border-top: 1px solid #030303;
+}
+
+/* unvisited link */
+a:link {
+	color: #0000EE;
+	text-decoration: none;
+}
+
+/* visited link */
+a:visited {
+	color: #551A8B;
+	text-decoration: none;
+}
+
+/* mouse over link */
+a:hover {
+	text-decoration: underline;
+}
+
+/* selected link */
+a:active {
+	text-decoration: underline;
+}

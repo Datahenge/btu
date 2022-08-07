@@ -4,7 +4,8 @@
  "creation": "2021-08-14 14:04:50.727345",
  "description": "A Task represents a Python function that can be executed automatically in the background, using Redis Queue and workers.",
  "doctype": "DocType",
- "documentation": "https://gitlab.com/datahenge/btu",
+ "document_type": "Document",
+ "documentation": "https://github.com/datahenge/btu",
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
@@ -145,10 +146,10 @@
    "fieldtype": "Select",
    "label": "Queue Name",
    "options": "default\nshort\nlong",
-   "reqd": 1,
-   "reqd_in_database": 1
+   "reqd": 1
   }
  ],
+ "icon": "fa fa-cog",
  "is_submittable": 1,
  "links": [
   {
@@ -160,10 +161,11 @@
    "link_fieldname": "task"
   }
  ],
- "modified": "2022-07-31 19:32:30.896781",
+ "modified": "2022-08-06 18:44:15.045100",
  "modified_by": "Administrator",
- "module": "BTU_Core",
+ "module": "btu_core",
  "name": "BTU Task",
+ "naming_rule": "Expression (old style)",
  "owner": "Administrator",
  "permissions": [
   {
@@ -183,6 +185,7 @@
  ],
  "sort_field": "name",
  "sort_order": "DESC",
+ "states": [],
  "title_field": "desc_short",
  "track_changes": 1
 }
