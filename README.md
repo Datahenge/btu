@@ -11,7 +11,7 @@ Background Tasks Unleashed is:
 2. a tool for running tasks or processes *automatically*, on a repeating schedule, in the background of your Frappe web application.
 3. a robust alternative to the out-of-the-box **`Scheduled Job Types`** featured in the Frappe framework.
 
-<img style="text-align: center;" src="https://datahenge.github.io/btu/images/btu_screenshot_workspace_1.png" alt="BTU Workspace" title="image Title" width="800"/>
+<img style="text-align: center;" src="https://datahenge.github.io/btu/images/btu_screenshot_v14_workspace_1.png" alt="BTU Workspace" title="image Title" width="800"/>
 
 ### Capabilities
 Using only your web browser, take full control of the BTU application.  No need to SSH and modify `hooks.py`.
