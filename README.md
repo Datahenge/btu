@@ -1,17 +1,15 @@
 ## Background Tasks Unleashed (BTU) v14
 
-For details, please read the project's **[Official Documentation](https://datahenge.github.io/btu/)**.
+For details, please refer to the **[Official Documentation](https://datahenge.github.io/btu/)**.
+* You can also visit the [Datahenge forums](https://forums.datahenge.com/) if you'd like to chat about the project.
+* The companion application, the **BTU Scheduler**, is maintained <a href="https://github.com/Datahenge/btu_scheduler_daemon" target='_blank'>on a separate GitHub site</a>.
 
-If you're looking for its companion application, the **BTU Scheduler**, that project is maintained <a href="https://github.com/Datahenge/btu_scheduler_daemon" target='_blank'>on a separate GitHub site</a>.
-
-### What is this?
+### What is BTU?
 Background Tasks Unleashed is:
 
-* a [Frappe Framework](https://github.com/frappe) application for Task Scheduling and Automation.
-
-* a tool for running tasks or processes *automatically*, on a repeating schedule, in the background of your Frappe web application.
-
-* a robust alternative to the out-of-the-box **`Scheduled Job Types`** feature in Frappe v13+
+1. a [Frappe Framework](https://github.com/frappe) application for Task Scheduling and Automation.
+2. a tool for running tasks or processes *automatically*, on a repeating schedule, in the background of your Frappe web application.
+3. a robust alternative to the out-of-the-box **`Scheduled Job Types`** featured in the Frappe framework.
 
 <img style="text-align: center;" src="https://datahenge.github.io/btu/images/btu_screenshot_workspace_1.png" alt="BTU Workspace" title="image Title" width="800"/>
 
