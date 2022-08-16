@@ -16,7 +16,7 @@ class BTUTaskLog(Document):
 			# Update the "Last Result" column on the BTU Task.
 			# NOTE: Setting update_modified prevents "Refresh" errors on the web page.
 			datetime_string = frappe.utils.data.get_datetime_str( get_system_datetime_now())
-			frappe.db.set_value("BTU Task", self.task, "last_runtime", get_system_datetime_now(), update_modified=False)
+			frappe.db.set_value("BTU Task", self.task, "last_runtime", datetime_string, update_modified=False)
 			try:
 				# First, may need to send an email when the task begins.
 				btu_email.email_on_task_start(self)
@@ -35,7 +35,8 @@ class BTUTaskLog(Document):
 		if (not self.task_component) or (self.task_component) == 'Main':
 			# Update the "Last Result" column on the BTU Task.
 			# NOTE: Setting update_modified prevents "Refresh" errors on the web page.
-			frappe.db.set_value("BTU Task", self.task, "last_runtime", get_system_datetime_now(), update_modified=False)
+			datetime_string = frappe.utils.data.get_datetime_str( get_system_datetime_now())
+			frappe.db.set_value("BTU Task", self.task, "last_runtime", datetime_string, update_modified=False)
 			# Email a summary of the Task to Users:
 			try:
 				if self.success_fail != "In-Progress":
@@ -79,7 +80,8 @@ def write_log_for_task(task_id, result, log_name=None, stdout=None, date_time_st
 
 	# Slightly faster than 'get_doc()', which would return a complete Document.
 	task_values = frappe.db.get_values('BTU Task', filters={'name': task_id},
-	                                   fieldname=["name", "desc_short", "repeat_log_in_stdout"], cache=True, as_dict=True)
+	                                   fieldname=["name", "desc_short", "repeat_log_in_stdout"],
+									   cache=True, as_dict=True)
 	if task_values:
 		task_values = task_values[0]  # get first Dictionary in the List.
 
@@ -140,28 +142,31 @@ def delete_logs_by_dates(from_date, to_date):
 	return rows_to_delete
 
 @frappe.whitelist()
-def check_in_progress_logs_for_timeout():
+def check_in_progress_logs_for_timeout(verbose=False):
 	"""
 	Examine all logs that are In-Progress.  If they have exceeded the BTU Timeout Minutes, mark them as 'Failed'.
 	"""
 
 	# This function is called via a cron schedule in BTU hooks.py
-	print("Checking for any BTU Task Logs that are 'In-Progress' and have exceeded their Max Task Duration...")
+	if verbose:
+		print("Checking for any BTU Task Logs that are 'In-Progress' and have exceeded their Max Task Duration...")
 	in_progress_logs = frappe.get_list("BTU Task Log", filters={"success_fail": "In-Progress"}, pluck="name")
 
-	print(f"Found {len(in_progress_logs)} BTU Task Logs that are In-Progress.")
+	if verbose:
+		print(f"Found {len(in_progress_logs)} BTU Task Logs that are In-Progress.")
 	for each_document_name in in_progress_logs:
 		doc_log = frappe.get_doc("BTU Task Log", each_document_name)
 		max_task_duration = frappe.get_value("BTU Task", doc_log.task, "max_task_duration")
 		try:
-			max_task_duration = int(max_task_duration)
+			max_task_duration = int(max_task_duration)  # in seconds
 		except Exception as ex:
 			raise Exception("Value of 'Max Task Duration' should be an integer representing seconds.") from ex
-		seconds_since_log_creation = (doc_log.creation - now_datetime()).total_seconds()
+
+		seconds_since_log_creation = (now_datetime() - doc_log.creation).total_seconds()
 		if seconds_since_log_creation > max_task_duration:
 			print(f"BTU Task Log {doc_log.name}.  {seconds_since_log_creation} seconds have passed since creation.  Changing status from 'In-Progress' to 'Failed'")
-			doc_log.success_fail = 'Failed'
+			doc_log.success_fail = 'Timeout'
 			doc_log.save()
 			frappe.db.commit()
-		else:
+		elif verbose:
 			print(f"BTU Task Log {doc_log.name}.  {seconds_since_log_creation} seconds have passed since creation, but 'max_task_duration' is {max_task_duration}")
