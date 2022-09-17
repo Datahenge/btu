@@ -1,4 +1,4 @@
-
+```python
 import logging
 import signal
 import time
@@ -185,9 +185,9 @@ class Scheduler(object):
                                   {job.id: to_unix(get_next_scheduled_time(cron_string, use_local_timezone=use_local_timezone))})
 
    
+```
 
-
-'''
+```python
 import sys
 import selectors
 import json
