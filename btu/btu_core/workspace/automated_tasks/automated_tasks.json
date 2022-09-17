@@ -104,7 +104,7 @@
  ],
  "modified": "2022-07-08 20:46:43.099152",
  "modified_by": "Administrator",
- "module": "BTU_Core",
+ "module": "btu_core",
  "name": "Automated Tasks",
  "owner": "Administrator",
  "pin_to_bottom": 0,
