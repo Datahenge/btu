@@ -1,2 +1,2 @@
 btu_core
-BTU_API
+btu_api
