@@ -71,6 +71,10 @@ class BTUTask(Document):
 		# 	raise Exception(f"Function '{self. _function_name()}' is not an instance of btu.task_runner.TaskWrapper()")
 		# frappe.msgprint("\u2713 Task module and function exist and are valid.")
 
+	def before_save(self):
+		self.arguments = self.arguments.replace('“', '"')  # replace the unsupported curly forward double quote with the regular one.
+		self.arguments = self.arguments.replace('”', '"')  # replace the unsupported curly backward double quote with the regular one.
+
 	def built_in_arguments(self):
 		"""
 		Converts an argument String into an argument Dictionary.

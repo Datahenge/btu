@@ -269,6 +269,7 @@ def remove_failed_jobs(date_from, date_to, wildcard_text=None):
 	jobs_deleted = 0
 	frappe.msgprint(f"Searching for Failed Jobs from {date_from} to {date_to}, with a description containing '{wildcard_text}' ...")
 	for each_queue in queues:
+		# each_queue is an object of RQ.Queue
 		fail_registry = each_queue.failed_job_registry
 		for job_id in fail_registry.get_job_ids():
 			# Get the details about this particular Job.
