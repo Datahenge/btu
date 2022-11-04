@@ -30,7 +30,7 @@
   {
    "description": "If the function requires arguments, enter them here as a Python Dictionary of key-values.",
    "fieldname": "arguments",
-   "fieldtype": "Small Text",
+   "fieldtype": "Text",
    "label": "Function Arguments"
   },
   {
@@ -160,7 +160,7 @@
    "link_fieldname": "task"
   }
  ],
- "modified": "2022-07-31 19:32:30.896781",
+ "modified": "2022-11-01 16:53:17.478921",
  "modified_by": "Administrator",
  "module": "BTU_Core",
  "name": "BTU Task",
