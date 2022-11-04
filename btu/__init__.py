@@ -269,9 +269,11 @@ def remove_failed_jobs(date_from, date_to, wildcard_text=None):
 	jobs_deleted = 0
 	frappe.msgprint(f"Searching for Failed Jobs from {date_from} to {date_to}, with a description containing '{wildcard_text}' ...")
 	for each_queue in queues:
-		# each_queue is an object of RQ.Queue
+		# 'each_queue' is an object of RQ.Queue
 		fail_registry = each_queue.failed_job_registry
-		for job_id in fail_registry.get_job_ids():
+		failed_job_ids = fail_registry.get_job_ids()
+		frappe.msgprint(f"Total quantity of failed Jobs in queue '{each_queue.name}' = {len(failed_job_ids)}", to_console=True)
+		for job_id in failed_job_ids:
 			# Get the details about this particular Job.
 			job = each_queue.fetch_job(job_id)
 			if not job:
@@ -288,6 +290,6 @@ def remove_failed_jobs(date_from, date_to, wildcard_text=None):
 						jobs_deleted += 1
 
 	if not jobs_deleted:
-		frappe.msgprint("No RQ Jobs found that match this criteria.")
+		frappe.msgprint("No RQ Jobs found that match this criteria.", to_console=True)
 	else:
-		frappe.msgprint(f"{jobs_deleted} jobs deleted from the Redis Queue.")
+		frappe.msgprint(f"{jobs_deleted} jobs deleted from the Redis Queue.", to_console=True)
