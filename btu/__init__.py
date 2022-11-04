@@ -169,7 +169,7 @@ def iso_string_to_date(any_string):
 		return any_string.date()
 	elif isinstance(any_string, DateType):
 		return any_string
-	return parser.parse(any_string).date()
+	return DateTimeType.strptime(any_string,"%Y-%m-%d").date()
 
 
 def rq_job_to_dict(rq_job):
