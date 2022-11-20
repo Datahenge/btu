@@ -72,8 +72,9 @@ class BTUTask(Document):
 		# frappe.msgprint("\u2713 Task module and function exist and are valid.")
 
 	def before_save(self):
-		self.arguments = self.arguments.replace('“', '"')  # replace the unsupported curly forward double quote with the regular one.
-		self.arguments = self.arguments.replace('”', '"')  # replace the unsupported curly backward double quote with the regular one.
+		if self.arguments:
+			self.arguments = self.arguments.replace('“', '"')  # replace the unsupported curly forward double quote with the regular one.
+			self.arguments = self.arguments.replace('”', '"')  # replace the unsupported curly backward double quote with the regular one.
 
 	def built_in_arguments(self):
 		"""
