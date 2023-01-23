@@ -2,7 +2,7 @@
 #
 # Background Tasks Unleashed: A Frappe Framework task scheduling App.
 #
-# Copyright (c) 2022, Datahenge LLC and contributors
+# Copyright (c) 2023, Datahenge LLC and contributors
 # For license information, please see LICENSE.txt
 #
 # Inspired by and initially based on:
