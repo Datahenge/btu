@@ -117,7 +117,7 @@ class TaskRunner():
 			except Exception as ex:
 				print(ex)
 		if debug:
-			print(f"Is this a BTU-Aware function = {result}")
+			print(f"Is this a BTU-Aware function = {result}\n--------")
 		return result
 
 	def function_wrapper(self):  # pylint: disable=too-many-locals, too-many-statements, too-many-branches

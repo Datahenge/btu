@@ -160,7 +160,7 @@ class BTUTask(Document):
 			except Exception as ex:
 				print(ex)
 		if debug:
-			print(f"Is this a BTU-Aware function = {result}")
+			print(f"Is this a BTU-Aware function = {result}\n--------")
 		return result
 
 	@frappe.whitelist()
