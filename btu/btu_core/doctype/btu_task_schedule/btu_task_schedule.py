@@ -10,7 +10,6 @@ import ast
 import calendar
 from calendar import monthrange
 from datetime import datetime as datetime_type
-# from time import gmtime, localtime, mktime
 
 # Third Party
 import cron_descriptor
@@ -33,10 +32,9 @@ class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
 
 	def on_trash(self):
 		"""
-		After deleting this Task Schedule, delete the corresponding Redis data.
+		After deleting this Task Schedule, delete the corresponding Python RQ data.
 		"""
 		self.cancel_schedule()
-		# btu_core.redis_cancel_by_queue_job_id(self.redis_job_id)
 
 	def before_validate(self):
 
@@ -103,7 +101,7 @@ class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
 				self.resubmit_task_schedule()
 			except Exception as ex:
 				frappe.msgprint(ex, indicator='red')
-		else:
+		else:  # Task is not enabled, so Cancel it.
 			doc_orig = self.get_doc_before_save()
 			if doc_orig and doc_orig.enabled != self.enabled:
 				# Request the BTU Scheduler to cancel (if status was not previously Disabled)
@@ -115,6 +113,12 @@ class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
 		"""
 		Send a request to the BTU Scheduler background daemon to reload this Task Schedule in RQ.
 		"""
+		try:
+			self.cancel_schedule()
+		except Exception as ex:
+			frappe.msgprint(f"Error while attempting to cancel Task Schedule {self.name}")
+			print(ex)
+
 		response = SchedulerAPI.reload_task_schedule(task_schedule_id=self.name)
 		if not response:
 			raise ConnectionError("Error, no response from BTU Task Scheduler daemon.  Check logs in directory '/etc/btu_scheduler.logs'")
@@ -134,24 +138,25 @@ class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
 		print(message)
 		frappe.msgprint(message)
 		self.redis_job_id = ""
+		return response
 
 	def get_task_doc(self):
 		return frappe.get_doc("BTU Task", self.task)
 
 	@frappe.whitelist()
 	def get_last_execution_results(self):
-
-		# response = SchedulerAPI.reload_task_schedule(task_schedule_id=self.name)
-
+		"""
+		Query the Python RQ database for information about the last execution of this Job.
+		"""
 		import zlib
 		from frappe.utils.background_jobs import get_redis_conn
-		conn = get_redis_conn()
-		# conn.type('rq:job:TS000001')
-		# conn.hkeys('rq:job:TS000001')
+
+		if not self.redis_job_id:
+			frappe.msgprint("No results available; Task may not have been processed yet.")
+			return
 
 		try:
-			# job_data =  conn.hgetall(f'rq:job:{self.redis_job_id}').decode('utf-8')
-			# frappe.msgprint(job_data)
+			conn = get_redis_conn()
 			job_status =  conn.hget(f'rq:job:{self.redis_job_id}', 'status').decode('utf-8')
 		except Exception:
 			frappe.msgprint(f"No job information is available for Job {self.redis_job_id}")
@@ -312,7 +317,7 @@ def get_system_timezone():
 	"""
 	system_time_zone = frappe.db.get_system_setting('time_zone')
 	if not system_time_zone:
-		raise Exception("Please configure a Time Zone under 'System Settings'.")
+		raise ValueError("Please configure a Time Zone under 'System Settings'.")
 	return pytz.timezone(system_time_zone)
 
 def localize_datetime(any_datetime):
@@ -327,7 +332,7 @@ def localize_datetime(any_datetime):
 		raise TypeError("Argument 'any_datetime' must be a Python datetime object.")
 
 	if any_datetime.tzinfo:
-		raise Exception(f"Datetime value {any_datetime} is already localized and time zone aware (tzinfo={any_datetime.tzinfo})")
+		raise ValueError(f"Datetime value {any_datetime} is already localized and time zone aware (tzinfo={any_datetime.tzinfo})")
 
 	# What kind of time zone object was passed?
 	type_name = type(time_zone).__name__

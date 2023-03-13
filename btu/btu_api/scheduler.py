@@ -55,7 +55,7 @@ class SchedulerAPI():
 	def send_message(self, request_type: RequestType, content):
 
 		if not isinstance(request_type, RequestType):
-			raise Exception("Argument 'request_type' must be an enum of RequestType.")
+			raise TypeError("Argument 'request_type' must be an enum of RequestType.")
 		new_message = {
 			'request_type': request_type.name,
 			'request_content': content
