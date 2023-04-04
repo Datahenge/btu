@@ -3,9 +3,6 @@
 # NOTE: This describes how to get rid of the outer 'message" key in Frappe HTTP responses:
 # https://discuss.erpnext.com/t/returning-plain-text-from-whitelisted-method/32621
 
-# Third Party
-from werkzeug.wrappers import Response
-
 # Frappe Library
 import frappe
 
@@ -76,6 +73,8 @@ def test_hello_world_bytes():
 	"""
 	Return some raw bytes to the HTTP client.
 	"""
+	from werkzeug.wrappers import Response
+
 	hello_bytes: bytes = "Hello World".encode()
 	response = Response()
 	response.mimetype = "application/octet-stream"

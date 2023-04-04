@@ -49,6 +49,14 @@ class BTUTaskLog(Document):
 				frappe.db.set_value("BTU Task Log", self.name, "stdout", message + (self.stdout or ""))
 				frappe.db.set_value("BTU Task Log", self.name, "success_fail", "Failed")
 
+# Yes, 'on_doctype_update' belongs here, outside the Document class.  Pretty silly.
+def on_doctype_update():
+	"""
+	Create additional indexes and constraints
+	"""
+	frappe.db.add_index("BTU Task Log", ["task"], index_name="task_idx")
+	frappe.db.add_index("BTU Task Log", ["schedule"], index_name="schedule_idx")
+	frappe.db.add_index("BTU Task Log", ["task_desc_short"], index_name="description_idx")
 
 def write_log_for_task(task_id, result, log_name=None, stdout=None, date_time_started=None, schedule_id=None):
 	"""
