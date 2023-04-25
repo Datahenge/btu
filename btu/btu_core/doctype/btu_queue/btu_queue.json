@@ -1,0 +1,45 @@
+{
+ "actions": [],
+ "autoname": "Prompt",
+ "creation": "2023-04-25 17:49:01.171140",
+ "description": "The names of the Python RQ queues.",
+ "doctype": "DocType",
+ "document_type": "Document",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "description"
+ ],
+ "fields": [
+  {
+   "fieldname": "description",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Description"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2023-04-25 18:18:33.121917",
+ "modified_by": "Administrator",
+ "module": "BTU_Core",
+ "name": "BTU Queue",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "select": 1,
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC"
+}

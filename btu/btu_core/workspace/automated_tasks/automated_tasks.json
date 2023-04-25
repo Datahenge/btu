@@ -34,6 +34,15 @@
   {
    "hidden": 0,
    "is_query_report": 0,
+   "label": "Queue Names",
+   "link_to": "BTU Queue",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
    "label": "Reports",
    "link_type": "DocType",
    "onboard": 0,
@@ -102,7 +111,7 @@
    "type": "Link"
   }
  ],
- "modified": "2022-09-08 20:46:43.099152",
+ "modified": "2023-04-25 18:10:04.655896",
  "modified_by": "Administrator",
  "module": "BTU_Core",
  "name": "Automated Tasks",

@@ -142,9 +142,9 @@
   {
    "default": "default",
    "fieldname": "queue_name",
-   "fieldtype": "Select",
+   "fieldtype": "Link",
    "label": "Queue Name",
-   "options": "default\nshort\nlong",
+   "options": "BTU Queue",
    "reqd": 1,
    "reqd_in_database": 1
   }
@@ -160,7 +160,7 @@
    "link_fieldname": "task"
   }
  ],
- "modified": "2022-11-01 16:53:17.478921",
+ "modified": "2023-04-25 18:21:53.102070",
  "modified_by": "Administrator",
  "module": "BTU_Core",
  "name": "BTU Task",
