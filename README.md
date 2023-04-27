@@ -1,7 +1,6 @@
 ## Background Tasks Unleashed (BTU) v14
 
 For details, please refer to the **[Official Documentation](https://datahenge.github.io/btu/)**.
-* You can also visit the [Datahenge forums](https://forums.datahenge.com/) if you'd like to chat about the project.
 * The companion application, the **BTU Scheduler**, is maintained <a href="https://github.com/Datahenge/btu_scheduler_daemon" target='_blank'>on a separate GitHub site</a>.
 
 ### What is BTU?
