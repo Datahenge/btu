@@ -31,5 +31,5 @@ A complete [Installation Guide](https://datahenge.github.io/btu/installation.htm
 
 ### Copyright and License
 * Background Tasks Unleashed (BTU) is licensed MIT. (*See LICENSE.md file*)
-* Copyright 2022, Datahenge LLC
+* Copyright 2021-2023, Datahenge LLC
 * Maintainer: Brian Pond <brian@datahenge.com>
