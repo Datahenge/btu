@@ -188,12 +188,6 @@
   }
  ],
  "index_web_pages_for_search": 1,
- "links": [
-  {
-   "link_doctype": "BTU Task Log",
-   "link_fieldname": "schedule"
-  }
- ],
  "modified": "2023-04-25 18:33:12.592524",
  "modified_by": "Administrator",
  "module": "BTU_Core",
