@@ -1,5 +1,6 @@
 # Python requirements for Background Tasks Unleashed
-# 
-rq~=1.8.1
+
+# Use the same version as Frappe Framework.
+rq==0.12.0
 rq-scheduler~=0.11.0
 cron-descriptor
