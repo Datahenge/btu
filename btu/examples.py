@@ -1,5 +1,8 @@
 """ examples.py """
 
+
+from datetime import timedelta
+
 import frappe
 from frappe.modules.patch_handler import block_user
 from frappe.model.sync import sync_for
@@ -7,6 +10,8 @@ from frappe.model.sync import sync_for
 # --------------------
 # BTU-Aware Functions
 # --------------------
+
+from btu import get_system_datetime_now
 from btu.btu_core.doctype.btu_task.btu_task import BTU_AWARE_FUNCTION
 from btu.btu_core.btu_task_component import TaskComponent
 
@@ -52,7 +57,7 @@ def wait_then_throw_error():
 	import time
 	print("Waiting 10 seconds, then throwing an Exception ...")
 	time.sleep(10)
-	raise Exception("Simulating a serious error while executing this function.")
+	raise RuntimeError("Simulating a serious error while executing this function.")
 
 
 @frappe.whitelist()
@@ -82,5 +87,23 @@ def test_get_list():
 
 
 def cleanup_transient_tasks(age_in_days=30):
-	pass
-	# TODO: Delete Transient Tasks/Logs older than a certain date/time.
+	"""
+	Remove Log records for historic Transient Tasks.
+	"""
+
+	older_than_date = get_system_datetime_now.date() + timedelta(days=-age_in_days)
+
+	statement = """
+		DELETE TaskLog
+		FROM `tabBTU Task Log`  AS TaskLog
+		INNER JOIN  -- SELECT * FROM
+			`tabBTU Task`		AS Task
+		ON
+			Task.name = TaskLog.task
+		AND Task.is_transient = 1
+		WHERE
+			TaskLog.creation <= %(older_than_date)s
+		"""
+
+	frappe.db.sql(statement, values={"older_than_date": older_than_date})
+	print(f"Deleted historic BTU Task Log records associated with Transient Tasks, older than {older_than_date}")
