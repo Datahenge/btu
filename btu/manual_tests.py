@@ -155,7 +155,7 @@ def test_taskrunner_3():
 def bytes_as_list_of_hex(some_bytes):
 	# Append 8 bits together ie pair of 4 bits to get a byte
 	if not isinstance(some_bytes, bytes):
-		raise Exception("Expected 'some_bytes' to be of type 'bytes'.")
+		raise ValueError("Expected 'some_bytes' to be of type 'bytes'.")
 
 	bytes_as_hex = some_bytes.hex()
 	array = []
