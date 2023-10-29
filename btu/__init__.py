@@ -95,7 +95,7 @@ def validate_cron_string(cron_string, error_on_invalid=False):
 
 	if crontab_time_format_regex.match(cron_string) is None:
 		if error_on_invalid:
-			raise Exception(f"String '{cron_string}' is not a valid Unix cron string.")
+			raise ValueError(f"String '{cron_string}' is not a valid Unix cron string.")
 		return False
 	return True
 
@@ -106,7 +106,7 @@ def get_system_timezone():
 	"""
 	system_time_zone = frappe.db.get_system_setting('time_zone')
 	if not system_time_zone:
-		raise Exception("Please configure a Time Zone under 'System Settings'.")
+		raise ValueError("Please configure a Time Zone under 'System Settings'.")
 	return pytz.timezone(system_time_zone)
 
 
@@ -157,7 +157,7 @@ def date_to_iso_string(any_date):
 	Given a date, create an ISO String.  For example, 2021-12-26.
 	"""
 	if not isinstance(any_date, DateType):
-		raise Exception(f"Argument 'any_date' should have type 'datetime.date', not '{type(any_date)}'")
+		raise TypeError(f"Argument 'any_date' should have type 'datetime.date', not '{type(any_date)}'")
 	return any_date.strftime("%Y-%m-%d")
 
 
@@ -209,6 +209,17 @@ def rq_job_to_dict(rq_job):
 	#for each_key, each_value in rq_job_dict.items():
 	#	print(f"key = {each_key}, value type = {type(each_value)}")
 	return result
+
+
+def encode_slack_text(any_text):
+	"""
+	Slack requires encoding 3 symbols: &, >, and <
+	"""
+	any_text = any_text.replace('&', '&amp;')
+	any_text = any_text.replace('<', '&lt;')
+	any_text = any_text.replace('>', '&gt;')
+	any_text = any_text.replace('|', '%7C')
+	return any_text
 
 
 @frappe.whitelist()
