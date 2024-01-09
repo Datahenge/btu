@@ -66,7 +66,8 @@ class Result():
 
 	def as_msgprint(self):
 		msg = f"Success: {self.okay}"
-		msg += f"<br>Execution Time: {self.execution_time} seconds."
+		if self.execution_time:
+			msg += f"<br>Execution Time: {self.execution_time} seconds."
 		msg += f"<br><br>Message: {self.message}"
 		return msg
 

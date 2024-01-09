@@ -38,7 +38,7 @@ class TaskComponent():
 		elif frappe_site_name:
 			self.frappe_site_name = frappe_site_name
 		else:
-			raise Exception("TaskRunner requires an argument 'site_name'.")
+			raise RuntimeError("TaskRunner requires an argument 'site_name'.")
 
 	def validate_class_variables(self):
 		if not frappe.db.exists("BTU Task", self.btu_task_id):
