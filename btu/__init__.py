@@ -127,21 +127,6 @@ def make_datetime_naive(any_datetime):
 	return any_datetime.replace(tzinfo=None)
 
 
-def is_env_var_set(variable_name):
-	"""
-	Returns true if an Environment Variable is set to 1.
-	"""
-	if not variable_name:
-		return False
-	variable_value = os.environ.get(variable_name)
-	if not variable_value:
-		return False
-	try:
-		return int(variable_value) == 1
-	except Exception:
-		return False
-
-
 def dprint(msg, check_env=None, force=None):
 	"""
 	A print() that only prints when an environment variable is set.
@@ -160,6 +145,32 @@ def date_to_iso_string(any_date):
 	if not isinstance(any_date, DateType):
 		raise TypeError(f"Argument 'any_date' should have type 'datetime.date', not '{type(any_date)}'")
 	return any_date.strftime("%Y-%m-%d")
+
+
+def encode_slack_text(any_text):
+	"""
+	Slack requires encoding 3 symbols: &, >, and <
+	"""
+	any_text = any_text.replace('&', '&amp;')
+	any_text = any_text.replace('<', '&lt;')
+	any_text = any_text.replace('>', '&gt;')
+	any_text = any_text.replace('|', '%7C')
+	return any_text
+
+
+def is_env_var_set(variable_name):
+	"""
+	Returns true if an Environment Variable is set to 1.
+	"""
+	if not variable_name:
+		return False
+	variable_value = os.environ.get(variable_name)
+	if not variable_value:
+		return False
+	try:
+		return int(variable_value) == 1
+	except Exception:
+		return False
 
 
 def iso_string_to_date(any_string):
@@ -210,17 +221,6 @@ def rq_job_to_dict(rq_job):
 	#for each_key, each_value in rq_job_dict.items():
 	#	print(f"key = {each_key}, value type = {type(each_value)}")
 	return result
-
-
-def encode_slack_text(any_text):
-	"""
-	Slack requires encoding 3 symbols: &, >, and <
-	"""
-	any_text = any_text.replace('&', '&amp;')
-	any_text = any_text.replace('<', '&lt;')
-	any_text = any_text.replace('>', '&gt;')
-	any_text = any_text.replace('|', '%7C')
-	return any_text
 
 
 @frappe.whitelist()
