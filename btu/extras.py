@@ -2,7 +2,7 @@
 btu.extras.py
 """
 
-# Usage: `bench execute temporal.dbsync.remove_unused_columns`
+# Usage: `bench execute btu.extras.remove_unused_columns`
 
 DEFAULT_COLUMNS = ['name', 'creation', 'modified', 'modified_by', 'owner', 'docstatus', 'parent', 'parentfield', 'parentype', 'idx']
 
