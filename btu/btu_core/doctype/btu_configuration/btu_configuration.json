@@ -18,14 +18,19 @@
   "sb_advanced_logging",
   "create_in_progress_logs",
   "email_section",
+  "send_email_via",
+  "email_body_is_html",
+  "column_break_15",
+  "environment_name",
+  "sb_smtp_email",
   "email_server",
   "email_server_port",
+  "column_break_5",
   "email_auth_username",
   "email_auth_password",
-  "column_break_5",
   "email_encryption",
-  "email_body_is_html",
-  "environment_name"
+  "mandrill_email_section",
+  "mandrill_from_email_address"
  ],
  "fields": [
   {
@@ -144,11 +149,38 @@
    "fieldname": "sb_advanced_logging",
    "fieldtype": "Section Break",
    "label": "Advanced Logging"
+  },
+  {
+   "fieldname": "send_email_via",
+   "fieldtype": "Select",
+   "label": "Send Email Via",
+   "options": "SMTP\nMandrill",
+   "reqd": 1
+  },
+  {
+   "fieldname": "sb_smtp_email",
+   "fieldtype": "Section Break",
+   "label": "SMTP Email"
+  },
+  {
+   "fieldname": "column_break_15",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "mandrill_email_section",
+   "fieldtype": "Section Break",
+   "label": "Mandrill Email"
+  },
+  {
+   "fieldname": "mandrill_from_email_address",
+   "fieldtype": "Data",
+   "label": "From Email Address",
+   "reqd": 1
   }
  ],
  "issingle": 1,
  "links": [],
- "modified": "2022-04-02 17:26:55.375314",
+ "modified": "2024-08-19 15:41:13.925492",
  "modified_by": "Administrator",
  "module": "BTU_Core",
  "name": "BTU Configuration",

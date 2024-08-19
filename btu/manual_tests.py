@@ -50,8 +50,9 @@ def send_hello_email_to_user(debug=False):
 
 	# Construct a small message Body for the email.
 	message_body = f"Hello, {user_doc.full_name}."
-	message_body += f"\n\nThis function was initiated by '{caller_name}'"
-	message_body += f"\nThe current, server time is {datetime_now_string}"
+	message_body += "\n\nThis email was initiated by Python function 'send_hello_email_to_user()'"
+	message_body += f"\n\n* Function caller is '{caller_name}'"
+	message_body += f"\n* Current server time is {datetime_now_string}"
 	message_body += "\n\n--------\n"
 
 	if debug:
@@ -59,12 +60,13 @@ def send_hello_email_to_user(debug=False):
 	frappe.msgprint(f"Sending test email to address '{user_doc.email}' ...")
 
 	subject = f"From BTU: Hello {user_doc.full_name}"
-	sender = frappe.get_doc("BTU Configuration").email_auth_username  # Send is configured in the DocType 'BTU Configuration'
 
-	Emailer(sender=sender,
-	        emailto_list=user_doc.email,
-			subject= subject,
-			body= message_body).send()
+	Emailer(subject=subject,
+			body=message_body,
+			sender=None,
+			emailto_list=user_doc.email
+	).send()
+
 	return "Exiting function 'send_hello_email_to_user()'.  If successful, an email will arrive soon."
 
 
