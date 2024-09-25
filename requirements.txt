@@ -1,6 +1,0 @@
-# Python requirements for Background Tasks Unleashed
-# 
-rq~=1.15.1",
-rq-scheduler~=0.11.0
-cron-descriptor
-pystemd~=0.13.2

@@ -1,0 +1,22 @@
+[project]
+name = "btu"
+authors = [
+    { name = "Datahenge LLC", email = "brian@datahenge.com"}
+]
+description = "Background Tasks Unleashed: A task scheduler for Frappe Framework"
+dynamic = [ "version" ]
+readme = "README.md"
+requires-python = ">=3.10,<3.13"
+license = "MIT"
+
+dependencies = [
+	"rq~=1.15.1",
+	"rq-scheduler~=0.11.0",
+	"cron-descriptor",
+	"pystemd~=0.13.2"
+]
+[tool.setuptools]
+py-modules = [ "btu" ]
+
+[tool.setuptools.dynamic]
+version = {attr = "btu.__version__"}
