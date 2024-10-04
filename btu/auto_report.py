@@ -3,9 +3,6 @@
 # A better replacement for the broken ERPNext "Auto Report" feature.
 # Much of this code shamelessly borrowed from "frappe/frappe/email/doctype/auto_email_report/auto_email_report.py"
 
-# import calendar
-# from datetime import timedelta
-
 from schema import Schema, And, Or, Optional  # pylint: disable=unused-import
 
 import frappe
@@ -13,8 +10,6 @@ from frappe import _
 from frappe.utils import (format_time, get_link_to_form, get_url_to_report,
 	                      global_date_format, now, validate_email_address)
 
-# from frappe.model.document import Document
-# from frappe.model.naming import append_number_if_name_exists
 from frappe.utils.csvutils import to_csv
 from frappe.utils.xlsxutils import make_xlsx
 
@@ -233,6 +228,7 @@ class BTUReport():
 			raise ValueError("BTU Report has no targets for report delivery.")
 
 		self.validate_mandatory_fields()
+		self.report_content: tuple = None, None
 
 	def validate_mandatory_fields(self):
 		"""
@@ -280,27 +276,28 @@ class BTUReport():
 
 	def transmit_report(self):
 
-		report_content = self.build_report()
-		if not report_content:
+		if not self.report_content:
 			print("Report has no rows.  Nothing to transmit.")
 			return
 
 		# Loop through all the Targets, and transmit the report data.
+		print(f"...report data built successfully.  Attempting to transmit to {len(self.delivery_target_dicts)} targets ...")
 		for each in self.delivery_target_dicts:
 			each["report_key"] = self.report_key
 			each["report_content"] = {
 				"type": "tabular",
-				"columns": report_content[0],
-				"rows": report_content[1]
+				"columns": self.report_content[0],
+				"rows": self.report_content[1]
 				}
 			instance = DeliveryTarget.init_from_dictionary(each)
 			instance.send()
 
 	def run(self):
-
+		"""
+		Build the report (columns, data), then transmit to the target destinations.
+		"""
 		print(f"BTU is attempting to run report '{self.report_key}' and automatically deliver...")
-		self.build_report()
-		print("...report data built successfully. Now attempting to transmit...")
+		self.report_content = self.build_report()
 		self.transmit_report()
 		print("---End of Function---")
 
