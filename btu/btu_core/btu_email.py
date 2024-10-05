@@ -199,7 +199,7 @@ class Emailer():
 				raise ApiClientError(response, 500)
 
 		except ApiClientError as error:
-			print(f"An exception occurred in priv_send_mandrill_email(): {error.text}")
+			print(f"An exception occurred in _send_via_mandrill(): {error.text}")
 			print(f"Message sent to Mandrill:\n{json.dumps(new_message, indent=4)}")
 			frappe.msgprint(f"Error while sending email via Mandrill: {error.text}")
 
