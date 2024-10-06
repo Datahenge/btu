@@ -100,7 +100,7 @@ def cleanup_transient_tasks(age_in_days=30):
 			`tabBTU Task`		AS Task
 		ON
 			Task.name = TaskLog.task
-		AND Task.is_transient = 1
+		AND Task.task_type = 'Subtask'
 		WHERE
 			TaskLog.creation <= %(older_than_date)s
 		"""

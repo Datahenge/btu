@@ -1,6 +1,6 @@
 {
  "actions": [],
- "autoname": "BTU-.#####",
+ "autoname": "BTU-.#########",
  "creation": "2021-08-14 14:04:50.727345",
  "description": "A Task represents a Python function that can be executed automatically in the background, using Redis Queue and workers.",
  "doctype": "DocType",
@@ -9,21 +9,23 @@
  "engine": "InnoDB",
  "field_order": [
   "desc_short",
-  "task_group",
-  "desc_long",
-  "is_transient",
+  "task_type",
   "cb1",
+  "task_group",
   "last_runtime",
-  "button_run_on_webserver",
-  "button_push_into_queue",
+  "sb_descriptions",
+  "desc_long",
   "sb_definition",
   "function_string",
   "arguments",
-  "repeat_log_in_stdout",
-  "cb2",
+  "cb3",
   "queue_name",
-  "run_only_as_worker",
+  "button_push_into_queue",
+  "button_run_on_webserver",
   "max_task_duration",
+  "sb2",
+  "repeat_log_in_stdout",
+  "run_only_as_worker",
   "amended_from"
  ],
  "fields": [
@@ -94,10 +96,6 @@
    "reqd": 1
   },
   {
-   "fieldname": "cb2",
-   "fieldtype": "Column Break"
-  },
-  {
    "default": "600",
    "description": "After this many seconds, Task Logs still \"In-Progress\" will be remarked as \"Failed\".  This may trigger an email (configurable per Schedule)",
    "fieldname": "max_task_duration",
@@ -131,15 +129,6 @@
    "label": "Repeat log in stdout"
   },
   {
-   "default": "0",
-   "description": "Transient Tasks are not reusable: they only execute once.  They are created automatically by BTU-aware classes.  Similar to using 'frappe.enqueue()'",
-   "fieldname": "is_transient",
-   "fieldtype": "Check",
-   "in_list_view": 1,
-   "label": "Transient",
-   "read_only": 1
-  },
-  {
    "default": "default",
    "fieldname": "queue_name",
    "fieldtype": "Link",
@@ -147,6 +136,30 @@
    "options": "BTU Queue",
    "reqd": 1,
    "reqd_in_database": 1
+  },
+  {
+   "default": "Persistent",
+   "fieldname": "task_type",
+   "fieldtype": "Select",
+   "in_standard_filter": 1,
+   "label": "Type",
+   "options": "Persistent\nOne-Shot\nSubtask\nOther",
+   "reqd": 1,
+   "reqd_in_database": 1,
+   "search_index": 1,
+   "set_only_once": 1
+  },
+  {
+   "fieldname": "sb_descriptions",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "cb3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "sb2",
+   "fieldtype": "Section Break"
   }
  ],
  "is_submittable": 1,
@@ -160,7 +173,7 @@
    "link_fieldname": "task"
   }
  ],
- "modified": "2023-04-25 18:21:53.102070",
+ "modified": "2024-10-06 18:41:34.150014",
  "modified_by": "Administrator",
  "module": "BTU_Core",
  "name": "BTU Task",

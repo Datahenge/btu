@@ -6,6 +6,7 @@ from contextlib import redirect_stdout
 import importlib
 import inspect
 import io
+import json
 import time
 
 # Frappe
@@ -13,7 +14,7 @@ import frappe
 from frappe.model.document import Document
 
 # BTU
-from btu import Result, get_system_datetime_now, make_datetime_naive
+from btu import Result, get_system_datetime_now, make_datetime_naive, dict_to_dateless_dict
 from btu.btu_core.task_runner import TaskRunner
 from btu.btu_core.doctype.btu_task_log.btu_task_log import write_log_for_task
 
@@ -50,7 +51,7 @@ class BTUTask(Document):
 		"""
 		result = getattr( self._imported_module(), self._function_name())
 		if not hasattr(result, '__call__'):
-			raise Exception(f"The function string '{self.function_string}' is not a callable function.")
+			raise RuntimeError(f"The function string '{self.function_string}' is not a callable function.")
 		return result
 
 	def validate(self, debug=False):
@@ -85,7 +86,7 @@ class BTUTask(Document):
 		args_dict = ast.literal_eval(self.arguments)
 		return args_dict
 
-	def _can_run_on_webserver(self):
+	def _can_run_on_webserver(self) -> bool:
 		"""
 		Returns a boolean True if the Task can be executed by the Web Server, otherwise False.
 		"""
@@ -255,3 +256,31 @@ class BTUTask(Document):
 			queue=self.queue_name,
 			timeout=self.max_task_duration or "3600",
 			is_async=True)
+
+
+def create_and_run_one_shot(short_description: str,
+                            function_path: str,
+							arguments: dict,
+							queue_name='default') -> str:
+	"""
+	NOTE: Returns a BTU Task Log document ID.
+	"""
+
+	if not function_path or not isinstance(function_path, str):
+		raise ValueError("Argument 'function_path' is mandatory and must be a Python string.")
+	if not arguments or not isinstance(arguments, dict):
+		raise ValueError("Argument 'arguments' is mandatory and must be a Python dictionary.")
+
+	arguments = dict_to_dateless_dict(arguments)  # necessary to convert Date objects into ISO 8601 strings.
+
+	doc_task = frappe.new_doc("BTU Task")
+	doc_task.task_type = 'One-Shot'
+	doc_task.desc_short = short_description
+	doc_task.function_string = function_path
+	doc_task.arguments = json.dumps(arguments, indent=4)
+	doc_task.run_only_as_worker = True
+	doc_task.queue_name = queue_name
+	doc_task.save()
+	doc_task.submit()
+	doc_task.btn_push_into_queue()
+	return doc_task.name
