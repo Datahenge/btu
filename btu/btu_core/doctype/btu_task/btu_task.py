@@ -280,6 +280,7 @@ def create_and_run_one_shot(short_description: str,
 	doc_task.arguments = json.dumps(arguments, indent=4)
 	doc_task.run_only_as_worker = True
 	doc_task.queue_name = queue_name
+	doc_task.max_task_duration = 3600  # timeout after 60 minutes
 	doc_task.save()
 	doc_task.submit()
 	doc_task.btn_push_into_queue()
