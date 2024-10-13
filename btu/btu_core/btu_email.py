@@ -260,8 +260,8 @@ def _build_recipients_from_task_log(doc_task_log) -> dict:
 		for each_recipient in doc_schedule.email_recipients:
 
 			# Add new key to dictionary:
-			if not result.get(each_recipient):
-				result[each_recipient] = {
+			if not result.get(each_recipient.email_address):
+				result[each_recipient.email_address] = {
 					"email_on_start": each_recipient.email_on_start,
 					"email_on_success": each_recipient.email_on_success,
 					"email_on_error": each_recipient.email_on_error,
@@ -269,10 +269,10 @@ def _build_recipients_from_task_log(doc_task_log) -> dict:
 				}
 			else:
 				# Apply "or" logic to each selection:
-				result[each_recipient]["email_on_start"] = result[each_recipient]["email_on_start"] or each_recipient.email_on_start
-				result[each_recipient]["email_on_success"] = result[each_recipient]["email_on_success"] or each_recipient.email_on_success
-				result[each_recipient]["email_on_error"] = result[each_recipient]["email_on_error"] or each_recipient.email_on_error
-				result[each_recipient]["email_on_timeout"] = result[each_recipient]["email_on_timeout"] or each_recipient.email_on_timeout
+				result[each_recipient.email_address]["email_on_start"] = result[each_recipient.email_address]["email_on_start"] or each_recipient.email_on_start
+				result[each_recipient.email_address]["email_on_success"] = result[each_recipient.email_address]["email_on_success"] or each_recipient.email_on_success
+				result[each_recipient.email_address]["email_on_error"] = result[each_recipient.email_address]["email_on_error"] or each_recipient.email_on_error
+				result[each_recipient.email_address]["email_on_timeout"] = result[each_recipient.email_address]["email_on_timeout"] or each_recipient.email_on_timeout
 
 	return result
 
