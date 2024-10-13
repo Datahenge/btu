@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015, Codrotech Inc. and contributors
 #
-# Copyright (c) 2023, Datahenge LLC and contributors
+# Copyright (c) 2022-2024, Datahenge LLC and contributors
 # For license information, please see license.txt
 
 from __future__ import unicode_literals

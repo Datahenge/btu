@@ -26,6 +26,8 @@
   "sb2",
   "repeat_log_in_stdout",
   "run_only_as_worker",
+  "sb_email",
+  "email_recipients",
   "amended_from"
  ],
  "fields": [
@@ -160,6 +162,16 @@
   {
    "fieldname": "sb2",
    "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "sb_email",
+   "fieldtype": "Section Break",
+   "label": "Email"
+  },
+  {
+   "fieldname": "email_recipients",
+   "fieldtype": "Table",
+   "options": "BTU Email Recipient"
   }
  ],
  "is_submittable": 1,
@@ -173,7 +185,7 @@
    "link_fieldname": "task"
   }
  ],
- "modified": "2024-10-06 18:41:34.150014",
+ "modified": "2024-10-13 15:45:10.429629",
  "modified_by": "Administrator",
  "module": "BTU_Core",
  "name": "BTU Task",

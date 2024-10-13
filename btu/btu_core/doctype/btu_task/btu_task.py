@@ -1,4 +1,4 @@
-# Copyright (c) 2023, Datahenge LLC and contributors
+# Copyright (c) 2022-2024, Datahenge LLC and contributors
 # For license information, please see license.txt
 
 import ast
@@ -34,6 +34,9 @@ class BTUTask(Document):
 	def revert_to_draft(self):
 		# Revert the BTU Task back into an editable Draft status.
 		frappe.db.set_value(self.doctype, self.name, "docstatus", 0)
+		# ...and the child documents too!
+		for each_email in self.email_recipients:
+			frappe.db.set_value(each_email.doctype, each_email.name, "docstatus", 0)
 
 	def _module_path(self):
 		return '.'.join(self.function_string.split('.')[0:-1])
@@ -76,6 +79,24 @@ class BTUTask(Document):
 		if self.arguments:
 			self.arguments = self.arguments.replace('“', '"')  # replace the unsupported curly forward double quote with the regular one.
 			self.arguments = self.arguments.replace('”', '"')  # replace the unsupported curly backward double quote with the regular one.
+
+	def before_insert(self):
+		# New Tasks should automatically inherit the default Email Recipients from BTU Configuration.
+		if self.email_recipients:
+			return
+		doc_config = frappe.get_single("BTU Configuration")
+		if not doc_config.email_recipients:
+			return
+		for each_recipient in doc_config.email_recipients:
+			self.append("email_recipients",
+				{
+					"email_address": each_recipient.email_address,
+					"email_on_start": each_recipient.email_on_start,
+					"email_on_success": each_recipient.email_on_success,
+					"email_on_error": each_recipient.email_on_error,
+					"email_on_timeout": each_recipient.email_on_timeout
+				}
+			)
 
 	def built_in_arguments(self):
 		"""
@@ -268,8 +289,8 @@ def create_and_run_one_shot(short_description: str,
 
 	if not function_path or not isinstance(function_path, str):
 		raise ValueError("Argument 'function_path' is mandatory and must be a Python string.")
-	if not arguments or not isinstance(arguments, dict):
-		raise ValueError("Argument 'arguments' is mandatory and must be a Python dictionary.")
+	if not isinstance(arguments, dict):
+		raise ValueError("Argument 'arguments' must be a Python dictionary.")
 
 	arguments = dict_to_dateless_dict(arguments)  # necessary to convert Date objects into ISO 8601 strings.
 

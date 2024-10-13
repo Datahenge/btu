@@ -184,12 +184,8 @@ def test_rq_pickling():
 	)
 
 	print(f"Created new job with ID: {new_job._id}")
-	# print(dir(new_job))
-	# print(f"Data:\n{new_job.data}\n")
 
 	# Step 2: Read it back from Redis
-	# from redis import Redis
-	# rq_conn = Redis(port=11003)
 	rq_job = Job.fetch(new_job._id, connection=queue_conn)
 
 	assert new_job.data == rq_job.data

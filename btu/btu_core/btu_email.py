@@ -1,6 +1,6 @@
 """ btu/btu_core/btu_email.py """
 
-# Copyright (c) 2023-2024, Datahenge LLC and contributors
+# Copyright (c) 2022-2024, Datahenge LLC and contributors
 # For license information, please see license.txt
 
 #
@@ -165,7 +165,7 @@ class Emailer():
 			"from_email": self.doc_btu_config.mandrill_from_email_address,
 			"subject": self.subject,
 			"to": [],
-			'Reply-To': "technology@farmtopeople.com",  # TODO: This custom reply-to is not working.
+			'Reply-To': "",  # TODO: This custom reply-to is not working.
 		}
 
 		# Loop through each Destination email address, and append to new_message.
@@ -233,6 +233,50 @@ class Emailer():
 		return body
 
 
+def _build_recipients_from_task_log(doc_task_log) -> dict:
+	"""
+	Given any Task Log, build a dictionary of Email Recipients and conditions.
+
+	Example response:
+		{ 'brian@datahenge.com': {'email_on_start': 1, 'email_on_success': 1, 'email_on_error': 1, 'email_on_timeout': 1} }
+	"""
+	from btu.btu_core.doctype.btu_task_log.btu_task_log import BTUTaskLog as BTUTaskLogType  # late import to avoid any circular reference problems.
+
+	if not doc_task_log or not isinstance(doc_task_log, BTUTaskLogType):
+		raise frappe.MandatoryError("Function requires argument 'doc_task_log', which should be an instance of 'BTU Task Log' document.")
+
+	result = {}
+	doc_task = frappe.get_doc("BTU Task", doc_task_log.task)
+	for each_recipient in doc_task.email_recipients:
+		result[each_recipient.email_address] = {
+			"email_on_start": each_recipient.email_on_start,
+			"email_on_success": each_recipient.email_on_success,
+			"email_on_error": each_recipient.email_on_error,
+			"email_on_timeout": each_recipient.email_on_timeout
+		}
+
+	if doc_task_log.schedule:
+		doc_schedule = frappe.get_doc("BTU Task Schedule", doc_task_log.schedule)
+		for each_recipient in doc_schedule.email_recipients:
+
+			# Add new key to dictionary:
+			if not result.get(each_recipient):
+				result[each_recipient] = {
+					"email_on_start": each_recipient.email_on_start,
+					"email_on_success": each_recipient.email_on_success,
+					"email_on_error": each_recipient.email_on_error,
+					"email_on_timeout": each_recipient.email_on_timeout
+				}
+			else:
+				# Apply "or" logic to each selection:
+				result[each_recipient]["email_on_start"] = result[each_recipient]["email_on_start"] or each_recipient.email_on_start
+				result[each_recipient]["email_on_success"] = result[each_recipient]["email_on_success"] or each_recipient.email_on_success
+				result[each_recipient]["email_on_error"] = result[each_recipient]["email_on_error"] or each_recipient.email_on_error
+				result[each_recipient]["email_on_timeout"] = result[each_recipient]["email_on_timeout"] or each_recipient.email_on_timeout
+
+	return result
+
+
 # Non-Class Methods
 def email_on_task_start(doc_task_log, send_via_queue=False):
 	"""
@@ -243,28 +287,29 @@ def email_on_task_start(doc_task_log, send_via_queue=False):
 	if not doc_task_log or not isinstance(doc_task_log, BTUTaskLogType):
 		raise frappe.MandatoryError("Function requires argument 'doc_task_log', which should be an instance of BTU Task Log document.")
 
-	if not doc_task_log.schedule:
-		dprint("Warning: BTU Task Log does not reference a Task Schedule.  No email can be transmitted.")
-		return  # only send emails for Tasks that were scheduled.
+	# Add emails associated with the Task:
+	recipients: dict = _build_recipients_from_task_log(doc_task_log)
+	recipients = { key:value for key, value in recipients.items() if value["email_on_start"] }  # reduce to recipients who opted-in 'Email on Start'
 
-	doc_schedule = frappe.get_doc("BTU Task Schedule", doc_task_log.schedule)
-	recipients = [ each for each in doc_schedule.email_recipients if each.email_on_start ]
+	subject = f"Started: BTU Task {doc_task_log.task_desc_short}"
+	body = f"Task {doc_task_log.task} ({doc_task_log.task_desc_short}) is now In-Progress."
+	sender = frappe.get_doc("BTU Configuration").email_auth_username
 
-	for each_recipient in recipients:
-		subject = f"Started: BTU Task {doc_task_log.task_desc_short}"
-		body = f"Task Schedule {doc_task_log.schedule}\nTask {doc_task_log.task} ({doc_task_log.task_desc_short}) is now In-Progress."
-		sender = frappe.get_doc("BTU Configuration").email_auth_username
+	# If Optionally, add emails associated with the Task Schedule:
+	if doc_task_log.schedule:
+		body += f"\nTask Schedule {doc_task_log.schedule}"
 
-		dprint(f"Sending email to {each_recipient.email_address} because Task Schedule {doc_task_log.schedule} has started.")
+	for each_recipient in recipients:  # Value of 'each_recipient' is a String email address
+		dprint(f"Sending email to {each_recipient} because Task {doc_task_log.task} has started.")
 		if not send_via_queue:
 			Emailer(sender=sender,
-					emailto_list=each_recipient.email_address or None,
+					emailto_list=each_recipient or None,
 					subject=subject,
 					body=body).send()
 		else:
 			raise NotImplementedError("Not Yet Implemented: Sending email via Redis Queue.")
 
-	dprint(f"Sent email message to Task Schedule's recipient {doc_schedule.email_recipients}", DEBUG_ENV_VARIABLE)
+	dprint(f"Sent email message to recipients {recipients}", DEBUG_ENV_VARIABLE)
 
 
 def email_on_task_conclusion(doc_task_log, send_via_queue=False):
@@ -276,18 +321,14 @@ def email_on_task_conclusion(doc_task_log, send_via_queue=False):
 	if not doc_task_log or not isinstance(doc_task_log, BTUTaskLogType):
 		raise frappe.MandatoryError("Function requires argument 'doc_task_log', which should be an instance of BTU Task Log document.")
 
-	if not doc_task_log.schedule:
-		dprint("Warning: BTU Task Log does not reference a Task Schedule.  No email can be transmitted.")
-		return  # only send emails for Tasks that were scheduled.
+	email_recipients: dict = _build_recipients_from_task_log(doc_task_log)
+	for each_recipient, options in email_recipients.items():
 
-	doc_schedule = frappe.get_doc("BTU Task Schedule", doc_task_log.schedule)
-	for each_recipient in doc_schedule.email_recipients:
-
-		if doc_task_log.success_fail == 'Success' and not each_recipient.email_on_success:
+		if doc_task_log.success_fail == 'Success' and not options["email_on_success"]:
 			continue
-		if doc_task_log.success_fail == 'Failed' and not each_recipient.email_on_error:
+		if doc_task_log.success_fail == 'Failed' and not options["email_on_error"]:
 			continue
-		if doc_task_log.success_fail == 'Timeout' and not each_recipient.email_on_timeout:
+		if doc_task_log.success_fail == 'Timeout' and not options["email_on_timeout"]:
 			continue
 
 		# Create the email "Subject" string:
@@ -307,10 +348,10 @@ def email_on_task_conclusion(doc_task_log, send_via_queue=False):
 		sender = frappe.get_doc("BTU Configuration").email_auth_username
 		if not send_via_queue:
 			Emailer(sender=sender,
-					emailto_list=each_recipient.email_address or None,
+					emailto_list=each_recipient or None,
 					subject=subject,
 					body=body).send()
 		else:
 			raise NotImplementedError("Not Yet Implemented: Sending email via Redis Queue.")
 
-	dprint(f"Sent email message to Task Schedule's recipient {doc_schedule.email_recipients}", DEBUG_ENV_VARIABLE)
+	dprint(f"Sent email message to recipients {list(email_recipients)}", DEBUG_ENV_VARIABLE)

@@ -2,7 +2,7 @@
 #
 # Background Tasks Unleashed: A Frappe Framework task scheduling App.
 #
-# Copyright (c) 2023, Datahenge LLC and contributors
+# Copyright (c) 2022-2024, Datahenge LLC and contributors
 # For license information, please see LICENSE.txt
 #
 # Inspired by and initially based on:
@@ -13,8 +13,8 @@ import copy
 from datetime import datetime as DateTimeType # standard Python library
 from datetime import date as DateType
 import json
-import os  # standard Python library
-import re  # standard Python library
+import os
+import re
 
 from dateutil import parser
 from dateutil.parser._parser import ParserError
@@ -25,7 +25,7 @@ from rq import Queue
 import frappe
 from frappe.utils.background_jobs import get_redis_conn
 
-__version__ = '0.9.0'
+__version__ = '13.10.0'
 
 
 class Result():
