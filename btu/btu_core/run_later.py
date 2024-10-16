@@ -31,25 +31,43 @@ def test_one():
 	"""
 	CLI:  bench execute btu.btu_core.run_later.test_one
 	"""
-	now = get_system_datetime_now() + timedelta(seconds=120)
+	now = get_system_datetime_now() + timedelta(seconds=180)
 
 	enqueue_for_later(
 		short_name="test_one",
 		not_before_time=now,
 		target_queue="default",
 		path_to_function="btu.manual_tests.ping_with_wait",
-		arguments={ "seconds_to_wait": 10 }
+		arguments={ "seconds_to_wait": 10 },
+		unique_identifier="TEST-ONE"
 	)
+
+def exists_unique_identifier(unique_identifier: str) -> bool:
+	"""
+	CLI:
+		bench execute btu.btu_core.run_later.exists_unique_identifier --args "['foo']"
+	"""
+	redis_conn = new_redis_queue_connection()
+	match_criteria = "btu_scheduler:run_later:*"
+	for each_key in redis_conn.scan_iter(match=match_criteria, count=100):
+		if redis_conn.hget(each_key, "unique_identifier") == unique_identifier:
+			return True
+	return False
 
 
 def enqueue_for_later(short_name: str,
 					  not_before_time: DateTimeType,
 					  target_queue: str,
 					  path_to_function: str,
-					  arguments: dict):
+					  arguments: dict,
+					  unique_identifier: str = None):
 
 	# TODO : validate path to function
 	validate_datatype("arguments", arguments, (dict, NoneType), False)
+
+	if unique_identifier and exists_unique_identifier(unique_identifier):
+		print(f"Skipping; task with unique identifer '{unique_identifier}' is already pending future execution.")
+		return  # do nothing, because the same task is already scheduled
 
 	not_before_time_utc = not_before_time.astimezone(ZoneInfo("UTC"))
 	not_before_timestamp_utc = int(not_before_time_utc.timestamp())  # round to nearest second
@@ -64,7 +82,8 @@ def enqueue_for_later(short_name: str,
 		"not_before_timestamp": not_before_timestamp_utc,
 		"path_to_function": path_to_function,
 		"arguments": json.dumps(arguments) if arguments else "",
-		"status": "pending"
+		"status": "pending",
+		"unique_identifier": unique_identifier or ""
 	}
 	new_redis_queue_connection().hmset(new_key, payload)
 	print(f"Added a new key to Redis Queue database: {new_key}")

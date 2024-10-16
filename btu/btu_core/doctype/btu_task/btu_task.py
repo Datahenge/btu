@@ -26,6 +26,34 @@ class BTU_AWARE_FUNCTION():  # pylint: disable=invalid-name
 		self.btu_task_schedule_id = None
 
 
+class FunctionPathString():
+	"""
+	String representing the path to a Python function.
+	"""
+
+	def __init__(self, function_path_string: str, debug=False):
+		self.function_path_string = function_path_string
+		self.debug_mode = bool(debug)
+
+	def module_path(self) -> str:
+		return '.'.join(self.function_path_string.split('.')[0:-1])
+
+	def function_name(self) -> str:
+		return self.function_path_string.split('.')[-1]
+
+	def create_module_object(self):
+		return importlib.import_module(self.module_path(), package=None)
+
+	def validate(self):
+		if self.debug_mode:
+			print(f"Validating module = '{self.module_path()}', function = '{self.function_name}'")
+		# 1. Import the Module.
+		module_imported = self.create_module_object()
+		# 2. Ensure function exists in the Module.
+		if not self.function_name() in dir(module_imported):
+			raise ImportError(f"Cannot find function '{self.function_name()}' in module path '{self.module_path()}'.")
+
+
 class BTUTask(Document):
 	"""
 	A SQL record that contains a path to a class of type TaskWrapper
@@ -38,15 +66,11 @@ class BTUTask(Document):
 		for each_email in self.email_recipients:
 			frappe.db.set_value(each_email.doctype, each_email.name, "docstatus", 0)
 
-	def _module_path(self):
-		return '.'.join(self.function_string.split('.')[0:-1])
-
 	def _function_name(self):
-		return self.function_string.split('.')[-1]
+		return FunctionPathString(self.function_string).function_name()
 
 	def _imported_module(self):
-		this_module = importlib.import_module(self._module_path(), package=None)
-		return this_module
+		return FunctionPathString(self.function_string).create_module_object()
 
 	def _callable_function(self):
 		"""
@@ -61,15 +85,9 @@ class BTUTask(Document):
 		"""
 		Validate the BTUTask by ensuring the Python function exists, and is derived from TaskWrapper()
 		"""
-		if debug:
-			print(f"Validating module = '{self._module_path()}', function = '{self._function_name}'")
-		# 1. Import the Module.
-		module_imported = self._imported_module()
-		# 2. Ensure function exists in the Module.
-		if not self._function_name() in dir(module_imported):
-			raise ImportError(f"Cannot find function '{self. _function_name()}' in module path '{self._module_path()}'.")
+		FunctionPathString(self.function_string, debug).validate()
 
-		# 3. Ensure function is an instance of btu.TaskWrapper()
+		# TODO: Ensure function is an instance of btu.TaskWrapper()
 		# callable_function = self._callable_function()
 		# if not isinstance(callable_function, TaskWrapper):
 		# 	raise Exception(f"Function '{self. _function_name()}' is not an instance of btu.task_runner.TaskWrapper()")
