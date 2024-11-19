@@ -25,7 +25,7 @@ import frappe
 from frappe.utils.password import get_decrypted_password
 
 # Mandrill App
-from mailchimp.mailchimp_core.doctype.mailchimp_settings.mailchimp_settings import get_client, ApiClientError
+from mailchimp.mailchimp_core.doctype.mailchimp_settings.mailchimp_settings import get_client
 from mailchimp.mailchimp_core import MandrillResponse, get_mandrill_response_status_overall
 
 # BTU
@@ -196,12 +196,16 @@ class Emailer():
 
 			if get_mandrill_response_status_overall(response) == MandrillResponse.UNHANDLED_ERROR:
 				frappe.msgprint(f"Unhandled error response from Mandrill API: {response}", to_console=True)
-				raise ApiClientError(response, 500)
+				raise IOError(response)
 
-		except ApiClientError as error:
-			print(f"An exception occurred in _send_via_mandrill(): {error.text}")
+		except IOError as ex:
+			if isinstance(ex, list):
+				error_string = json.dumps(ex)
+			else:
+				error_string = str(ex)
+			frappe.msgprint(f"Error while sending email via Mandrill: {error_string}", to_console=True)
 			print(f"Message sent to Mandrill:\n{json.dumps(new_message, indent=4)}")
-			frappe.msgprint(f"Error while sending email via Mandrill: {error.text}")
+			frappe.msgprint(f"Error while sending email via Mandrill: {error_string}")
 
 	def _create_plaintext_message(self):
 		"""
