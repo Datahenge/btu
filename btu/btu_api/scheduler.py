@@ -21,7 +21,6 @@ class SchedulerAPI():
 	Static methods are for external use.
 	"""
 
-	@frappe.whitelist()
 	@staticmethod
 	def send_ping():
 		"""
@@ -30,7 +29,6 @@ class SchedulerAPI():
 		response = SchedulerAPI().send_message(RequestType.ping, content=None)
 		return response
 
-	@frappe.whitelist()
 	@staticmethod
 	def reload_task_schedule(task_schedule_id):
 		"""
