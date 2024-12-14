@@ -1,4 +1,4 @@
-# Copyright (c) 2023, Datahenge LLC and contributors
+# Copyright (c) 2021-2025, Datahenge LLC and contributors
 # For license information, please see license.txt
 
 import frappe
@@ -168,7 +168,7 @@ def check_in_progress_logs_for_timeout(verbose=False):
 		try:
 			max_task_duration = int(max_task_duration)  # in seconds
 		except Exception as ex:
-			raise Exception("Value of 'Max Task Duration' should be an integer representing seconds.") from ex
+			raise ValueError("Value of 'Max Task Duration' should be an integer representing seconds.") from ex
 
 		seconds_since_log_creation = (now_datetime() - doc_log.creation).total_seconds()
 		if seconds_since_log_creation > max_task_duration:

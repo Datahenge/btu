@@ -15,7 +15,7 @@
  "name": "Task Log Averages",
  "owner": "Administrator",
  "prepared_report": 0,
- "query": "SELECT\n\t TaskLog.task\n\t,TaskLog.task_desc_short \n\t,CEIL(MIN(execution_time))\t\tAS minimum_time\n\t,CEIL(MAX(execution_time))\t\tAS maximum_time\n\t,CEIL(AVG(execution_time))\t\tAS average_time\nFROM\n\t`tabBTU Task Log`\tAS TaskLog\nINNER JOIN\n\t`tabBTU Task`\tAS Task\nON\n\tTaskLog.task = Task.name\nAND Task.is_transient = 0\n\nWHERE\n\tTaskLog.success_fail = 'Success'\nAND IFNULL(TaskLog.task_component,'Main') IN ('Main', '')\n\nGROUP BY\n\tTaskLog.task\nORDER BY\n\tTaskLog.task",
+ "query": "SELECT\n\t TaskLog.task\n\t,TaskLog.task_desc_short \n\t,CEIL(MIN(execution_time))\t\tAS minimum_time\n\t,CEIL(MAX(execution_time))\t\tAS maximum_time\n\t,CEIL(AVG(execution_time))\t\tAS average_time\nFROM\n\t`tabBTU Task Log`\tAS TaskLog\nINNER JOIN\n\t`tabBTU Task`\tAS Task\nON\n\tTaskLog.task = Task.name\nAND Task.task_type = 'Subtask'\n\nWHERE\n\tTaskLog.success_fail = 'Success'\nAND IFNULL(TaskLog.task_component,'Main') IN ('Main', '')\n\nGROUP BY\n\tTaskLog.task\nORDER BY\n\tTaskLog.task",
  "ref_doctype": "BTU Task Log",
  "report_name": "Task Log Averages",
  "report_type": "Query Report",

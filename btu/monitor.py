@@ -94,7 +94,7 @@ def show_sql_processes():
 
 def post_error_in_slack(webhook_name, error_message: str, verbose=False):
 	"""
-	Post a message in the FTP Slack 'registrations' channel, mentioning this new customer.
+	Post a message in a Slack channel.
 	"""
 
 	if not webhook_name:

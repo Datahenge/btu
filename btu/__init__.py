@@ -2,18 +2,19 @@
 #
 # Background Tasks Unleashed: A Frappe Framework task scheduling App.
 #
-# Copyright (c) 2023, Datahenge LLC and contributors
+# Copyright (c) 2022-2024, Datahenge LLC and contributors
 # For license information, please see LICENSE.txt
 #
 # Inspired by and initially based on:
 #   https://github.com/meeerp/jobtaskscheduler
 #   Copyright (c) 2015, Codrotech Inc. and contributors
 
+import copy
 from datetime import datetime as DateTimeType # standard Python library
 from datetime import date as DateType
 import json
-import os  # standard Python library
-import re  # standard Python library
+import os
+import re
 
 from dateutil import parser
 from dateutil.parser._parser import ParserError
@@ -24,7 +25,7 @@ from rq import Queue
 import frappe
 from frappe.utils.background_jobs import get_redis_conn
 
-__version__ = '0.8.0'
+__version__ = '15.0.0'
 
 
 class Result():
@@ -305,3 +306,28 @@ def remove_failed_jobs(date_from, date_to, wildcard_text=None):
 		frappe.msgprint("No RQ Jobs found that match this criteria.", to_console=True)
 	else:
 		frappe.msgprint(f"{jobs_deleted} jobs deleted from the Redis Queue.", to_console=True)
+
+
+def dict_to_dateless_dict(some_object):
+	"""
+	Given an common object, convert any Dates to ISO Strings.
+	"""
+	result = copy.deepcopy(some_object)  # making a deep copy to be safe.
+
+	# Scenario 1: Object is a Date
+	if isinstance(result, DateType):
+		return date_to_iso_string(some_object)
+
+	# Scenario 2: Object is a List
+	if isinstance(some_object, list):
+		return [dict_to_dateless_dict(v) for v in some_object]  # recursive call to this function.
+
+	# Scenario 3: Argument is a Dictionary
+	if isinstance(some_object, dict):
+		new_dict = {}
+		for key, value in some_object.items():
+			new_dict[ key ] = dict_to_dateless_dict(value)  # recursive call to this function.
+		return new_dict
+
+	# Scenario 4: Argument is something not covered above (e.g. Integers)
+	return some_object

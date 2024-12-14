@@ -1,6 +1,6 @@
 /*
-	Copyright (c) 2021, Datahenge LLC and contributors
-	For license information, please see license.txt
+	Copyright (c) 2021-2025, Datahenge LLC and contributors
+	For license information, please see LICENSE
 
 	List Page for DocType 'BTU Task Log'
 */

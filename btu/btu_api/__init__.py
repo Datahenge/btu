@@ -139,14 +139,13 @@ class TransientTask():
 	@staticmethod
 	def create_new_transient(function_path, description, task_group="Transient",
 	                         max_task_duration='600s', queue_name='short', **kwargs):
-
-		kwargs_as_string = str(kwargs)
-		print(kwargs_as_string)
-
+		"""
+		Create a new, transient Subtask.
+		"""
 		doc_task = frappe.new_doc("BTU Task")
 		doc_task.desc_short = description
 		doc_task.task_group = task_group
-		doc_task.is_transient = True
+		doc_task.task_type = 'Subtask'
 		doc_task.function_string = function_path
 		doc_task.arguments = str(kwargs)
 		doc_task.run_only_as_worker = True
@@ -162,7 +161,7 @@ class TransientTask():
 	def __init__(self, doc_task):
 		from btu.btu_core.doctype.btu_task.btu_task import BTUTask
 		if not isinstance(doc_task, BTUTask):
-			raise Exception("Class instantiation argument 'doc_task' must be an instance of BTUTask document.")
+			raise TypeError("Class instantiation argument 'doc_task' must be an instance of 'BTU Task' document.")
 		self.doc_task = doc_task
 
 	def enqueue(self):
@@ -170,8 +169,8 @@ class TransientTask():
 		Called via button on document's main page.
 		Sends a function call into the Redis Queue named 'default'
 		"""
-		if not self.doc_task.is_transient:
-			raise Exception(f"BTU Task {self.doc_task.name} is not transient.")
+		if self.doc_task.task_type != 'Subtask':
+			raise ValueError(f"BTU Task {self.doc_task.name} is not a transient Subtask.")
 
 		self.doc_task.push_task_into_queue(extra_arguments=self.doc_task.built_in_arguments())
 
