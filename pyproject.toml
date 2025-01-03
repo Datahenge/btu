@@ -12,8 +12,10 @@ dependencies = [
 	"rq~=1.15.1",
 	"rq-scheduler~=0.11.0",
 	"cron-descriptor",
+    "mailchimp_transactional",
 	"pystemd~=0.13.2"
 ]
+
 [tool.setuptools]
 py-modules = [ "btu" ]
 

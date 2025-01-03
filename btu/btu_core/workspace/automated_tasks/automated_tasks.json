@@ -1,23 +1,23 @@
 {
- "cards_label": "Settings",
- "category": "Modules",
  "charts": [],
- "creation": "2021-08-30 19:48:47.939414",
- "developer_mode_only": 0,
- "disable_user_customization": 0,
+ "content": "[{\"id\":\"wCiYqLH3hS\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Background Tasks Unleashed (BTU)<br></span>\",\"col\":12}},{\"id\":\"uA6-DxC-s_\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Tasks\",\"col\":3}},{\"id\":\"aC-ecHZJbg\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Task Log\",\"col\":3}},{\"id\":\"ItlO5egnqG\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Task Schedule\",\"col\":3}},{\"id\":\"ndw5GuNgcF\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"8SBcapyHo3\",\"type\":\"card\",\"data\":{\"card_name\":\"Configuration\",\"col\":4}},{\"id\":\"oFUY58mJBA\",\"type\":\"card\",\"data\":{\"card_name\":\"Reports\",\"col\":4}}]",
+ "creation": "2024-12-30 12:09:48.222456",
+ "custom_blocks": [],
  "docstatus": 0,
  "doctype": "Workspace",
- "extends_another_page": 0,
+ "for_user": "",
  "hide_custom": 0,
+ "icon": "workflow",
  "idx": 0,
- "is_default": 0,
- "is_standard": 1,
+ "indicator_color": "green",
+ "is_hidden": 0,
  "label": "Automated Tasks",
  "links": [
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "BTU Setup",
+   "label": "Configuration",
+   "link_count": 2,
    "link_type": "DocType",
    "onboard": 0,
    "type": "Card Break"
@@ -25,7 +25,8 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "Configuration",
+   "label": "BTU Configuration",
+   "link_count": 0,
    "link_to": "BTU Configuration",
    "link_type": "DocType",
    "onboard": 0,
@@ -34,7 +35,8 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "Queue Names",
+   "label": "BTU Queue",
+   "link_count": 0,
    "link_to": "BTU Queue",
    "link_type": "DocType",
    "onboard": 0,
@@ -44,6 +46,7 @@
    "hidden": 0,
    "is_query_report": 0,
    "label": "Reports",
+   "link_count": 2,
    "link_type": "DocType",
    "onboard": 0,
    "type": "Card Break"
@@ -51,7 +54,8 @@
   {
    "hidden": 0,
    "is_query_report": 1,
-   "label": "Scheduled Task Summary",
+   "label": "BTU Scheduled Task Summary",
+   "link_count": 0,
    "link_to": "BTU Scheduled Task Summary",
    "link_type": "Report",
    "onboard": 0,
@@ -60,89 +64,51 @@
   {
    "hidden": 0,
    "is_query_report": 1,
-   "label": "Task Log Averages",
-   "link_to": "Task Log Averages",
+   "label": "BTU Task Log Summary",
+   "link_count": 0,
+   "link_to": "BTU Task Log Summary",
    "link_type": "Report",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Frappe",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Card Break"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Background Jobs",
-   "link_to": "background_jobs",
-   "link_type": "Page",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Scheduled Job Type",
-   "link_to": "Scheduled Job Type",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Scheduled Job Log",
-   "link_to": "Scheduled Job Log",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Error Log",
-   "link_to": "Error Log",
-   "link_type": "DocType",
    "onboard": 0,
    "type": "Link"
   }
  ],
- "modified": "2023-04-25 18:10:04.655896",
+ "modified": "2024-12-31 16:29:45.561482",
  "modified_by": "Administrator",
  "module": "BTU_Core",
  "name": "Automated Tasks",
+ "number_cards": [],
  "owner": "Administrator",
- "pin_to_bottom": 0,
- "pin_to_top": 0,
+ "parent_page": "",
+ "public": 1,
+ "quick_lists": [],
+ "roles": [],
+ "sequence_id": 12.0,
  "shortcuts": [
   {
-   "doc_view": "",
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Task Log",
+   "link_to": "BTU Task Log",
+   "stats_filter": "[]",
+   "type": "DocType"
+  },
+  {
+   "color": "Green",
+   "doc_view": "List",
+   "format": "{}",
    "label": "Tasks",
    "link_to": "BTU Task",
+   "stats_filter": "[[\"BTU Task\",\"task_type\",\"=\",\"Persistent\",false],[\"BTU Task\",\"docstatus\",\"=\",\"1\",false]]",
    "type": "DocType"
   },
   {
-   "doc_view": "",
-   "label": "Schedules",
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Task Schedule",
    "link_to": "BTU Task Schedule",
+   "stats_filter": "[]",
    "type": "DocType"
-  },
-  {
-   "doc_view": "",
-   "label": "Logs",
-   "link_to": "BTU Task Log",
-   "type": "DocType"
-  },
-  {
-   "doc_view": "",
-   "icon": "tool",
-   "label": "Redis Queue",
-   "link_to": "btu-redis-queue",
-   "type": "Page"
   }
- ]
+ ],
+ "title": "Automated Tasks"
 }

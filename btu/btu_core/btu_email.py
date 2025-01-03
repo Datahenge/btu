@@ -17,21 +17,58 @@
 # Standard Library
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from enum import Enum
 import json
 import smtplib
+
+# Third Party
+import mailchimp_transactional as MailchimpTransactional  # This is the official Python SDK for Mandrill
 
 # Frappe Library
 import frappe
 from frappe.utils.password import get_decrypted_password
 
-# Mandrill App
-from mailchimp.mailchimp_core.doctype.mailchimp_settings.mailchimp_settings import get_client
-from mailchimp.mailchimp_core import MandrillResponse, get_mandrill_response_status_overall
-
 # BTU
 from btu import dprint
 
 DEBUG_ENV_VARIABLE="BTU_DEBUG"  # if this OS environment variable = 1, then dprint() messages will print to stdout.
+
+def new_mandrill_client(doc_configuration=None):
+	"""
+	Create a new, authenticated Mandrill client.
+	"""
+	if not doc_configuration:
+		doc_configuration = frappe.get_doc("BTU Configuration")  # singles DocType
+	api_key = doc_configuration.get_password(fieldname="mandrill_api_key")
+	return MailchimpTransactional.Client(api_key)
+
+
+class MandrillResponse(Enum):
+	SUCCESS = 1
+	REJECTED = 2
+	UNHANDLED_ERROR = 3
+
+
+def get_mandrill_response_status_overall(mandrill_response: list) -> MandrillResponse:
+	"""
+	Mandrill responses are a List of Dictionary:
+		[{
+			'email': 'foo@bar.com',
+		 	'status': 'sent',
+		 	'_id': 'e89b5467ac7c4805a8d415c972ba4007',
+		 	'reject_reason': None,
+		 	'queued_reason': None
+		}]
+	"""
+	# Look for bad 'status' or any kind of rejection reason.
+	try:
+		for each_dict in mandrill_response:
+			if each_dict.get('status', None) != 'sent':
+				return MandrillResponse.REJECTED
+	except Exception as ex:
+		print(f"Unhandled exception in get_mandrill_response_status_overall() : {ex}")
+		return MandrillResponse.UNHANDLED_ERROR
+	return MandrillResponse.SUCCESS
 
 
 class Emailer():
@@ -192,7 +229,7 @@ class Emailer():
 			else:
 				new_message["text"] = MIMEText(self.body, "plain")
 
-			response = get_client().messages.send({"message": new_message})
+			response = new_mandrill_client().messages.send({"message": new_message})
 
 			if get_mandrill_response_status_overall(response) == MandrillResponse.UNHANDLED_ERROR:
 				frappe.msgprint(f"Unhandled error response from Mandrill API: {response}", to_console=True)

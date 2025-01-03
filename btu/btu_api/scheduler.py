@@ -39,7 +39,6 @@ class SchedulerAPI():
 		                                       content=task_schedule_id)
 		return response
 
-	@frappe.whitelist()
 	@staticmethod
 	def cancel_task_schedule(task_schedule_id):
 		"""

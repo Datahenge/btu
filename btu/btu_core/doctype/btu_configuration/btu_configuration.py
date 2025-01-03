@@ -1,11 +1,14 @@
 # Copyright (c) 2022-2024, Datahenge LLC and contributors
 # For license information, please see license.txt
 
+from mailchimp_transactional.api_client import ApiClientError
+
 import frappe
 from frappe.model.document import Document
 
 from btu.manual_tests import send_hello_email_to_user
 from btu.btu_api.scheduler import SchedulerAPI
+
 
 class BTUConfiguration(Document):
 
@@ -41,3 +44,49 @@ class BTUConfiguration(Document):
 		"""
 		from btu.btu_core.doctype.btu_task_schedule.btu_task_schedule import resubmit_all_task_schedules
 		resubmit_all_task_schedules()
+
+	@frappe.whitelist()
+	def button_send_test_mandrill_email(self):
+		"""
+		Confirm configuration is working by sending an email to the current User.
+		See also: https://mailchimp.com/developer/transactional/api/messages/send-new-message/
+		"""
+		from btu.btu_core.btu_email import new_mandrill_client, get_mandrill_response_status_overall, MandrillResponse
+
+		subject = "Hello from ERPNext + Mailchimp Transactional"
+		# Prefix the Subject with an environment name, if configured to do so
+		environment_name = frappe.db.get_single_value("BTU Configuration", "environment_name")
+		if environment_name:
+			subject = f"{environment_name}: {subject}"
+
+		user_doc = frappe.get_doc("User", frappe.session.user)
+
+		message = {
+			"from_email": self.mandrill_from_email_address,
+			"subject": subject,
+			"html": """<ul><li>Name of this function: 'send_test_email'</li>
+			<li>Path to this function: 'btu.btu_core.doctype.btu_configuration.btu_configuration, BTUConfiguration.button_send_test_mandrill_email()'</li>
+			<li>By reading this email, you can be confident that ERPNext is successfully authenticating and communicating with Mailchimp Transactional (Mandrill) email.</li>
+			</ul>""",
+			"to": [
+				{ "email": user_doc.email, "type": "to" }
+			]
+		}
+		try:
+			frappe.msgprint(f"Attempting to send a test email via Mandrill to '{user_doc.email}'.", to_console=True)
+			http_response = new_mandrill_client(self).messages.send({"message":message})
+			response = get_mandrill_response_status_overall(http_response)
+			if response == MandrillResponse.SUCCESS:
+				message = f"Successfully sent a Mandrill Transactional Email to '{user_doc.email}'."
+				print(message)
+				frappe.msgprint(message)
+			else:
+				raise IOError(response)
+		except ApiClientError as error:
+			message = f"An error occurred while sending email via Mandrill: {error.text}"
+			print(message)
+			frappe.msgprint(message)
+		except Exception as error:
+			message = f"An error occurred while sending email via Mandrill: {repr(error)}"
+			print(message)
+			frappe.msgprint(message)
