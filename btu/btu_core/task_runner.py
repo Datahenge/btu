@@ -55,7 +55,7 @@ class TaskRunner():
 			if frappe.local.site:
 				self.site_name = frappe.local.site
 			else:
-				raise Exception("TaskRunner requires an argument 'site_name'.")
+				raise ValueError("TaskRunner requires an argument 'site_name'.")
 		else:
 			self.site_name = site_name
 
@@ -136,6 +136,7 @@ class TaskRunner():
 		from btu.btu_core.doctype.btu_task_log.btu_task_log import write_log_for_task
 
 		self.dprint(f"\n-------- Begin function_wrapper (Redis Job = {self.redis_job_id})--------\n")
+		print(dir(frappe))
 		if not hasattr(frappe, 'boot'):
 			# The missing 'boot' object is the best-indication that this function is running on RQ, not the web server.
 			# This means we have to initialize the frappe namespace, choose a Site, and connect to the MySQL DB.
@@ -169,7 +170,7 @@ class TaskRunner():
 			elif self.standard_output == StandardOutput.DB_LOG:
 				ret, stdout_buffer_for_log = self.option_log_to_sql(datetime_string, function_to_call)
 			else:
-				raise Exception(f"No code implemented for Standard Output = '{self.standard_output}'")
+				raise ValueError(f"No code implemented for Standard Output = '{self.standard_output}'")
 
 			execution_time = round(time.time() - execution_start,3)
 			function_result = Result(True, ret, execution_time=execution_time)
