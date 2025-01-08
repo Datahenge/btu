@@ -21,3 +21,8 @@ scheduler_events = {
 	 	]
 	}
 }
+
+# This enables the command 'bench --site mysite export-fixtures' to create JSON files for the Workspaces
+fixtures = [
+    {"dt": "Workspace", "filters": [["module", "=", "BTU_Core"]]},
+]

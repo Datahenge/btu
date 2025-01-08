@@ -32,6 +32,11 @@ You can also:
 ### Installation
 A complete [Installation Guide](https://datahenge.github.io/btu/installation.html) is available on BTU's GitHub Pages site.
 
+### Linux Prerequisites
+```bash
+apt install pkg-config libsystemd-dev
+```
+
 ### Copyright and License
 * Background Tasks Unleashed (BTU) is licensed MIT. (*See LICENSE.md file*)
 * Copyright 2022, Datahenge LLC
