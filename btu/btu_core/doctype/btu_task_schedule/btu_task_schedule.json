@@ -39,7 +39,8 @@
    "in_list_view": 1,
    "label": "Task",
    "options": "BTU Task",
-   "reqd": 1
+   "reqd": 1,
+   "search_index": 1
   },
   {
    "default": "default",
@@ -130,7 +131,8 @@
    "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Task Description",
-   "read_only": 1
+   "read_only": 1,
+   "search_index": 1
   },
   {
    "fieldname": "sb_schedule",
@@ -194,10 +196,11 @@
    "link_fieldname": "schedule"
   }
  ],
- "modified": "2023-04-25 18:33:12.592524",
+ "modified": "2025-01-22 15:02:55.088811",
  "modified_by": "Administrator",
  "module": "BTU_Core",
  "name": "BTU Task Schedule",
+ "naming_rule": "Expression (old style)",
  "owner": "Administrator",
  "permissions": [
   {
@@ -221,7 +224,8 @@
    "role": "All"
   }
  ],
- "sort_field": "task",
- "sort_order": "DESC",
+ "sort_field": "task_description",
+ "sort_order": "ASC",
+ "states": [],
  "title_field": "task_description"
 }

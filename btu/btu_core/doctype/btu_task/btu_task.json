@@ -97,7 +97,8 @@
    "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Short Description",
-   "reqd": 1
+   "reqd": 1,
+   "search_index": 1
   },
   {
    "default": "600",
@@ -197,7 +198,7 @@
    "link_fieldname": "task"
   }
  ],
- "modified": "2025-01-02 15:07:22.962111",
+ "modified": "2025-01-22 14:59:50.007953",
  "modified_by": "Administrator",
  "module": "BTU_Core",
  "name": "BTU Task",
@@ -219,8 +220,8 @@
    "write": 1
   }
  ],
- "sort_field": "name",
- "sort_order": "DESC",
+ "sort_field": "desc_short",
+ "sort_order": "ASC",
  "states": [],
  "title_field": "desc_short",
  "track_changes": 1
