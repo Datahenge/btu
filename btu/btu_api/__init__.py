@@ -155,7 +155,7 @@ class TransientTask():
 		document_name = frappe.generate_hash("BTU", 12)  # Don't use the Naming Series; transient documents just get hash names.
 		# NOTE: Ignoring permissions, because employees should never have access to BTU Tasks.
 		doc_task.insert(set_name=document_name, ignore_permissions=True)
-		doc_task.submit(ignore_permissions=True)
+		doc_task.submit()
 		transient_task = TransientTask(doc_task)
 		return transient_task
 
