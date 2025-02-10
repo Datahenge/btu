@@ -200,7 +200,8 @@ class BTUTask(Document):
 			except Exception as ex:
 				print(ex)
 		if debug:
-			print(f"Is this a BTU-Aware function = {result}\n--------")
+			print(f"BTUTask: Is this a BTU-Aware function = {result}\n--------")
+			print(f"BTUTask: Current user is {frappe.session.user}\n--------")
 		return result
 
 	@frappe.whitelist()
