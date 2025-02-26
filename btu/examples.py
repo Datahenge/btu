@@ -4,7 +4,7 @@
 from datetime import timedelta
 
 import frappe
-from frappe.modules.patch_handler import block_user
+from frappe.modules.patch_handler import _patch_mode
 from frappe.model.sync import sync_for
 
 # --------------------
@@ -64,7 +64,7 @@ def wait_then_throw_error():
 def perform_full_db_sync():
 
 	print("Performing a full DB synchronization (JSON --> DocType/MariaDB).  Please standby...")
-	block_user(True)
+	_patch_mode(True)
 
 	for app in frappe.get_installed_apps():
 		try:
@@ -72,7 +72,7 @@ def perform_full_db_sync():
 		except Exception as ex:
 			print(ex)
 
-	block_user(False)
+	_patch_mode(False)
 	frappe.clear_cache()
 	print("DB synchronization complete")
 
@@ -89,21 +89,22 @@ def test_get_list():
 def cleanup_transient_tasks(age_in_days=30):
 	"""
 	Remove Log records for historic Transient Tasks.
+
+	CLI:  bench execute btu.examples.cleanup_transient_tasks
 	"""
 
-	older_than_date = get_system_datetime_now.date() + timedelta(days=-age_in_days)
+	older_than_date = get_system_datetime_now().date() + timedelta(days=-age_in_days)
+	task_log_table = frappe.qb.DocType("BTU Task Log")
+	task_table =  frappe.qb.DocType("BTU Task")
 
-	statement = """
-		DELETE TaskLog
-		FROM `tabBTU Task Log`  AS TaskLog
-		INNER JOIN  -- SELECT * FROM
-			`tabBTU Task`		AS Task
-		ON
-			Task.name = TaskLog.task
-		AND Task.task_type = 'Subtask'
-		WHERE
-			TaskLog.creation <= %(older_than_date)s
-		"""
+	sql_statement = (
+		frappe.qb.from_(task_log_table)
+		.delete()
+		.inner_join(task_table)
+		.on(task_table.name == task_log_table.task & task_table.task_type == 'Subtask')
+		.where(task_log_table.creation <= older_than_date)
+	)
 
-	frappe.db.sql(statement, values={"older_than_date": older_than_date})
+	print(sql_statement.get_sql())
+	sql_statement.run()
 	print(f"Deleted historic BTU Task Log records associated with Transient Tasks, older than {older_than_date}")
