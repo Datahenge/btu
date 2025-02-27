@@ -167,7 +167,7 @@ class TaskRunner():
 			# Option 1: Function output will be routed to Standard Output, and saved to a log file on disk.
 			if self.standard_output == StandardOutput.STDOUT:
 				ret = self.option_standard_output(datetime_string, function_to_call)
-			# Option 2: Standard output intercepted, and saved to a SQL table `tabBTU Task Log`
+			# Option 2: Standard output intercepted, and saved to a SQL table "tabBTU Task Log"
 			elif self.standard_output == StandardOutput.DB_LOG:
 				ret, stdout_buffer_for_log = self.option_log_to_sql(datetime_string, function_to_call)
 			else:

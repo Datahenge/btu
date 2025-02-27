@@ -215,12 +215,12 @@ def check_hours(hour):
 def check_day_of_week(day_of_week):
 
 	if not day_of_week or day_of_week is None:
-		raise ValueError(_("Please select a day of the week"))
+		raise ValueError(_("Please choose a day of the week"))
 
 def check_day_of_month(run_frequency, day, month=None):
 
 	if run_frequency == "Monthly" and not day:
-		raise ValueError(_("Please select a day of the month"))
+		raise ValueError(_("Please choose a day of the month"))
 
 	if run_frequency == "Yearly":
 		if day and month:
@@ -231,7 +231,7 @@ def check_day_of_month(run_frequency, day, month=None):
 				raise ValueError(
 					_("Day value for {0} must be between 1 and {1}").format(month, last))
 		else:
-			raise ValueError(_("Please select a day of the week and a month"))
+			raise ValueError(_("Please choose a day of the week and a month"))
 
 def schedule_to_cron_string(doc_schedule):
 	"""

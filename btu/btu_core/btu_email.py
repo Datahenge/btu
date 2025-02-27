@@ -309,7 +309,7 @@ def _build_recipients_from_task_log(doc_task_log) -> dict:
 					"email_on_timeout": each_recipient.email_on_timeout
 				}
 			else:
-				# Apply "or" logic to each selection:
+				# Apply "OR" logic to each selection:
 				result[each_recipient.email_address]["email_on_start"] = result[each_recipient.email_address]["email_on_start"] or each_recipient.email_on_start
 				result[each_recipient.email_address]["email_on_success"] = result[each_recipient.email_address]["email_on_success"] or each_recipient.email_on_success
 				result[each_recipient.email_address]["email_on_error"] = result[each_recipient.email_address]["email_on_error"] or each_recipient.email_on_error

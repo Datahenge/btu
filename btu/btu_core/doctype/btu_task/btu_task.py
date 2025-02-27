@@ -253,7 +253,7 @@ class BTUTask(Document):
 		# Create an instance of Result class:
 		result_object = Result(success=success, message=any_result or "", execution_time=execution_time)
 
-		# Write to `tabBTU Task Log`:
+		# Write to the BTU Task Log
 		new_log_id = write_log_for_task(task_id=self.name,
 							result=result_object,
 							stdout=stdout_buffer_for_log or None,

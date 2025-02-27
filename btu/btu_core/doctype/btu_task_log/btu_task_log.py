@@ -1,6 +1,8 @@
 # Copyright (c) 2021-2025, Datahenge LLC and contributors
 # For license information, please see license.txt
 
+from pypika import functions as fn
+
 import frappe
 from frappe.model.document import Document
 from frappe.utils import now_datetime
@@ -128,24 +130,24 @@ def write_log_for_task(task_id, result, log_name=None, stdout=None, date_time_st
 def delete_logs_by_dates(from_date, to_date):
 	"""
 	Delete records in 'BTU Task Log' where execution date is between a date range.
+	CLI:  bench execute btu.btu_core.doctype.btu_task_log.btu_task_log.delete_logs_by_dates --args "['2025-01-27', '2025-02-17']"
 	"""
+	# First, count the rows to delete (because sql() call does not return # rows deleted, at least not in MariaDB)
+	task_log_table = frappe.qb.DocType("BTU Task Log")	# PyPika Query Builder
+	sql_statement: list = (
+		frappe.qb.from_(task_log_table)
+		.select(fn.Count("*"))
+		.where(fn.Date(task_log_table.date_time_started) >= from_date)
+		.where(fn.Date(task_log_table.date_time_started) <= to_date)
+	)
+	rows_to_delete: int = sql_statement.run()[0][0]
 
-	# Count the rows first, so we can return this value to the web page.
-	sql_statement = """ SELECT count(*) as RowCount FROM `tabBTU Task Log`
-	                    WHERE DATE(date_time_started) between %(from_date)s and %(to_date)s """
-
-	result = frappe.db.sql(sql_statement,
-	                       values={"from_date": from_date, "to_date": to_date},
-				           debug=False,
-				           explain=False)
-	rows_to_delete = result[0][0]
-
-	# Delete the rows:
-	sql_statement = """ DELETE FROM `tabBTU Task Log`
-	                    WHERE DATE(date_time_started) between %(from_date)s and %(to_date)s """
-	frappe.db.sql(sql_statement,
-	              values={"from_date": from_date, "to_date": to_date},
-				  auto_commit=True)
+	(
+		frappe.qb.from_(task_log_table)
+		.delete()
+		.where(fn.Date(task_log_table.date_time_started) >= from_date)
+		.where(fn.Date(task_log_table.date_time_started) <= to_date)
+	).run(auto_commit=True)
 
 	return rows_to_delete
 

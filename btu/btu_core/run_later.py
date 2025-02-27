@@ -10,6 +10,7 @@ import redis
 
 # Frappe Framework
 import frappe
+from frappe.exceptions import DoesNotExistError
 
 # Custom Apps
 from temporal import datetime_to_iso_string, validate_datatype
@@ -89,22 +90,42 @@ def enqueue_for_later(short_name: str,
 	print(f"Added a new key to Redis Queue database: {new_key}")
 
 
-def lock_polling_task():
+def lock_polling_task(verbose=False):
 	"""
 	Lock the BTU Task that is doing all the polling.
 	This should help prevent 2 instances of the poll from running simultaneously.
 	"""
+	btu_task = frappe.qb.DocType("BTU Task")
+	sql_query =	(
+	frappe.qb.from_(btu_task)
+	.select(btu_task.name)
+	.where(btu_task.function_string == 'btu.btu_core.run_later.poll_for_ready_work' )
+	.limit(1)
+	)
+	sql_results = sql_query.run()
 
-	sql_query = """ SELECT name FROM `tabBTU Task` WHERE function_string = 'btu.btu_core.run_later.poll_for_ready_work' LIMIT 1; """
-	sql_results = frappe.db.sql(sql_query)
-	if (not sql_results) or (not sql_results[0]) or (not sql_results[0][0]):
+	try:
+		btu_task_key = sql_results[0][0]
+		if not btu_task_key:
+			raise DoesNotExistError()
+		# if (not sql_results) or (not sql_results[0]) or (not sql_results[0][0]):
+		#	return
+	except Exception:
+		print("WARNING: lock_polling_task() failed to find the BTU Task responsible for polling.")
 		return
 
-	btu_task_key = sql_results[0][0]
-	print(f"Locking down BTU Task '{btu_task_key}' FOR UPDATE ...")
-	sql_query = """ SELECT * FROM `tabBTU Task` WHERE name = %(btu_task_key)s FOR UPDATE; """
-	frappe.db.sql(sql_query, values={"btu_task_key": btu_task_key}, as_dict=True)
-	print("...row is now locked.")
+	if verbose:
+		print(f"Locking down SQL row for BTU Task '{btu_task_key}' FOR UPDATE ...")
+	sql_query =	(
+		frappe.qb.from_(btu_task)
+		.select("*")
+		.where(btu_task.name == btu_task_key)
+		.for_update()
+	)
+	# print(sql_query.get_sql())
+	sql_query.run()
+	if verbose:
+		print("...SQL row is now locked.")
 
 
 def poll_for_ready_work():
