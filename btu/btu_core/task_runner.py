@@ -34,7 +34,7 @@ class TaskRunner():
 		function_name = function_path.split('.')[-1]
 		return (module_path, function_name)
 
-	def __init__(self, btu_task, site_name, schedule_id=None, enable_debug_mode=True):
+	def __init__(self, btu_task, site_name, schedule_id=None, enable_debug_mode=False):
 		"""
 		args:
 			btu_task : Either a Document or string that represents the primary key of a BTU Task.
@@ -117,7 +117,7 @@ class TaskRunner():
 			except Exception as ex:
 				print(ex)
 		if debug:
-			print(f"TaskRunner: Is this a BTU-Aware function = {result}\n--------")
+			print(f"TaskRunner: Is this a BTU-Aware function = {result}")
 			print(f"TaskRunner: Current user is {frappe.session.user}\n--------")
 		return result
 
