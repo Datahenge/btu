@@ -103,3 +103,56 @@ def test_function_ping_now_bytes():
 	new_sanchez.build_internals(func=execute_job, _args=None, _kwargs=queue_args)
 	http_result: bytes = new_sanchez.get_serialized_rq_job()
 	return http_result
+
+
+@frappe.whitelist()
+def enqueue_for_next_available_worker(task_schedule_key: str):
+	"""
+	Called by the BTU scheduler daemon when it's time to run a Task, based on its Schedule.
+	"""
+	# Added March of 2025 as part of BTU Scheduler - Python edition.
+	#
+	# Avoids headaches with having to:
+	#    * Ask ERP to calculate the pickled version of a function + arguments.
+	#    * Encode and transfer over HTTP.
+	#    * Decode inside the schedule.
+	#    * Assign the scheduler to generate an RQ Job with the pickled bytes.
+	#
+	# Since BTU Scheduler was having to call ERP *regardless*, why the complexity?  Just tell ERP "enqueue now"
+	#
+	# The only way to avoid HTTP is by writing some kind of Frappe CLI App that does the pickling + Redis.
+	# And then call *that* standalone applicatoni via Unix domain sockets, or system calls.
+	# It's just not worth the effort: the ERP Web Server should not be offline *anyway*
+
+	response = {
+		"has_errors": 0,
+		"error_message": ""
+	}
+
+	try:
+		doc_task_schedule = frappe.get_doc("BTU Task Schedule", task_schedule_key)
+		doc_task = frappe.get_doc("BTU Task", doc_task_schedule.task)
+
+		# Create an instance of TaskRunner() class, and put 'function_wrapper' into the queue.
+		task_runner = TaskRunner(doc_task, site_name=frappe.local.site, enable_debug_mode=True)
+
+		# This supports the idea of passing special keyword arguments to a Task:
+		extra_arguments = doc_task.built_in_arguments()
+		if extra_arguments:
+			task_runner.add_keyword_arguments(**extra_arguments)  # pass them as kwargs
+
+		# Using standard frappe.enqueue() to place the 'function_wrapper' into RQ.
+		# Execution will happen immediately, via the next available worker.
+		frappe.enqueue(method=task_runner.function_wrapper,
+			queue=doc_task.queue_name,
+			timeout=doc_task.max_task_duration or "3600",
+			is_async=True)
+
+	except Exception as ex:
+		frappe.db.rollback()
+		response = {
+			"has_errors": 1,
+			"error_message": str(ex)
+		}
+
+	return response
