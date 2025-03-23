@@ -169,6 +169,9 @@ def bytes_as_list_of_hex(some_bytes):
 def test_rq_pickling():
 	"""
 	Purpose: To verify the pickled binary produced by regular RQ Jobs.
+
+	CLI:  bench execute btu.manual_tests.test_rq_pickling
+
 	"""
 	# pylint: disable=protected-access
 	from rq.job import Job
@@ -197,6 +200,6 @@ def test_rq_pickling():
 	# print(f"In Hex:\n{bytes_as_list_of_hex(rq_job.data)}")
 
 	test_pickler_results = test_function_ping_now_bytes()
-	print(f"Function 'data' as produced by Sanchez Pickler:\n{test_pickler_results}")
+	print(f"\nFunction 'data' as produced by Sanchez Pickler:\n{test_pickler_results}")
 
 	assert test_pickler_results == new_job.data
