@@ -105,7 +105,7 @@ def test_function_ping_now_bytes():
 	return http_result
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST", "PUT"])
 def enqueue_for_next_available_worker(task_schedule_key: str):
 	"""
 	Called by the BTU scheduler daemon when it's time to run a Task, based on its Schedule.
@@ -130,8 +130,8 @@ def enqueue_for_next_available_worker(task_schedule_key: str):
 	}
 
 	try:
-		doc_task_schedule = frappe.get_doc("BTU Task Schedule", task_schedule_key)
-		doc_task = frappe.get_doc("BTU Task", doc_task_schedule.task)
+		doc_task_schedule = frappe.get_doc("BTU Task Schedule", task_schedule_key, ignore_permissions=True)
+		doc_task = frappe.get_doc("BTU Task", doc_task_schedule.task, ignore_permissions=True)
 
 		# Create an instance of TaskRunner() class, and put 'function_wrapper' into the queue.
 		task_runner = TaskRunner(doc_task, site_name=frappe.local.site, enable_debug_mode=True)
