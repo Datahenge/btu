@@ -137,7 +137,8 @@ class TaskRunner():
 		from btu.btu_core.doctype.btu_task_log.btu_task_log import write_log_for_task
 
 		self.dprint(f"\n-------- Begin function_wrapper (Redis Job = {self.redis_job_id})--------\n")
-		print(dir(frappe))
+		
+		# TODO: This is not longer working in Frappe v15.  Presence of boot doesn't seem to indicate anything??
 		if not hasattr(frappe, 'boot'):
 			# The missing 'boot' object is the best-indication that this function is running on RQ, not the web server.
 			# This means we have to initialize the frappe namespace, choose a Site, and connect to the MySQL DB.
