@@ -17,6 +17,7 @@ from temporal import datetime_to_iso_string, validate_datatype
 from btu import get_system_datetime_now
 from btu.btu_core.doctype.btu_task.btu_task import create_and_run_one_shot
 
+
 NoneType = type(None)
 
 
@@ -42,6 +43,7 @@ def test_one():
 		arguments={ "seconds_to_wait": 10 },
 		unique_identifier="TEST-ONE"
 	)
+
 
 def exists_unique_identifier(unique_identifier: str) -> bool:
 	"""
@@ -90,11 +92,13 @@ def enqueue_for_later(short_name: str,
 	print(f"Added a new key to Redis Queue database: {new_key}")
 
 
-def lock_polling_task(verbose=False):
+def _lock_polling_task(verbose=False):
 	"""
 	Lock the BTU Task that is doing all the polling.
 	This should help prevent 2 instances of the poll from running simultaneously.
 	"""
+
+	# First, find the 'name' primary key of the "Poll for One-Shots" task
 	btu_task = frappe.qb.DocType("BTU Task")
 	sql_query =	(
 	frappe.qb.from_(btu_task)
@@ -108,12 +112,11 @@ def lock_polling_task(verbose=False):
 		btu_task_key = sql_results[0][0]
 		if not btu_task_key:
 			raise DoesNotExistError()
-		# if (not sql_results) or (not sql_results[0]) or (not sql_results[0][0]):
-		#	return
 	except Exception:
-		print("WARNING: lock_polling_task() failed to find the BTU Task responsible for polling.")
+		print("WARNING: _lock_polling_task() failed to find the BTU Task 'name' responsible for polling.")
 		return
 
+	# If the 'name' is found, select that Task with a FOR UPDATE lock.
 	if verbose:
 		print(f"Locking down SQL row for BTU Task '{btu_task_key}' FOR UPDATE ...")
 	sql_query =	(
@@ -122,12 +125,12 @@ def lock_polling_task(verbose=False):
 		.where(btu_task.name == btu_task_key)
 		.for_update()
 	)
-	# print(sql_query.get_sql())
 	sql_query.run()
 	if verbose:
 		print("...SQL row is now locked.")
 
 
+@frappe.whitelist()
 def poll_for_ready_work():
 	"""
 	This function should be run continously, at least every 1 minute.
@@ -138,16 +141,37 @@ def poll_for_ready_work():
 	# 2. For each found, create a One-Shot BTU Task, and then immediately run via queue.
 
 	frappe.db.begin()
-	lock_polling_task()  # prevent another instance of this function from running at the same time, to avoid double-enqueuing.
+	_lock_polling_task()  # prevent another instance of this function from running at the same time, to avoid double-enqueuing.
 
-	redis_conn = new_redis_queue_connection()
-	match_criteria = "btu_scheduler:run_later:*"
-	tasks_to_examine = list(redis_conn.scan_iter(match=match_criteria, count=100))  # generator to List
+	try:
+		_run_tasks_from_redis_database()
+	except Exception as ex:
+		print(f"Unhandled exception during poll_for_ready_work() : {ex}")
+	print()
+	try:
+		_run_tasks_from_sql_database()
+	except Exception as ex:
+		print(f"Unhandled exception during poll_for_ready_work() : {ex}")
+	print()
+	identify_timeouts()
 
+
+def _run_tasks_from_redis_database():
+	"""
+	This is the simpler of the 2 possible 'run later' functions.
+	It lacks features like:
+	    * Advanced logging
+		* Retry upon failure.
+		* Relationships to other documents.
+		* Persistence if the Redis database is truncated.
+	"""
 	utc_now = get_system_datetime_now().astimezone(ZoneInfo("UTC"))
 	timestamp_now = int(utc_now.timestamp())
 
-	print(f"Examining {len(tasks_to_examine)} one-shot tasks, queued for future execution ...")
+	redis_conn = new_redis_queue_connection()
+	tasks_to_examine = list(redis_conn.scan_iter(match="btu_scheduler:run_later:*", count=100))  # generator to List
+	print(f"Examining {len(tasks_to_examine)} one-shot Redis tasks, queued for future execution ...")
+
 	for key in tasks_to_examine:
 
 		data = redis_conn.hgetall(key)
@@ -155,7 +179,7 @@ def poll_for_ready_work():
 			continue  # nothing to do here, the task is not in a "pending" status.
 
 		if int(data.get("not_before_timestamp")) > timestamp_now:
-			continue  # not time to enqueue this task yet
+			continue  # not-yet time to enqueue this task.
 
 		arguments = data.get("arguments", {})
 		if arguments:
@@ -170,10 +194,80 @@ def poll_for_ready_work():
 				queue_name = data.get("target_queue")
 			)
 			redis_conn.delete(key)  # remove the key from the "To Do" list
-			# redis_conn.hset(key, "status", "enqueued")
 		except Exception as ex:
-			print("ERROR in poll_for_ready_work() : {ex}")
-			raise ex
+			print(f"ERROR in _run_tasks_from_redis_database() : {ex}.  Moving on to next Redis key ...")
 
 	print("Okay, finished polling all the 'pending' keys")
 	frappe.db.commit()
+
+
+def _run_tasks_from_sql_database():
+	"""
+	This is a more-advanced function with better logging, retry capability, and more.
+	"""
+
+	datetime_now = get_system_datetime_now()
+	filters = {
+		"hold_until": ["<=", datetime_now ],
+		"execution_status": 'Pending Future'
+	}
+	tasks_to_examine = frappe.get_list("BTU Run Later", filters, pluck="name")
+	print(f"Examining {len(tasks_to_examine)} one-shot SQL tasks, queued for future execution ...")
+
+	for run_later_key in tasks_to_examine:
+
+		try:
+			doc_run_later = frappe.get_doc("BTU Run Later", run_later_key, for_update=True)
+			if doc_run_later.last_attempt and not doc_run_later.can_retry():
+				doc_run_later.execution_status = 'Abandoned'
+				doc_run_later.save()
+				frappe.db.commit()
+				continue
+
+			# First enqueue it.
+			frappe.enqueue(
+				method="btu.btu_core.wrapped_function.enqueued_run_later_instance",
+				queue="short",
+				timeout="3600",  # one hour
+				run_later_key=doc_run_later.name
+			)
+
+			# Then update and release the lock
+			doc_run_later.execution_status = 'In-Progress'
+			doc_run_later.last_attempt = datetime_now
+			doc_run_later.save()
+			frappe.db.commit()
+		except Exception as ex:
+			frappe.db.rollback()
+			print(f"ERROR in _run_tasks_from_sql_database() : {ex}.  Moving on to next SQL key ...")
+
+	print("_run_tasks_from_sql_database() : function concluded.")
+
+
+def identify_timeouts():
+	"""
+	Find any 'BTU Run Later' that have been running for too long, and mark them Failed.
+	How long is too long?  Start Time = more than 1 hour ago.
+	"""
+	one_hour_ago = get_system_datetime_now() - timedelta(hours=1)
+
+	filters = {
+		"execution_status": 'In-Progress',
+		"last_attempt": [ "<=", one_hour_ago ]
+	}
+	tasks_to_examine = frappe.get_list("BTU Run Later", filters, pluck="name")
+	for run_later_key in tasks_to_examine:
+		try:
+			doc_run_later = frappe.get_doc("BTU Run Later", run_later_key, for_update=True)
+			doc_run_later.last_result = 'Timeout'
+
+			if not doc_run_later.can_retry():
+				doc_run_later.execution_status = 'Abandoned'
+				doc_run_later.save()
+			else:
+				doc_run_later.execution_status = 'Pending Future'
+				doc_run_later.save()
+				frappe.db.commit()
+			frappe.db.commit()
+		except Exception as ex:
+			print(f"identify_timeouts() : {ex}")

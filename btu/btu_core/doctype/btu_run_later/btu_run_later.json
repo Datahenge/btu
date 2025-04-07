@@ -1,0 +1,206 @@
+{
+ "actions": [],
+ "autoname": "format: BTU-RL-{YYYY}{MM}{DD}-{######}",
+ "creation": "2025-04-03 19:12:14.913479+00:00",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "comms_type",
+  "execution_status",
+  "column_break_qgcw",
+  "description",
+  "activity_section",
+  "last_result",
+  "last_attempt",
+  "column_break_wzpa",
+  "hold_until",
+  "retry_until",
+  "do_not_retry",
+  "relations_tab",
+  "relations_section",
+  "links",
+  "action_tab",
+  "btu_section",
+  "btu_task",
+  "create_new_task",
+  "new_task_name",
+  "new_task_function_path",
+  "new_task_notes",
+  "column_break_swjs",
+  "btu_task_arguments"
+ ],
+ "fields": [
+  {
+   "fieldname": "comms_type",
+   "fieldtype": "Data",
+   "in_filter": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Content Type",
+   "reqd": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "column_break_qgcw",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Notes go here, if applicable.",
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "label": "Description"
+  },
+  {
+   "fieldname": "activity_section",
+   "fieldtype": "Section Break",
+   "label": "Activity"
+  },
+  {
+   "default": "None",
+   "description": "Outcome of the last attempt by a worker.",
+   "fieldname": "last_result",
+   "fieldtype": "Select",
+   "label": "Last Result",
+   "no_copy": 1,
+   "options": "None\nError\nSuccess\nTimeout",
+   "reqd": 1
+  },
+  {
+   "description": "The last datetime this task was attempted.",
+   "fieldname": "last_attempt",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "label": "Last Attempt",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_wzpa",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "No attempt at communication will happen until this datetime.",
+   "fieldname": "hold_until",
+   "fieldtype": "Datetime",
+   "label": "Hold Until"
+  },
+  {
+   "description": "Retry until a certain DateTime.  If message has not been sent by then, give up.",
+   "fieldname": "retry_until",
+   "fieldtype": "Datetime",
+   "label": "Retry Until"
+  },
+  {
+   "default": "0",
+   "description": "If the first attempt fails, do not try again.",
+   "fieldname": "do_not_retry",
+   "fieldtype": "Check",
+   "label": "Do not retry"
+  },
+  {
+   "fieldname": "relations_tab",
+   "fieldtype": "Tab Break",
+   "label": "Relations"
+  },
+  {
+   "fieldname": "relations_section",
+   "fieldtype": "Section Break",
+   "label": "Relations"
+  },
+  {
+   "fieldname": "links",
+   "fieldtype": "Table",
+   "label": "Links",
+   "options": "Dynamic Link"
+  },
+  {
+   "fieldname": "action_tab",
+   "fieldtype": "Tab Break",
+   "label": "Action"
+  },
+  {
+   "fieldname": "btu_section",
+   "fieldtype": "Section Break",
+   "label": "BTU"
+  },
+  {
+   "depends_on": "eval:doc.create_new_task != 1;",
+   "fieldname": "btu_task",
+   "fieldtype": "Link",
+   "label": "BTU Task ID",
+   "options": "BTU Task"
+  },
+  {
+   "default": "0",
+   "fieldname": "create_new_task",
+   "fieldtype": "Check",
+   "label": "Create new task"
+  },
+  {
+   "depends_on": "eval:doc.create_new_task == 1;",
+   "fieldname": "new_task_name",
+   "fieldtype": "Data",
+   "label": "New Task Name"
+  },
+  {
+   "depends_on": "eval:doc.create_new_task == 1;",
+   "fieldname": "new_task_function_path",
+   "fieldtype": "Data",
+   "label": "New Task Function Path"
+  },
+  {
+   "depends_on": "eval:doc.create_new_task == 1;",
+   "fieldname": "new_task_notes",
+   "fieldtype": "Small Text",
+   "label": "New Task Notes"
+  },
+  {
+   "fieldname": "column_break_swjs",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "btu_task_arguments",
+   "fieldtype": "Text",
+   "label": "BTU Task Arguments"
+  },
+  {
+   "default": "Pending Future",
+   "description": "Overall status of this task.",
+   "fieldname": "execution_status",
+   "fieldtype": "Select",
+   "in_filter": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Execution Status",
+   "no_copy": 1,
+   "options": "Pending Future\nIn-Progress\nCompleted\nAbandoned",
+   "reqd": 1,
+   "search_index": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-04-07 21:48:47.492945+00:00",
+ "modified_by": "Administrator",
+ "module": "BTU_Core",
+ "name": "BTU Run Later",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

@@ -1,0 +1,61 @@
+
+# What called me?  Or was I just enqueued?
+# How do I lock to prevent multiple instances?
+# Write to a the log:  "In Progress"?
+# If after the Select For Update, I should check the status.
+# Call a Python function.  Make sure it's fully wrapped in Try-Except
+# Get the response
+# Do something with it.
+
+import frappe
+from btu.btu_core.doctype.btu_task.btu_task import create_and_run_one_shot
+
+
+class WrappedFunction():
+	pass
+
+
+def enqueued_run_later_instance(run_later_key: str):
+	# NOTE: This function will normally be running via RQ Workers.
+
+	# Lock down the BTU Run Later record
+	# TODO: The called function may contain a SQL Commit.  Which would break this lock.
+	#       So I should lock using a different SQL transaction.
+	doc_run_later = frappe.get_doc("BTU Run Later", run_later_key, for_update=True)
+	# instantiate a class
+	# write some logs
+	# do some other stuff.
+	try:
+		if doc_run_later.btu_task:
+			print(f"Running BTU Task '{doc_run_later.btu_task}' on web server ...")
+			doc_btu_task = frappe.get_doc("BTU Task", doc_run_later.btu_task)
+			result = doc_btu_task.run_task_on_webserver()
+			print(f"Result = {result}")
+		else:
+			print("Creating and running a One-Shot task in the current thread of execution ...")
+			# Run a One-Shot task, but don't enqueue...we're already in one.
+			create_and_run_one_shot(
+					short_description=doc_run_later.new_task_name,
+					function_path=doc_run_later.new_task_function_path,
+					arguments=doc_run_later.btu_task_arguments,
+					queue_name=None
+			)
+
+		# NOTE: Commits could have just happened, which will undo my Locks.
+
+	except Exception as ex:
+		# Something went wrong with whatever I'm supposed to be doing.
+		print(f"enqueued_run_later_instance(): {ex}")
+		doc_run_later.last_result = 'Error'
+		if doc_run_later.can_retry():
+			doc_run_later.execution_status = 'Pending Future'
+		else:
+			doc_run_later.execution_status = 'Abandoned'  # albeit with an Error
+		doc_run_later.save()
+
+	else:
+		doc_run_later.last_result = 'Success'
+		doc_run_later.execution_status = 'Completed'
+		doc_run_later.save()
+	finally:
+		frappe.db.commit()
