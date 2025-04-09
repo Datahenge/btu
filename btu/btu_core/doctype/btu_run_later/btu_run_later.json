@@ -38,7 +38,8 @@
    "in_standard_filter": 1,
    "label": "Content Type",
    "reqd": 1,
-   "search_index": 1
+   "search_index": 1,
+   "set_only_once": 1
   },
   {
    "fieldname": "column_break_qgcw",
@@ -180,7 +181,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-04-07 21:48:47.492945+00:00",
+ "modified": "2025-04-08 22:43:10.304565+00:00",
  "modified_by": "Administrator",
  "module": "BTU_Core",
  "name": "BTU Run Later",

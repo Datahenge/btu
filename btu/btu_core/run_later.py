@@ -201,7 +201,7 @@ def _run_tasks_from_redis_database():
 	frappe.db.commit()
 
 
-def _run_tasks_from_sql_database():
+def _run_tasks_from_sql_database(disable_enqueue=False):
 	"""
 	This is a more-advanced function with better logging, retry capability, and more.
 	"""
@@ -218,19 +218,25 @@ def _run_tasks_from_sql_database():
 
 		try:
 			doc_run_later = frappe.get_doc("BTU Run Later", run_later_key, for_update=True)
+
 			if doc_run_later.last_attempt and not doc_run_later.can_retry():
 				doc_run_later.execution_status = 'Abandoned'
 				doc_run_later.save()
 				frappe.db.commit()
 				continue
 
-			# First enqueue it.
-			frappe.enqueue(
-				method="btu.btu_core.wrapped_function.enqueued_run_later_instance",
-				queue="short",
-				timeout="3600",  # one hour
-				run_later_key=doc_run_later.name
-			)
+			# bench execute btu.btu_core.wrapped_function.enqueued_run_later_instance --kwargs "{'run_later_key': 'BTU-RL-20250408-134209'}"
+			if disable_enqueue:
+				from btu.btu_core.wrapped_function import enqueued_run_later_instance
+				enqueued_run_later_instance(run_later_key=doc_run_later.name)
+			else:
+				# Enqueue the work:
+				frappe.enqueue(
+					method="btu.btu_core.wrapped_function.enqueued_run_later_instance",
+					queue="short",
+					timeout="3600",  # one hour
+					run_later_key=doc_run_later.name
+				)
 
 			# Then update and release the lock
 			doc_run_later.execution_status = 'In-Progress'

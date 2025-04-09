@@ -7,6 +7,8 @@
 # Get the response
 # Do something with it.
 
+import json
+
 import frappe
 from btu.btu_core.doctype.btu_task.btu_task import create_and_run_one_shot
 
@@ -37,7 +39,7 @@ def enqueued_run_later_instance(run_later_key: str):
 			create_and_run_one_shot(
 					short_description=doc_run_later.new_task_name,
 					function_path=doc_run_later.new_task_function_path,
-					arguments=doc_run_later.btu_task_arguments,
+					arguments=json.loads(doc_run_later.btu_task_arguments),
 					queue_name=None
 			)
 
@@ -45,7 +47,7 @@ def enqueued_run_later_instance(run_later_key: str):
 
 	except Exception as ex:
 		# Something went wrong with whatever I'm supposed to be doing.
-		print(f"enqueued_run_later_instance(): {ex}")
+		print(f"Error during enqueued_run_later_instance(): {ex}")
 		doc_run_later.last_result = 'Error'
 		if doc_run_later.can_retry():
 			doc_run_later.execution_status = 'Pending Future'

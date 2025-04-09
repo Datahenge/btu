@@ -43,6 +43,8 @@ class Result():
 		if not isinstance(success, bool):
 			raise TypeError("Result class argument 'success' must be a boolean.")
 		if message:
+			if isinstance(message, bool):
+				message = "True" if message else "False"
 			if not isinstance(message, (str, dict, list)):
 				raise TypeError(f"Result class argument 'message' must be a Python String, List, or Dictionary.  Found value '{message}' instead.")
 		self.okay = success
