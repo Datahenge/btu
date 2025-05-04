@@ -2,12 +2,12 @@
 # For license information, please see license.txt
 
 from pypika import functions as fn
+from temporal_lib.core import get_system_datetime_now, make_datetime_naive, is_datetime_naive
 
 import frappe
 from frappe.model.document import Document
-from frappe.utils import now_datetime
-
-from btu import Result, get_system_datetime_now
+# from frappe.utils import now_datetime  # this is a Naive Datetime
+from btu import Result
 from btu.btu_core import btu_email
 
 class BTUTaskLog(Document):
@@ -164,6 +164,9 @@ def check_in_progress_logs_for_timeout(verbose=False):
 
 	if verbose:
 		print(f"Found {len(in_progress_logs)} BTU Task Logs that are In-Progress.")
+
+	datetime_now_tz_aware = get_system_datetime_now()
+
 	for each_document_name in in_progress_logs:
 		doc_log = frappe.get_doc("BTU Task Log", each_document_name)
 		max_task_duration = frappe.get_value("BTU Task", doc_log.task, "max_task_duration")
@@ -172,7 +175,8 @@ def check_in_progress_logs_for_timeout(verbose=False):
 		except Exception as ex:
 			raise ValueError("Value of 'Max Task Duration' should be an integer representing seconds.") from ex
 
-		seconds_since_log_creation = (now_datetime() - doc_log.creation).total_seconds()
+		log_creation_tz_aware = make_datetime_naive(doc_log.creation) if is_datetime_naive(doc_log.creation) else doc_log.creation
+		seconds_since_log_creation = (datetime_now_tz_aware - log_creation_tz_aware).total_seconds()
 		if seconds_since_log_creation > max_task_duration:
 			print(f"BTU Task Log {doc_log.name}.  {seconds_since_log_creation} seconds have passed since creation.  Changing status from 'In-Progress' to 'Failed'")
 			doc_log.success_fail = 'Timeout'

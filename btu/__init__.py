@@ -25,7 +25,7 @@ from rq import Queue
 import frappe
 from frappe.utils.background_jobs import get_redis_conn
 
-__version__ = '15.0.0'
+__version__ = '15.0.1'
 
 
 class Result():
@@ -247,6 +247,7 @@ def list_failed_jobs():
 				message += f"Unable to retrieve details for Queue={each_queue.name} : Job={job_id}<br>"
 	frappe.msgprint(message)
 
+
 @frappe.whitelist()
 def print_job_details(queue_name, job_id):
 	"""
@@ -267,6 +268,7 @@ def print_job_details(queue_name, job_id):
 		prettier_string = prettier_string.replace("\n", "<br>")
 		# print(prettier_string)
 		frappe.msgprint(prettier_string)
+
 
 @frappe.whitelist(methods=['DELETE'])
 def remove_failed_jobs(date_from, date_to, wildcard_text=None):
