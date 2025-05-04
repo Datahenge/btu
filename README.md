@@ -2,7 +2,9 @@
 
 For details, please read the project's **[Official Documentation](https://datahenge.github.io/btu/)**.
 
-If you're looking for its companion application, the **BTU Scheduler**, that project is maintained <a href="https://github.com/Datahenge/btu_scheduler_daemon" target='_blank'>on a separate GitHub site</a>.
+If you're looking for its companion application, the Rust-based **BTU Scheduler**, that project is maintained <a href="https://github.com/Datahenge/btu_scheduler_daemon" target='_blank'>on a separate GitHub site</a>.
+
+🆕 **NEW in 2025** - Python version of the BTU Scheduler, [btu_scheduler_py](https://github.com/Datahenge/btu_scheduler_py)
 
 ### What is this?
 Background Tasks Unleashed is:
