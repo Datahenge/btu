@@ -34,7 +34,11 @@ class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
 		"""
 		After deleting this Task Schedule, delete the corresponding Python RQ data.
 		"""
-		self.cancel_schedule()
+		try:
+			self.cancel_schedule()
+		except Exception as ex:
+			print(ex)
+			frappe.msgprint(ex)
 
 	def before_validate(self):
 
@@ -105,7 +109,11 @@ class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
 			doc_orig = self.get_doc_before_save()
 			if doc_orig and doc_orig.enabled != self.enabled:
 				# Request the BTU Scheduler to cancel (if status was not previously Disabled)
-				self.cancel_schedule()
+				try:
+					self.cancel_schedule()
+				except Exception as ex:
+					print(ex)
+					frappe.msgprint(ex)
 
 # -----end of standard controller methods-----
 
