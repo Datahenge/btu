@@ -106,6 +106,10 @@ class DeliveryTarget():
 	@staticmethod
 	def get_spreadsheet_data(columns, data):
 
+		if (not columns) or (not data):
+			print("Warning: Function get_spreadsheet_data() does not have both columns and data.")
+			return None
+
 		out = [[_(df.label) for df in columns], ]
 		for row in data:
 			new_row = []
@@ -129,7 +133,7 @@ class DeliveryTarget():
 		"""
 		if self.target_type not in DeliveryTarget.valid_target_types:
 			frappe.throw(_("{0} is not a valid Target Type (should one of the following {1})")
-				.format(frappe.bold(self.format), frappe.bold(", ".join(DeliveryTarget.valid_target_types))))
+				.format(frappe.bold(self.report_format), frappe.bold(", ".join(DeliveryTarget.valid_target_types))))
 
 	def validate_report_format(self):
 		"""
@@ -137,7 +141,7 @@ class DeliveryTarget():
 		"""
 		if self.report_format not in DeliveryTarget.valid_report_formats:
 			frappe.throw(_("{0} is not a valid report format. Report format should one of the following {1}")
-				.format(frappe.bold(self.format), frappe.bold(", ".join(DeliveryTarget.valid_report_formats))))
+				.format(frappe.bold(self.report_format), frappe.bold(", ".join(DeliveryTarget.valid_report_formats))))
 
 	def validate_target_details(self):
 
@@ -158,8 +162,8 @@ class DeliveryTarget():
 
 	def get_file_name(self):
 
-		prefix = self.report.replace(" ", "-").replace("/", "-")
-		suffix = self.format.lower()
+		prefix = self.report_key.replace(" ", "-").replace("/", "-")
+		suffix = self.report_format.lower()
 		return f"{prefix}.{suffix}"
 
 	def generate_output(self):
@@ -182,22 +186,21 @@ class DeliveryTarget():
 			return to_csv(spreadsheet_data)
 
 		frappe.throw(_('Invalid Output Format'))
+		return None
 
 	def send(self):
 		# TODO: Send for different target destinations, not just frappe.sendmail
 
-		content = self.generate_output()
+		email_content = self.generate_output()
 
 		attachments = None
 		if self.report_format == "HTML":
-			message = content
+			message = email_content
 		else:
-			message = get_html_table(self.report_key, self.content)
-
-		if not self.report_format=='HTML':
+			message = get_html_table(self.report_key, email_content)
 			attachments = [{
 				'fname': self.get_file_name(),
-				'fcontent': content
+				'fcontent': email_content
 			}]
 
 		if self.target_type == "Email":
@@ -319,15 +322,13 @@ def test1():
 	values = {
 		"report_key": "Daily Orders by Customer Group",
 		"report_parameters": {
-			"delivery_date": "2023-10-23",
-			"customer_group": "None",
-			"delivery_status": "Ready",
+			"delivery_date": "2025-05-29"
 		},
 		"delivery_targets": [
 			{
 				"target_type": "Email",
 				"target_details": "brian@datahenge.com, recall@martianskies.com",
-				"report_format": "HTML",
+				"report_format": "CSV",
 
 			}
 		]
