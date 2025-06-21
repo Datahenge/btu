@@ -122,8 +122,14 @@ class BTUTask(Document):
 		"""
 		if not self.arguments:
 			return None
-		args_dict = ast.literal_eval(self.arguments)
-		return args_dict
+		if isinstance(self.arguments, dict):
+			return self.arguments
+		try:
+			return json.loads(self.arguments)
+		except Exception as ex:
+			print(f"built_in_arguments() : {ex}")
+
+		return ast.literal_eval(self.arguments)
 
 	def _can_run_on_webserver(self) -> bool:
 		"""
