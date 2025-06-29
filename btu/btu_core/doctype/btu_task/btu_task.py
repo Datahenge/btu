@@ -282,9 +282,9 @@ class BTUTask(Document):
 
 		self.push_task_into_queue(extra_arguments=self.built_in_arguments())
 
-		message = f"Task {self.name} has been submitted to the Redis Queue. No callback alerts are possible."
-		message += "\nTo see the status of this Task, review the Task Logs."
-		frappe.msgprint(message)
+		message = f"BTU Task {self.name} has been submitted to the Redis Queue. No callback alerts are possible."
+		message += "\nTo see the status of this Task, review the BTU Task Logs."
+		frappe.msgprint(message, to_console=True)
 
 	def push_task_into_queue(self, extra_arguments=None):
 		"""
