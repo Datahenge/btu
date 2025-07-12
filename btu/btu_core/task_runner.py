@@ -1,9 +1,10 @@
 """
-btu.task_runner.py
+btu.btu_core.task_runner.py
 """
 
 from contextlib import redirect_stdout
 from enum import Enum
+import importlib
 import io
 import sys
 import time
@@ -11,6 +12,9 @@ import uuid
 
 # Frappe
 import frappe
+
+from btu import Result, get_system_datetime_now, make_datetime_naive
+from btu.btu_core.doctype.btu_task_log.btu_task_log import write_log_for_task
 
 class StandardOutput(Enum):
 	NONE = 0
@@ -129,15 +133,9 @@ class TaskRunner():
 		To help debug and explain what is happening, I've included a 'dprint()' function.
 		This function only prints when TaskRunner argument 'enable_debug_mode' is True.
 		"""
-		# I'm not confident that importing here (instead of the module level) makes any difference.
-		# Still, it "feels right", given this function is executed independently by the Queue.
-		# It's possible that Python + RQ pickle the entire Class and namespace, though.
-		import importlib
-		from btu import Result, get_system_datetime_now, make_datetime_naive
-		from btu.btu_core.doctype.btu_task_log.btu_task_log import write_log_for_task
 
 		self.dprint(f"\n-------- Begin function_wrapper (Redis Job = {self.redis_job_id})--------\n")
-		
+
 		# TODO: This is not longer working in Frappe v15.  Presence of boot doesn't seem to indicate anything??
 		if not hasattr(frappe, 'boot'):
 			# The missing 'boot' object is the best-indication that this function is running on RQ, not the web server.
@@ -149,21 +147,21 @@ class TaskRunner():
 		else:
 			self.dprint("This code is being executed directly by the Web Server.")
 
-		module_object = importlib.import_module(self.module_path())  # Need to import the function's module into scope.
-		function_to_call = getattr(module_object, self.function_name())
-		function_result = None
-
-		self.dprint(f"Calling function '{self.function_name()}' in module '{self.module_path()}'.")
-		self.dprint("Begin Standard Output (TaskRunner.function_wrapper):\n")
-
 		start_datetime = make_datetime_naive(get_system_datetime_now()) # Recording this in the System Time Zone
 		self.create_new_log(start_datetime)  # Create a new BTU Task Log, with a status of "In Progress"
+
+		function_result = None
 		execution_start = time.time()
+		datetime_string = get_system_datetime_now().strftime("%m/%d/%Y, %H:%M:%S %Z")
 
 		try:
 			stdout_buffer_for_log = None
+
+			module_object = importlib.import_module(self.module_path())  # Need to import the function's module into scope.
+			function_to_call = getattr(module_object, self.function_name())
+			self.dprint(f"Calling function '{self.function_name()}' in module '{self.module_path()}'.")
+			self.dprint("Begin Standard Output (TaskRunner.function_wrapper):\n")
 			self.dprint(f"Keyword arguments are as follows: {self.kwarg_dict}")
-			datetime_string = get_system_datetime_now().strftime("%m/%d/%Y, %H:%M:%S %Z")
 
 			# Option 1: Function output will be routed to Standard Output, and saved to a log file on disk.
 			if self.standard_output == StandardOutput.STDOUT:
@@ -174,12 +172,12 @@ class TaskRunner():
 			else:
 				raise ValueError(f"No code implemented for Standard Output = '{self.standard_output}'")
 
-			execution_time = round(time.time() - execution_start,3)
+			execution_time = round(time.time() - execution_start, 3)
 			function_result = Result(True, ret, execution_time=execution_time)
 
 		except Exception as ex:
 			self.dprint(f"Error in call to function '{self.function_name()}'\n{ex}")
-			execution_time = round(time.time() - execution_start,3)
+			execution_time = round(time.time() - execution_start, 3)
 			function_result = Result(False, str(ex), execution_time=execution_time)
 
 		self.dprint(f"\nEnd Standard Output\nFunction Result: {function_result}")
