@@ -330,6 +330,7 @@ def create_and_run_one_shot(short_description: str,
 	doc_task.flags.ignore_permissions=1
 	doc_task.save()
 	doc_task.submit()
+	frappe.db.commit()  # Brian: It's importantly to commit immediately, before enqueuing, or you risk a Race Condition because SQL commit happens very late.
 
 	# Decision: Run in Queue or immediately in the current thread of execution?
 	if doc_task.queue_name:
