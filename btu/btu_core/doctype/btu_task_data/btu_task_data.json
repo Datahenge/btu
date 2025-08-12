@@ -1,0 +1,70 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-08-12 17:13:32.927806+00:00",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "text_data_section_section",
+  "btu_task_data",
+  "button_readme",
+  "data_description",
+  "text_data"
+ ],
+ "fields": [
+  {
+   "fieldname": "text_data_section_section",
+   "fieldtype": "Section Break"
+  },
+  {
+   "description": "Text data goes here.  But it could be gigantic, so we don't ever want to display it.",
+   "fieldname": "text_data",
+   "fieldtype": "Text",
+   "hidden": 1,
+   "label": "Text Data"
+  },
+  {
+   "description": "Text data goes here.  But it could be gigantic, so we don't ever want to display it.",
+   "fieldname": "btu_task_data",
+   "fieldtype": "Heading",
+   "label": "BTU Task Data"
+  },
+  {
+   "fieldname": "button_readme",
+   "fieldtype": "Button",
+   "label": "README",
+   "options": "button_readme_clicked"
+  },
+  {
+   "description": "Describes the purpose or use case for this data.",
+   "fieldname": "data_description",
+   "fieldtype": "Small Text",
+   "label": "Data Description",
+   "set_only_once": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-08-12 17:42:12.111508+00:00",
+ "modified_by": "Administrator",
+ "module": "BTU_Core",
+ "name": "BTU Task Data",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
