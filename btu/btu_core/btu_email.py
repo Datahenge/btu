@@ -105,12 +105,12 @@ class Emailer():
 		"""
 		if not recipients:
 			return []
-		elif isinstance(recipients, str):
-			return recipients.replace(',', ';').split(';')
-		elif isinstance(recipients, list):
+		if isinstance(recipients, str):
+			temp = recipients.replace(',', ';').split(';')
+			return { each.strip() for each in temp }
+		if isinstance(recipients, list):
 			return recipients
-		else:
-			raise TypeError(f"Argument 'recipients' has an unhandled data type '{type(recipients)}'")
+		raise TypeError(f"Argument 'recipients' has an unhandled data type '{type(recipients)}'")
 
 	@staticmethod
 	def recipients_to_csv_string(recipients):
