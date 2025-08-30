@@ -27,7 +27,7 @@ class BTUTaskLog(Document):
 					btu_email.email_on_task_conclusion(self)
 			except Exception as ex:
 				message = "Error in BTU Task Log (after_insert) while attempting to send email about Task Log."
-				message += f"\n{str(ex)}\n"
+				message += f"\n{repr(ex)}\n"
 				frappe.msgprint(message)
 				print(message)
 				frappe.set_value("BTU Task Log", self.name, "stdout", message + (self.stdout or ""))
@@ -46,13 +46,13 @@ class BTUTaskLog(Document):
 			except Exception as ex:
 				message = "Error in function email_on_task_conclusion(), during attempt to send email about Task Log."
 				message += f"\n{str(ex)}\n"
-				frappe.msgprint(message)
 				print(message)
+				frappe.msgprint(message)
 				frappe.db.set_value("BTU Task Log", self.name, "stdout", message + (self.stdout or ""))
 				frappe.db.set_value("BTU Task Log", self.name, "success_fail", "Failed")
 
-# Yes, 'on_doctype_update' belongs here, outside the Document class.  Pretty silly.
-def on_doctype_update():
+
+def on_doctype_update():  # Yes, 'on_doctype_update' belongs here, outside the Document class.  Pretty silly.
 	"""
 	Create additional indexes and constraints
 	"""
@@ -72,6 +72,8 @@ def write_log_for_task(task_id, result, log_name=None, stdout=None, date_time_st
 		result	:	A Result object.
 		log_name :	Optional.  The name of the Task Log.  Useful when updating an existing, pending log.
 	"""
+
+	print(f"BTU Task {task_id} has overall result {bool(result)}")
 
 	# Important Fields in BTU Task Log:
 	#     1.  task

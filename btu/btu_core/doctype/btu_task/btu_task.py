@@ -18,6 +18,7 @@ from btu import Result, get_system_datetime_now, make_datetime_naive, dict_to_da
 from btu.btu_core.task_runner import TaskRunner
 from btu.btu_core.doctype.btu_task_log.btu_task_log import write_log_for_task
 
+NoneType = type(None)
 
 class BTU_AWARE_FUNCTION():  # pylint: disable=invalid-name
 
@@ -270,7 +271,7 @@ class BTUTask(Document):
 		return (self._callable_function().__name__, success, new_log_id)
 
 	@frappe.whitelist()
-	def btn_push_into_queue(self):
+	def btn_push_into_queue(self, quiet=False):
 		"""
 		Runs the BTU Task in the context of a Redis Queue (RQ) Worker.
 		"""
@@ -284,7 +285,9 @@ class BTUTask(Document):
 
 		message = f"BTU Task {self.name} has been submitted to the Redis Queue. No callback alerts are possible."
 		message += "\nTo see the status of this Task, review the BTU Task Logs."
-		frappe.msgprint(message, to_console=True)
+		if not quiet:
+			frappe.msgprint(message)
+		print(message)
 
 	def push_task_into_queue(self, extra_arguments=None):
 		"""
@@ -307,14 +310,15 @@ class BTUTask(Document):
 def create_and_run_one_shot(short_description: str,
                             function_path: str,
 							arguments: dict,
-							queue_name='default') -> str:
+							queue_name='default',
+							quiet=False) -> str:
 	"""
 	NOTE: Returns a BTU Task Log document ID.
 	"""
 
 	if not function_path or not isinstance(function_path, str):
 		raise ValueError("Argument 'function_path' is mandatory and must be a Python string.")
-	if not isinstance(arguments, dict):
+	if not isinstance(arguments, (dict, NoneType)):
 		raise ValueError("Argument 'arguments' must be a Python dictionary.")
 
 	arguments = dict_to_dateless_dict(arguments)  # necessary to convert Date objects into ISO 8601 strings.
@@ -323,7 +327,7 @@ def create_and_run_one_shot(short_description: str,
 	doc_task.task_type = 'One-Shot'
 	doc_task.desc_short = short_description
 	doc_task.function_string = function_path
-	doc_task.arguments = json.dumps(arguments, indent=4)
+	doc_task.arguments = json.dumps(arguments, indent=4) if arguments else None
 	doc_task.run_only_as_worker = bool(queue_name)
 	doc_task.queue_name = queue_name
 	doc_task.max_task_duration = 3600  # timeout after 60 minutes
@@ -334,7 +338,7 @@ def create_and_run_one_shot(short_description: str,
 
 	# Decision: Run in Queue or immediately in the current thread of execution?
 	if doc_task.queue_name:
-		doc_task.btn_push_into_queue()
+		doc_task.btn_push_into_queue(quiet=quiet)
 	else:
 		doc_task.run_task_on_webserver()
 	return doc_task.name

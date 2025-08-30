@@ -119,11 +119,11 @@ class Emailer():
 		"""
 		if not recipients:
 			return None
-		if isinstance(recipients, list):
+		if isinstance(recipients, (list, set)):
 			return ", ".join(recipients)
 		if isinstance(recipients, str):
 			return recipients
-		raise TypeError(recipients)
+		raise TypeError(f"Argument 'recipients' is a Python type {type(recipients)} with value {recipients}")
 
 	def parse_recipients(self):
 
