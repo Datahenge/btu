@@ -265,13 +265,15 @@ class BTUReport():
 												 as_dict=True,
 												 ignore_prepared_report=True)
 
+		if not data:
+			return None, None
+
 		# Add row numbers:
 		columns.insert(0, frappe._dict(fieldname='idx', label='', width='30px'))  # pylint: disable=protected-access
 		for index, each_dict in enumerate(data):
 			each_dict['idx'] = index + 1
 
 		# We now have data, a List of Dictionary.
-
 		if len(data)==0:
 			return None, None
 
