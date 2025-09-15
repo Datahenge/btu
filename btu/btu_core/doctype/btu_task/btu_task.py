@@ -117,6 +117,11 @@ class BTUTask(Document):
 				}
 			)
 
+	def on_trash(self):
+		self.flags.ignore_submitted = True  # tell a lie, to bypass the Submitted checks
+		sql_statement = """ DELETE FROM "tabBTU Task Log" WHERE task = %(task_id)s """
+		frappe.db.sql(sql_statement, values={"task_id": self.name})
+
 	def built_in_arguments(self):
 		"""
 		Converts an argument String into an argument Dictionary.
