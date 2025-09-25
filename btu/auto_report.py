@@ -170,6 +170,8 @@ class DeliveryTarget():
 
 		report_columns = self.report_content["columns"]
 		report_rows = self.report_content["rows"]
+		if not report_rows:
+			return None
 
 		if self.report_format == 'HTML':
 			columns, data = make_links(report_columns, report_rows)

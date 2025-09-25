@@ -315,7 +315,7 @@ class BTUTask(Document):
 def create_and_run_one_shot(short_description: str,
                             function_path: str,
 							arguments: dict,
-							queue_name='default',
+							queue_name='short',
 							quiet=False) -> str:
 	"""
 	NOTE: Returns a BTU Task Log document ID.
