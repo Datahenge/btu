@@ -194,6 +194,8 @@ class DeliveryTarget():
 		# TODO: Send for different target destinations, not just frappe.sendmail
 
 		email_content = self.generate_output()
+		if not email_content:
+			return  # do not transmit empty reports
 
 		attachments = None
 		if self.report_format == "HTML":
