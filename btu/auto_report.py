@@ -146,9 +146,9 @@ class DeliveryTarget():
 	def validate_target_details(self):
 
 		if self.target_type == "Email":
-			recipients = self.target_details
+			recipients = self.target_details.replace(',', ';')  # allows for splitting by either comma or semicolon
 			valid = []
-			for each_email in recipients.split(","):
+			for each_email in recipients.split(";"):
 				if each_email:
 					validate_email_address(each_email, True)
 					valid.append(each_email)
