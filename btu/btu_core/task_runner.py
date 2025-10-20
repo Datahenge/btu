@@ -106,7 +106,7 @@ class TaskRunner():
 			self.kwarg_dict = None
 		self.dprint(f"Task Runner now has these keyword arguments: {self.kwarg_dict}")
 
-	def is_this_btu_aware_function(self, callable_function, debug=True):
+	def is_this_btu_aware_function(self, callable_function, debug=False):
 		"""
 		Returns True if the 'function_string' is actually the path to a BTU-Aware class.
 		"""

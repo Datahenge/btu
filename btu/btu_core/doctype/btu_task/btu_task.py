@@ -197,7 +197,7 @@ class BTUTask(Document):
 
 		return number_of_missing_arguments == 0
 
-	def is_this_btu_aware_function(self, debug=True):
+	def is_this_btu_aware_function(self, debug=False):
 		"""
 		Returns True if the 'function_string' is actually the path to a BTU-Aware class.
 		"""
