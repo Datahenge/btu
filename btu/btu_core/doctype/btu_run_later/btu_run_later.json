@@ -25,9 +25,10 @@
   "create_new_task",
   "new_task_name",
   "new_task_function_path",
-  "new_task_notes",
+  "redis_queue_name",
   "column_break_swjs",
-  "btu_task_arguments"
+  "btu_task_arguments",
+  "new_task_notes"
  ],
  "fields": [
   {
@@ -129,25 +130,29 @@
    "fieldname": "btu_task",
    "fieldtype": "Link",
    "label": "BTU Task ID",
-   "options": "BTU Task"
+   "options": "BTU Task",
+   "set_only_once": 1
   },
   {
    "default": "0",
    "fieldname": "create_new_task",
    "fieldtype": "Check",
-   "label": "Create new task"
+   "label": "Create new task",
+   "set_only_once": 1
   },
   {
    "depends_on": "eval:doc.create_new_task == 1;",
    "fieldname": "new_task_name",
    "fieldtype": "Data",
-   "label": "New Task Name"
+   "label": "New Task Name",
+   "set_only_once": 1
   },
   {
    "depends_on": "eval:doc.create_new_task == 1;",
    "fieldname": "new_task_function_path",
    "fieldtype": "Data",
-   "label": "New Task Function Path"
+   "label": "New Task Function Path",
+   "set_only_once": 1
   },
   {
    "depends_on": "eval:doc.create_new_task == 1;",
@@ -162,7 +167,8 @@
   {
    "fieldname": "btu_task_arguments",
    "fieldtype": "Text",
-   "label": "BTU Task Arguments"
+   "label": "BTU Task Arguments",
+   "set_only_once": 1
   },
   {
    "default": "Pending Future",
@@ -177,11 +183,17 @@
    "options": "Pending Future\nIn-Progress\nCompleted\nAbandoned",
    "reqd": 1,
    "search_index": 1
+  },
+  {
+   "fieldname": "redis_queue_name",
+   "fieldtype": "Data",
+   "label": "Redis Queue",
+   "set_only_once": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-04-08 22:43:10.304565+00:00",
+ "modified": "2025-11-08 22:21:26.565663+00:00",
  "modified_by": "Administrator",
  "module": "BTU_Core",
  "name": "BTU Run Later",

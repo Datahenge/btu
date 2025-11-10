@@ -58,12 +58,16 @@ def exists_unique_identifier(unique_identifier: str) -> bool:
 	return False
 
 
+# pylint: disable=too-many-positional-arguments
 def enqueue_for_later(short_name: str,
 					  not_before_time: DateTimeType,
 					  target_queue: str,
 					  path_to_function: str,
 					  arguments: dict,
 					  unique_identifier: str = None):
+	"""
+	Option 1 of 2 for creating a BTU Run Later: write directly to Redis database.
+	"""
 
 	# TODO : validate path to function
 	validate_datatype("arguments", arguments, (dict, NoneType), False)
@@ -90,6 +94,32 @@ def enqueue_for_later(short_name: str,
 	}
 	new_redis_queue_connection().hmset(new_key, payload)
 	print(f"Added a new key to Redis Queue database: {new_key}")
+
+
+def create_doc_run_later(comms_type: str,
+                         hold_until_datetime: DateTimeType,
+						 task_name: str,
+						 task_function_path: str,
+						 task_arguments,
+						 redis_queue_name="short") -> "Document":
+	"""
+	Option 2 of 2 for creating a BTU Run Later: create a new Document 'BTU Run Later'
+	"""
+	doc_later = frappe.new_doc("BTU Run Later")
+	doc_later.comms_type = comms_type
+	doc_later.hold_until = hold_until_datetime
+	doc_later.create_new_task = True
+	doc_later.new_task_name = task_name
+	doc_later.new_task_function_path = task_function_path
+	if isinstance(task_arguments, dict):
+		doc_later.btu_task_arguments = json.dumps(task_arguments)
+	elif isinstance(task_arguments, str):
+		doc_later.btu_task_arguments = task_arguments
+	else:
+		raise TypeError(f"task_arguments: {type(task_arguments)}")
+	doc_later.redis_queue_name = redis_queue_name
+	doc_later.save(ignore_permissions=True)
+	return doc_later.name
 
 
 def _lock_polling_task(verbose=False):
@@ -233,7 +263,7 @@ def _run_tasks_from_sql_database(disable_enqueue=False):
 				# Enqueue the work:
 				frappe.enqueue(
 					method="btu.btu_core.wrapped_function.enqueued_run_later_instance",
-					queue="short",
+					queue=doc_run_later.redis_queue_name or "short",
 					timeout="3600",  # one hour
 					run_later_key=doc_run_later.name
 				)
