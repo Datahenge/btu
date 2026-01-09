@@ -32,7 +32,7 @@ def get_pickled_task(task_id, task_schedule_id=None):
 	this_taskrunner = TaskRunner(btu_task=doc_task,
 	                             site_name=frappe.local.site,
 								 schedule_id=task_schedule_id,	# very important, so TaskRunner can Log per Schedule!
-								 enable_debug_mode=True)
+								 enable_debug_mode=False)
 
 	# This allows for adding additional keyword arguments to a Task:
 	extra_arguments = doc_task.built_in_arguments()
@@ -134,7 +134,7 @@ def enqueue_for_next_available_worker(task_schedule_key: str):
 		doc_task = frappe.get_doc("BTU Task", doc_task_schedule.task, ignore_permissions=True)
 
 		# Create an instance of TaskRunner() class, and put 'function_wrapper' into the queue.
-		task_runner = TaskRunner(doc_task, site_name=frappe.local.site, enable_debug_mode=True)
+		task_runner = TaskRunner(doc_task, site_name=frappe.local.site, enable_debug_mode=False)
 
 		# This supports the idea of passing special keyword arguments to a Task:
 		extra_arguments = doc_task.built_in_arguments()

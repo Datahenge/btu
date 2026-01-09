@@ -7,6 +7,7 @@ Call these functions from 'Bench Console' or 'Bench Execute'; then validate resu
 """
 
 import frappe
+from btu.logging import logger
 
 @frappe.whitelist()
 def ping_with_wait(seconds_to_wait):
@@ -203,3 +204,20 @@ def test_rq_pickling():
 	print(f"\nFunction 'data' as produced by Sanchez Pickler:\n{test_pickler_results}")
 
 	assert test_pickler_results == new_job.data
+
+
+def test_with_try_except_logging():
+	"""
+	Very basic function for testing BTU returning None
+	"""
+	import warnings
+	warnings.filterwarnings("ignore", category=DeprecationWarning)
+	from time import sleep
+	try:
+		sleep(1.5)
+		print("Hello World")
+		print("Hello Mars")
+		raise RuntimeError()
+	except Exception as ex:
+		logger.error(f"test_with_try_except_logging() : Unhandled exception {repr(ex)}")
+		raise ex

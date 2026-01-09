@@ -29,7 +29,7 @@ import frappe
 from frappe.utils.password import get_decrypted_password
 
 # BTU
-from btu import dprint
+from btu import dprint, print_both
 
 DEBUG_ENV_VARIABLE="BTU_DEBUG"  # if this OS environment variable = 1, then dprint() messages will print to stdout.
 
@@ -232,7 +232,7 @@ class Emailer():
 			response = new_mandrill_client().messages.send({"message": new_message})
 
 			if get_mandrill_response_status_overall(response) == MandrillResponse.UNHANDLED_ERROR:
-				frappe.msgprint(f"Unhandled error response from Mandrill API: {response}", to_console=True)
+				print_both(f"Unhandled error response from Mandrill API: {response}")
 				raise IOError(response)
 
 		except IOError as ex:
@@ -240,7 +240,7 @@ class Emailer():
 				error_string = json.dumps(ex)
 			else:
 				error_string = str(ex)
-			frappe.msgprint(f"Error while sending email via Mandrill: {error_string}", to_console=True)
+			print_both(f"Error while sending email via Mandrill: {error_string}")
 			print(f"Message sent to Mandrill:\n{json.dumps(new_message, indent=4)}")
 			frappe.msgprint(f"Error while sending email via Mandrill: {error_string}")
 

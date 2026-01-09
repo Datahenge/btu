@@ -17,6 +17,7 @@
   "btn_send_hello_email",
   "section_break_cskj",
   "environment_name",
+  "force_debug_mode",
   "email_tab",
   "email_section",
   "send_email_via",
@@ -224,7 +225,8 @@
   },
   {
    "fieldname": "section_break_cskj",
-   "fieldtype": "Section Break"
+   "fieldtype": "Section Break",
+   "label": "Debugging"
   },
   {
    "fieldname": "column_break_kfdc",
@@ -235,14 +237,23 @@
    "fieldtype": "Button",
    "label": "Test Mandrill Email",
    "options": "button_send_test_mandrill_email"
+  },
+  {
+   "default": "Defer To Code",
+   "description": "Allows admins to forcibly enable/disable the TaskRunner debug mode.",
+   "fieldname": "force_debug_mode",
+   "fieldtype": "Select",
+   "label": "Debug Mode",
+   "options": "Defer To Code\nAlways\nNever",
+   "reqd": 1
   }
  ],
  "hide_toolbar": 1,
  "issingle": 1,
  "links": [],
- "modified": "2025-01-02 14:58:58.367576",
+ "modified": "2026-01-09 14:59:02.490893",
  "modified_by": "Administrator",
- "module": "BTU_Core",
+ "module": "btu_core",
  "name": "BTU Configuration",
  "owner": "Administrator",
  "permissions": [
@@ -256,6 +267,7 @@
    "write": 1
   }
  ],
+ "row_format": "Dynamic",
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": []

@@ -1,7 +1,7 @@
 {
  "charts": [],
  "content": "[{\"id\":\"wCiYqLH3hS\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Background Tasks Unleashed (BTU)<br></span>\",\"col\":12}},{\"id\":\"uA6-DxC-s_\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Tasks\",\"col\":3}},{\"id\":\"aC-ecHZJbg\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Task Log\",\"col\":3}},{\"id\":\"ItlO5egnqG\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Task Schedule\",\"col\":3}},{\"id\":\"TDdTlk_Ehh\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Btu Run Later\",\"col\":3}},{\"id\":\"ndw5GuNgcF\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"8SBcapyHo3\",\"type\":\"card\",\"data\":{\"card_name\":\"Configuration\",\"col\":4}},{\"id\":\"oFUY58mJBA\",\"type\":\"card\",\"data\":{\"card_name\":\"Reports\",\"col\":4}}]",
- "creation": "2025-04-07 21:19:41.266009+00:00",
+ "creation": "2025-04-07 21:19:41.266009",
  "custom_blocks": [],
  "docstatus": 0,
  "doctype": "Workspace",
@@ -72,7 +72,7 @@
    "type": "Link"
   }
  ],
- "modified": "2025-04-07 23:03:31.358337+00:00",
+ "modified": "2025-04-07 23:03:31.358337",
  "modified_by": "Administrator",
  "module": "BTU_Core",
  "name": "Automated Tasks",

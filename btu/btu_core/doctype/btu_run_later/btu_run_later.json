@@ -1,7 +1,7 @@
 {
  "actions": [],
  "autoname": "format: BTU-RL-{YYYY}{MM}{DD}-{######}",
- "creation": "2025-04-03 19:12:14.913479+00:00",
+ "creation": "2025-04-03 19:12:14.913479",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
@@ -193,7 +193,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-11-08 22:21:26.565663+00:00",
+ "modified": "2025-11-08 22:21:26.565663",
  "modified_by": "Administrator",
  "module": "BTU_Core",
  "name": "BTU Run Later",

@@ -1,7 +1,7 @@
 {
  "actions": [],
  "allow_rename": 1,
- "creation": "2025-08-12 17:13:32.927806+00:00",
+ "creation": "2025-08-12 17:13:32.927806",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
@@ -45,7 +45,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-08-12 17:42:12.111508+00:00",
+ "modified": "2025-08-12 17:42:12.111508",
  "modified_by": "Administrator",
  "module": "BTU_Core",
  "name": "BTU Task Data",

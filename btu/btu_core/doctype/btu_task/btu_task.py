@@ -197,7 +197,7 @@ class BTUTask(Document):
 
 		return number_of_missing_arguments == 0
 
-	def is_this_btu_aware_function(self, debug=False):
+	def is_this_btu_aware_function(self):
 		"""
 		Returns True if the 'function_string' is actually the path to a BTU-Aware class.
 		"""
@@ -211,9 +211,8 @@ class BTUTask(Document):
 					result = True
 			except Exception as ex:
 				print(ex)
-		if debug:
-			print(f"BTUTask: Is this a BTU-Aware function = {result}\n--------")
-			print(f"BTUTask: Current user is {frappe.session.user}\n--------")
+		# print(f"BTUTask: Is this a BTU-Aware function = {result}\n--------")
+		# print(f"BTUTask: Current user is {frappe.session.user}\n--------")
 		return result
 
 	@frappe.whitelist()
@@ -299,7 +298,7 @@ class BTUTask(Document):
 		Create an instance of TaskRunner() class, and put 'function_wrapper' into the queue.
 		Execution will happen immediately (not on a schedule)
 		"""
-		task_runner = TaskRunner(self, site_name=frappe.local.site, enable_debug_mode=True)
+		task_runner = TaskRunner(self, site_name=frappe.local.site, enable_debug_mode=False)
 
 		# This supports the idea of passing special keyword arguments to a Task:
 		if extra_arguments:

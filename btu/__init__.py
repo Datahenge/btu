@@ -25,7 +25,9 @@ from rq import Queue
 import frappe
 from frappe.utils.background_jobs import get_redis_conn
 
-__version__ = '15.0.1'
+NoneType = type(None)
+
+__version__ = '15.1.0'
 
 
 class Result():
@@ -45,8 +47,8 @@ class Result():
 		if message:
 			if isinstance(message, bool):
 				message = "True" if message else "False"
-			if not isinstance(message, (str, dict, list)):
-				raise TypeError(f"Result class argument 'message' must be a Python String, List, or Dictionary.  Found value '{message}' instead.")
+			if not isinstance(message, (str, dict, list, int, NoneType)):
+				raise TypeError(f"Result class argument 'message' must be a Python String, Integer, List, or Dictionary.  Found a type '{type(message)}' instead.")
 		self.okay = success
 		self.message = message or None
 		self.execution_time = round(execution_time,2) if execution_time else None
@@ -289,7 +291,7 @@ def remove_failed_jobs(date_from, date_to, wildcard_text=None):
 		# 'each_queue' is an object of RQ.Queue
 		fail_registry = each_queue.failed_job_registry
 		failed_job_ids = fail_registry.get_job_ids()
-		frappe.msgprint(f"Total quantity of failed Jobs in queue '{each_queue.name}' = {len(failed_job_ids)}", to_console=True)
+		print_both(f"Total quantity of failed Jobs in queue '{each_queue.name}' = {len(failed_job_ids)}")
 		for job_id in failed_job_ids:
 			# Get the details about this particular Job.
 			job = each_queue.fetch_job(job_id)
@@ -307,9 +309,9 @@ def remove_failed_jobs(date_from, date_to, wildcard_text=None):
 						jobs_deleted += 1
 
 	if not jobs_deleted:
-		frappe.msgprint("No RQ Jobs found that match this criteria.", to_console=True)
+		print_both("No RQ Jobs found that match this criteria.")
 	else:
-		frappe.msgprint(f"{jobs_deleted} jobs deleted from the Redis Queue.", to_console=True)
+		print_both(f"{jobs_deleted} jobs deleted from the Redis Queue.")
 
 
 def dict_to_dateless_dict(some_object):
@@ -335,3 +337,11 @@ def dict_to_dateless_dict(some_object):
 
 	# Scenario 4: Argument is something not covered above (e.g. Integers)
 	return some_object
+
+
+def print_both(message):
+	"""
+	Function to print something to both stdout and browser.
+	"""
+	frappe.msgprint(message)
+	print(message)

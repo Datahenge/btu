@@ -1,7 +1,7 @@
 {
  "actions": [],
  "autoname": "BTU-.#########",
- "creation": "2021-08-14 14:04:50.727345+00:00",
+ "creation": "2021-08-14 14:04:50.727345",
  "description": "A Task represents a Python function that can be executed automatically in the background, using Redis Queue and workers.",
  "doctype": "DocType",
  "documentation": "https://gitlab.com/datahenge/btu",
@@ -198,7 +198,7 @@
    "link_fieldname": "task"
   }
  ],
- "modified": "2025-09-14 15:50:44.501821+00:00",
+ "modified": "2025-09-14 15:50:44.501821",
  "modified_by": "Administrator",
  "module": "BTU_Core",
  "name": "BTU Task",

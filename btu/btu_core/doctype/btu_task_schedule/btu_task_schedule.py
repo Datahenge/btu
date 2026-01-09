@@ -21,7 +21,7 @@ from frappe import _
 from frappe.model.document import Document
 
 # BTU
-from btu import ( validate_cron_string, Result, get_system_datetime_now)
+from btu import ( validate_cron_string, Result, get_system_datetime_now, print_both)
 from btu.btu_api.scheduler import SchedulerAPI
 
 NoneType = type(None)
@@ -112,8 +112,7 @@ class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
 				try:
 					self.cancel_schedule()
 				except Exception as ex:
-					print(ex)
-					frappe.msgprint(ex)
+					print_both(ex)
 
 # -----end of standard controller methods-----
 
@@ -311,8 +310,7 @@ def resubmit_all_task_schedules():
 			doc_schedule.resubmit_task_schedule()
 		except Exception as ex:
 			message = f"Error from BTU Scheduler while submitting Task {doc_schedule.name} : {ex}"
-			frappe.msgprint(message)
-			print(message)
+			print_both(message)
 			doc_schedule.enabled = False
 			doc_schedule.save()
 

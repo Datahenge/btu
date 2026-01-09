@@ -6,8 +6,7 @@ from temporal_lib.core import get_system_datetime_now, make_datetime_naive, is_d
 
 import frappe
 from frappe.model.document import Document
-# from frappe.utils import now_datetime  # this is a Naive Datetime
-from btu import Result
+from btu import Result, print_both
 from btu.btu_core import btu_email
 
 class BTUTaskLog(Document):
@@ -28,8 +27,7 @@ class BTUTaskLog(Document):
 			except Exception as ex:
 				message = "Error in BTU Task Log (after_insert) while attempting to send email about Task Log."
 				message += f"\n{repr(ex)}\n"
-				frappe.msgprint(message)
-				print(message)
+				print_both(message)
 				frappe.set_value("BTU Task Log", self.name, "stdout", message + (self.stdout or ""))
 
 	def on_update(self):
@@ -46,8 +44,7 @@ class BTUTaskLog(Document):
 			except Exception as ex:
 				message = "Error in function email_on_task_conclusion(), during attempt to send email about Task Log."
 				message += f"\n{str(ex)}\n"
-				print(message)
-				frappe.msgprint(message)
+				print_both(message)
 				frappe.db.set_value("BTU Task Log", self.name, "stdout", message + (self.stdout or ""))
 				frappe.db.set_value("BTU Task Log", self.name, "success_fail", "Failed")
 
@@ -88,7 +85,10 @@ def write_log_for_task(task_id, result, log_name=None, stdout=None, date_time_st
 	if not isinstance(result, Result):
 		raise ValueError(f"Argument 'result' should be an instance of BTU class 'Result'. Found '{type(result)}' instead.")
 	if stdout and not isinstance(stdout, str):
-		raise ValueError(f"Argument 'stdout' should be a Python string.  Found '{type(result)}' instead.")
+		try:
+			stdout = str(stdout)
+		except Exception:
+			raise ValueError(f"Argument 'stdout' should be a Python string.  Found datatype '{type(result)}' instead.")  # pylint: disable=raise-missing-from
 
 	# Slightly faster than 'get_doc()', which would return a complete Document.
 	task_values = frappe.db.get_values('BTU Task', filters={'name': task_id},
@@ -110,7 +110,7 @@ def write_log_for_task(task_id, result, log_name=None, stdout=None, date_time_st
 
 	if result.execution_time:
 		new_log.execution_time = result.execution_time  # Field 3
-	new_log.stdout = stdout  # Field 4
+	new_log.stdout = f"{new_log.stdout if new_log.stdout else ""}\n{stdout}"   # Field 4.  Respect previous contents
 	new_log.result_message = str(result.message)  # Field 6.  Could be a List or Dictionary, so must convert to a String.
 	if result.okay:
 		new_log.success_fail = 'Success'

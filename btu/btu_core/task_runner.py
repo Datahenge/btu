@@ -8,6 +8,7 @@ import importlib
 import io
 import sys
 import time
+import traceback
 import uuid
 
 # Frappe
@@ -64,7 +65,11 @@ class TaskRunner():
 			self.site_name = site_name
 
 		self.schedule_id = schedule_id
-		self.debug_mode_enabled = enable_debug_mode
+		force_debug_mode = frappe.db.get_single_value("BTU Configuration", "force_debug_mode", cache=True)
+		if force_debug_mode == "Defer To Code":
+			self.debug_mode_enabled = enable_debug_mode
+		else:
+			self.debug_mode_enabled = force_debug_mode == "Always"
 		self.redis_job_id = uuid.uuid4().hex
 		self.standard_output = StandardOutput.DB_LOG
 
@@ -94,7 +99,7 @@ class TaskRunner():
 
 	def dprint(self, object_foo):
 		"""
-		Only prints 'object_foo' if the debug_mode is enabled in the class instance.
+		Only prints 'object_foo' if the 'self.debug_mode_enabled' is enabled in the class instance.
 		"""
 		if self.debug_mode_enabled:
 			print(object_foo)
@@ -106,7 +111,7 @@ class TaskRunner():
 			self.kwarg_dict = None
 		self.dprint(f"Task Runner now has these keyword arguments: {self.kwarg_dict}")
 
-	def is_this_btu_aware_function(self, callable_function, debug=False):
+	def is_this_btu_aware_function(self, callable_function):
 		"""
 		Returns True if the 'function_string' is actually the path to a BTU-Aware class.
 		"""
@@ -120,36 +125,34 @@ class TaskRunner():
 					result = True
 			except Exception as ex:
 				print(ex)
-		if debug:
-			print(f"TaskRunner: Is this a BTU-Aware function = {result}")
-			print(f"TaskRunner: Current user is {frappe.session.user}\n--------")
+		self.dprint(f"TaskRunner: Is this a BTU-Aware function = {result}")
+		self.dprint(f"TaskRunner: Current user is {frappe.session.user}\n--------")
 		return result
 
-	def function_wrapper(self):  # pylint: disable=too-many-locals, too-many-statements, too-many-branches
-		"""
-		This function is effectively a 'decorator' or 'wrapper' around some other Python function.
-		The code below is complex and very important.
-
-		To help debug and explain what is happening, I've included a 'dprint()' function.
-		This function only prints when TaskRunner argument 'enable_debug_mode' is True.
-		"""
-
-		self.dprint(f"\n-------- Begin function_wrapper (Redis Job = {self.redis_job_id})--------\n")
-
+	def _initialize_site_and_database(self):
 		# TODO: This is not longer working in Frappe v15.  Presence of boot doesn't seem to indicate anything??
 		if not hasattr(frappe, 'boot'):
 			# The missing 'boot' object is the best-indication that this function is running on RQ, not the web server.
-			# This means we have to initialize the frappe namespace, choose a Site, and connect to the MySQL DB.
-			self.dprint("This code is running independently from the Web Server.  Need to initialize a few things:")
+			# This means we have to initialize the frappe namespace, choose a Site, and connect to the SQL database.
+			self.dprint("function_wrapper() Code is running outside of the Web Server.  Need to initialize a few things ...")
 			frappe.init(site=self.site_name)
 			frappe.connect()
 			self.dprint("\u2713 Initialization complete.")
 		else:
 			self.dprint("This code is being executed directly by the Web Server.")
 
+	def function_wrapper(self):  # pylint: disable=too-many-locals, too-many-statements, too-many-branches
+		"""
+		This function is effectively a 'decorator' or 'wrapper' around some other Python function.
+		The code below is complex and very important.
+		"""
+
+		self.dprint(f"\n-------- Begin function_wrapper (Redis Job = {self.redis_job_id})--------\n")
+		self._initialize_site_and_database()
 		start_datetime = make_datetime_naive(get_system_datetime_now()) # Recording this in the System Time Zone
 		self.create_new_log(start_datetime)  # Create a new BTU Task Log, with a status of "In Progress"
 
+		function_threw_exception = False
 		function_result = None
 		execution_start = time.time()
 		datetime_string = get_system_datetime_now().strftime("%m/%d/%Y, %H:%M:%S %Z")
@@ -168,12 +171,15 @@ class TaskRunner():
 				ret = self.option_standard_output(datetime_string, function_to_call)
 			# Option 2: Standard output intercepted, and saved to a SQL table "tabBTU Task Log"
 			elif self.standard_output == StandardOutput.DB_LOG:
-				ret, stdout_buffer_for_log = self.option_log_to_sql(datetime_string, function_to_call)
+				function_threw_exception, ret, stdout_buffer_for_log = self.option_log_to_sql(datetime_string, function_to_call)
 			else:
-				raise ValueError(f"No code implemented for Standard Output = '{self.standard_output}'")
+				raise ValueError(f"No code implemented for Standard Output option = '{self.standard_output}'")
 
 			execution_time = round(time.time() - execution_start, 3)
-			function_result = Result(True, ret, execution_time=execution_time)
+			if function_threw_exception:
+				function_result = Result(False, ret, execution_time=execution_time)
+			else:
+				function_result = Result(True, ret, execution_time=execution_time)
 
 		except Exception as ex:
 			self.dprint(f"Error in call to function '{self.function_name()}'\n{ex}")
@@ -208,27 +214,36 @@ class TaskRunner():
 				ret = function_to_call()  # ----call the underlying function----
 		return ret
 
-	def option_log_to_sql(self, datetime_string, function_to_call):
+	def option_log_to_sql(self, datetime_string, function_to_call) -> tuple:
 		"""
 		Call the function, and capture STDOUT so we can write it to BTU Task Logs.
 		"""
-		print(f"--------\nBTU Task {self.btu_task.name} starting at: {datetime_string}")
+		function_threw_exception = False
+		function_response = None
 		buffer = io.StringIO()
 		with redirect_stdout(buffer):
-			# Yes, has keyword arguments:
-			if self.kwarg_dict:
-				if self.is_this_btu_aware_function(function_to_call):
-					ret = function_to_call(self.btu_task.name).run(**self.kwarg_dict)    # create an instance of the BTU-aware class, and call its run() method.
+			try:
+				print(f"--------\nBTU Task {self.btu_task.name} starting at: {datetime_string}")
+				# Yes, has keyword arguments:
+				if self.kwarg_dict:
+					if self.is_this_btu_aware_function(function_to_call):
+						function_response = function_to_call(self.btu_task.name).run(**self.kwarg_dict)    # create an instance of the BTU-aware class, and call its run() method.
+					else:
+						function_response = function_to_call(**self.kwarg_dict)  # ---- call the underlying function + arguments ----
+				# No, does not have keyword arguments for this Task:
 				else:
-					ret = function_to_call(**self.kwarg_dict)  # ---- call the underlying function + arguments ----
-			# No, does not have keyword arguments for this Task:
-			else:
-				if self.is_this_btu_aware_function(function_to_call):
-					ret = function_to_call(self.btu_task.name).run()    # create an instance of the BTU-aware class, and call its run() method.
-				else:
-					ret = function_to_call()  # ----call the underlying function----
-			stdout_buffer_for_log = buffer.getvalue()  	 # fetch any Stdout from the buffer.
-		return ret, stdout_buffer_for_log
+					if self.is_this_btu_aware_function(function_to_call):
+						function_response = function_to_call(self.btu_task.name).run()    # create an instance of the BTU-aware class, and call its run() method.
+					else:
+						function_response = function_to_call()  # ----call the underlying function----
+			except Exception as ex:
+				function_threw_exception = True
+				print(f"ERROR: Exception during function call.  Type = {type(ex)}, Value = {ex}")
+				print(traceback.format_exc())
+			finally:
+				stdout_buffer_for_log = buffer.getvalue()  	 # fetch any Stdout from the buffer.
+
+		return function_threw_exception, function_response, stdout_buffer_for_log
 
 	def create_new_log(self, date_time_started):
 		"""
@@ -245,7 +260,8 @@ class TaskRunner():
 		new_log.task_component = 'Main'
 		new_log.date_time_started = date_time_started
 		new_log.success_fail = 'In-Progress'
+		new_log.stdout = f"Redis Job ID: {self.redis_job_id}"
 		new_log.save(ignore_permissions=True)  # Not even System Administrators are supposed to create and save these.
 		frappe.db.commit()
 		self.dprint(f"Created a new BTU Task Log record: '{new_log.name}'")
-		self.task_log_name = new_log.name
+		self.task_log_name = new_log.name  # Save the BTU Task Log 'name' to this class, so we can reference it later.

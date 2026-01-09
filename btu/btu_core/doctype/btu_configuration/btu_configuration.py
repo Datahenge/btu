@@ -1,4 +1,4 @@
-# Copyright (c) 2022-2024, Datahenge LLC and contributors
+# Copyright (c) 2022-Present, Datahenge LLC and contributors
 # For license information, please see license.txt
 
 from mailchimp_transactional.api_client import ApiClientError
@@ -6,6 +6,7 @@ from mailchimp_transactional.api_client import ApiClientError
 import frappe
 from frappe.model.document import Document
 
+from btu import print_both
 from btu.manual_tests import send_hello_email_to_user
 from btu.btu_api.scheduler import SchedulerAPI
 
@@ -73,20 +74,17 @@ class BTUConfiguration(Document):
 			]
 		}
 		try:
-			frappe.msgprint(f"Attempting to send a test email via Mandrill to '{user_doc.email}'.", to_console=True)
+			print_both(f"Attempting to send a test email via Mandrill to '{user_doc.email}'.")
 			http_response = new_mandrill_client(self).messages.send({"message":message})
 			response = get_mandrill_response_status_overall(http_response)
 			if response == MandrillResponse.SUCCESS:
 				message = f"Successfully sent a Mandrill Transactional Email to '{user_doc.email}'."
-				print(message)
-				frappe.msgprint(message)
+				print_both(message)
 			else:
 				raise IOError(response)
 		except ApiClientError as error:
 			message = f"An error occurred while sending email via Mandrill: {error.text}"
-			print(message)
-			frappe.msgprint(message)
+			print_both(message)
 		except Exception as error:
 			message = f"An error occurred while sending email via Mandrill: {repr(error)}"
-			print(message)
-			frappe.msgprint(message)
+			print_both(message)
