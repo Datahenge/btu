@@ -110,7 +110,7 @@ def write_log_for_task(task_id, result, log_name=None, stdout=None, date_time_st
 
 	if result.execution_time:
 		new_log.execution_time = result.execution_time  # Field 3
-	new_log.stdout = f"{new_log.stdout if new_log.stdout else ""}\n{stdout}"   # Field 4.  Respect previous contents
+	new_log.stdout = f"{new_log.stdout if new_log.stdout else ''}\n{stdout}"   # Field 4.  Respect previous contents
 	new_log.result_message = str(result.message)  # Field 6.  Could be a List or Dictionary, so must convert to a String.
 	if result.okay:
 		new_log.success_fail = 'Success'
