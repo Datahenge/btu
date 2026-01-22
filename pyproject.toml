@@ -1,0 +1,60 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "btu"
+version = "12.1.0"
+description = "Background Tasks Unleashed"
+readme = "README.md"
+requires-python = ">=3.8"
+authors = [
+    {name = "Datahenge LLC", email = "brian@datahenge.com"}
+]
+license = {text = "See LICENSE file"}
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
+
+dependencies = [
+    "rq~=1.8.1",
+    "rq-scheduler~=0.11.0",
+    "cron-descriptor",
+    "pystemd~=0.13.2",
+    "python-dateutil",
+    "pytz",
+    "redis",
+    "requests",
+    "schema",
+]
+
+[project.optional-dependencies]
+dev = []
+
+[tool.setuptools]
+# Automatic package discovery - setuptools will find all packages automatically
+
+[tool.setuptools.package-data]
+btu = [
+    "*.json",
+    "*.md",
+    "*.py",
+    "*.txt",
+    "**/*.css",
+    "**/*.csv",
+    "**/*.html",
+    "**/*.ico",
+    "**/*.js",
+    "**/*.json",
+    "**/*.md",
+    "**/*.png",
+    "**/*.py",
+    "**/*.svg",
+    "**/*.txt",
+]
