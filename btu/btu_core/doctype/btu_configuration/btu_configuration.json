@@ -10,6 +10,9 @@
  "field_order": [
   "btu_scheduler_section",
   "path_to_btu_scheduler_uds",
+  "use_tcp_socket",
+  "tcp_host",
+  "tcp_port",
   "cron_time_zone",
   "cb2",
   "tests",
@@ -112,7 +115,31 @@
    "description": "This is the absolute path to the BTU Scheduler daemon's Unix Domain Socket.  Example:  /tmp/btu_scheduler.sock\n",
    "fieldname": "path_to_btu_scheduler_uds",
    "fieldtype": "Data",
-   "label": "Path to BTU Scheduler Unix socket"
+   "label": "Path to BTU Scheduler Unix socket",
+   "depends_on": "eval:!doc.use_tcp_socket"
+  },
+  {
+   "default": "0",
+   "description": "Enable TCP socket instead of Unix Domain Socket (required for Kubernetes inter-pod communication)",
+   "fieldname": "use_tcp_socket",
+   "fieldtype": "Check",
+   "label": "Use TCP Socket"
+  },
+  {
+   "default": "localhost",
+   "description": "Hostname or IP of BTU Scheduler (e.g., f2p-erp-btu-scheduler for Kubernetes)",
+   "fieldname": "tcp_host",
+   "fieldtype": "Data",
+   "label": "TCP Host",
+   "depends_on": "use_tcp_socket"
+  },
+  {
+   "default": "8888",
+   "description": "TCP port for BTU Scheduler communication",
+   "fieldname": "tcp_port",
+   "fieldtype": "Int",
+   "label": "TCP Port",
+   "depends_on": "use_tcp_socket"
   },
   {
    "description": "Sends a 'ping' request to the BTU Scheduler background daemon.",
