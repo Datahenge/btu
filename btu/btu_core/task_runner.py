@@ -17,6 +17,27 @@ import frappe
 from btu import Result, get_system_datetime_now, make_datetime_naive
 from btu.btu_core.doctype.btu_task_log.btu_task_log import write_log_for_task
 
+def run_task_by_id(task_id: str, site_name: str, schedule_id: str = None, extra_arguments: dict = None):
+	"""
+	Module-level RQ entry point for BTU task execution.
+
+	Accepts only primitive arguments (strings, dicts of primitives), which are always
+	safe to pickle. Re-fetches the BTU Task document and constructs TaskRunner inside
+	the worker process, avoiding the pickling of bound methods and Frappe Document objects.
+
+	extra_arguments: optional dict that overrides the task's stored built-in arguments.
+	                 Used by manual tests and programmatic callers that supply runtime values.
+	"""
+	if not getattr(frappe.local, "initialised", None):
+		frappe.init(site=site_name)
+		frappe.connect()
+	btu_task = frappe.get_doc("BTU Task", task_id)
+	runner = TaskRunner(btu_task, site_name=site_name, schedule_id=schedule_id)
+	if extra_arguments:
+		runner.add_keyword_arguments(**extra_arguments)
+	runner.function_wrapper()
+
+
 class StandardOutput(Enum):
 	NONE = 0
 	STDOUT = 1

@@ -285,7 +285,7 @@ class BTUTask(Document):
 		if not self._can_run_on_webserver():
 			return  # Cannot run without defining the appropriate arguments on the Task.
 
-		self.push_task_into_queue(extra_arguments=self.built_in_arguments())
+		self.push_task_into_queue()
 
 		message = f"BTU Task {self.name} has been submitted to the Redis Queue. No callback alerts are possible."
 		message += "\nTo see the status of this Task, review the BTU Task Logs."
@@ -293,22 +293,24 @@ class BTUTask(Document):
 			frappe.msgprint(message)
 		print(message)
 
-	def push_task_into_queue(self, extra_arguments=None):
+	def push_task_into_queue(self, schedule_id=None, extra_arguments=None):
 		"""
-		Create an instance of TaskRunner() class, and put 'function_wrapper' into the queue.
-		Execution will happen immediately (not on a schedule)
+		Enqueue this BTU Task for execution by the next available RQ worker.
+		Execution will happen immediately (not on a schedule).
+
+		extra_arguments: optional dict of primitive values that override the task's
+		                 stored built-in arguments. Must be JSON-serializable.
 		"""
-		task_runner = TaskRunner(self, site_name=frappe.local.site, enable_debug_mode=False)
-
-		# This supports the idea of passing special keyword arguments to a Task:
-		if extra_arguments:
-			task_runner.add_keyword_arguments(**extra_arguments)  # pass them as kwargs
-
-		# Using standard frappe.enqueue() to place the 'function_wrapper' into RQ.
-		frappe.enqueue(method=task_runner.function_wrapper,
+		frappe.enqueue(
+			method="btu.btu_core.task_runner.run_task_by_id",
 			queue=self.queue_name,
-			timeout=self.max_task_duration or "3600",
-			is_async=True)
+			timeout=self.max_task_duration or 3600,
+			is_async=True,
+			task_id=self.name,
+			site_name=frappe.local.site,
+			schedule_id=schedule_id,
+			extra_arguments=extra_arguments,
+		)
 
 
 def create_and_run_one_shot(short_description: str,

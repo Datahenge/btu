@@ -7,7 +7,6 @@
 import frappe
 
 # BTU Library
-from btu.btu_core.task_runner import TaskRunner
 from btu.btu_api import Sanchez, execute_job
 
 
@@ -16,47 +15,33 @@ def get_pickled_task(task_id, task_schedule_id=None):
 	"""
 	RPC HTTP Endpoint called by BTU Scheduler daemon and CLI.
 
+	Builds a pre-serialized RQ job payload (pickled bytes) for the daemon to write
+	directly to Redis. Only primitive strings are packed into the payload — no bound
+	methods, no Frappe Document objects — so pickling is always safe.
+
 	args:
-		task_id:				primary key of a BTU Task
-		task_schedule_id:		primary key of a BTU Task Schedule
-
-	Steps:
-		1. Create some pickled, binary data for a Task's function.
-		2. Return the binary data to the caller.
+		task_id:          primary key of a BTU Task
+		task_schedule_id: primary key of a BTU Task Schedule (optional)
 	"""
-
-	# Step 1: Retrieve the BTU Task Document.
 	doc_task = frappe.get_doc("BTU Task", task_id)
 
-	# Step 2: Wrap it in the TaskRunner class.  This handles logging, capturing Standard Output, and much more.
-	this_taskrunner = TaskRunner(btu_task=doc_task,
-	                             site_name=frappe.local.site,
-								 schedule_id=task_schedule_id,	# very important, so TaskRunner can Log per Schedule!
-								 enable_debug_mode=False)
-
-	# This allows for adding additional keyword arguments to a Task:
-	extra_arguments = doc_task.built_in_arguments()
-	if extra_arguments:
-		this_taskrunner.add_keyword_arguments(**extra_arguments)  # pass them as kwargs
-
-	# Step 3: Wrap again, this time using some Frappe code from 'background_jobs.py'
 	queue_args = {
 		"site": frappe.local.site,
 		"user": frappe.session.user,
-		"method": this_taskrunner.function_wrapper,
+		"method": "btu.btu_core.task_runner.run_task_by_id",
 		"event": None,
 		"job_name": doc_task.desc_short,
-		"is_async": True,  # always true; we want to run things in the Redis Queue, not on the Web Server.
-		"kwargs": None  # if function requires keyword arguments, this is where you'd store them.
+		"is_async": True,
+		"kwargs": {
+			"task_id": task_id,
+			"site_name": frappe.local.site,
+			"schedule_id": task_schedule_id,
+		},
 	}
 
-	# Step 4. Use the Sanchez class to pickle the Task Runner
 	new_sanchez = Sanchez()
 	new_sanchez.build_internals(func=execute_job, _args=None, _kwargs=queue_args)
-
-	# Step 4. Create a serialized RQ Job, but do not save to Redis.  Return the binary over HTTP.
-	http_result: bytes = new_sanchez.get_serialized_rq_job()
-	return http_result
+	return new_sanchez.get_serialized_rq_job()  # bytes
 
 # The purpose of the following endpoints: to enable the BTU CLI and Scheduler
 # to test and validate connectivity with the Frappe web server.
@@ -133,20 +118,15 @@ def enqueue_for_next_available_worker(task_schedule_key: str):
 		doc_task_schedule = frappe.get_doc("BTU Task Schedule", task_schedule_key, ignore_permissions=True)
 		doc_task = frappe.get_doc("BTU Task", doc_task_schedule.task, ignore_permissions=True)
 
-		# Create an instance of TaskRunner() class, and put 'function_wrapper' into the queue.
-		task_runner = TaskRunner(doc_task, site_name=frappe.local.site, enable_debug_mode=False)
-
-		# This supports the idea of passing special keyword arguments to a Task:
-		extra_arguments = doc_task.built_in_arguments()
-		if extra_arguments:
-			task_runner.add_keyword_arguments(**extra_arguments)  # pass them as kwargs
-
-		# Using standard frappe.enqueue() to place the 'function_wrapper' into RQ.
-		# Execution will happen immediately, via the next available worker.
-		frappe.enqueue(method=task_runner.function_wrapper,
+		frappe.enqueue(
+			method="btu.btu_core.task_runner.run_task_by_id",
 			queue=doc_task.queue_name,
-			timeout=doc_task.max_task_duration or "3600",
-			is_async=True)
+			timeout=doc_task.max_task_duration or 3600,
+			is_async=True,
+			task_id=doc_task.name,
+			site_name=frappe.local.site,
+			schedule_id=task_schedule_key,
+		)
 
 	except Exception as ex:
 		frappe.db.rollback()

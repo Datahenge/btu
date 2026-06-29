@@ -174,7 +174,7 @@ class TransientTask():
 		if self.doc_task.task_type != 'Subtask':
 			raise ValueError(f"BTU Task {self.doc_task.name} is not a transient Subtask.")
 
-		self.doc_task.push_task_into_queue(extra_arguments=self.doc_task.built_in_arguments())
+		self.doc_task.push_task_into_queue()
 
 		message = f"Transient Task {self.doc_task.name} has been submitted to the Redis Queue."
 		print(message)
