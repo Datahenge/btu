@@ -55,6 +55,7 @@ def on_doctype_update():  # Yes, 'on_doctype_update' belongs here, outside the D
 	frappe.db.add_index("BTU Task Log", ["task"], index_name="task_idx")
 	frappe.db.add_index("BTU Task Log", ["schedule"], index_name="schedule_idx")
 	frappe.db.add_index("BTU Task Log", ["task_desc_short"], index_name="description_idx")
+	frappe.db.add_index("BTU Task Log", ["rq_job_id"], index_name="rq_job_id_idx")
 
 def write_log_for_task(task_id, result, log_name=None, stdout=None, date_time_started=None, schedule_id=None):
 	"""

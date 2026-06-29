@@ -16,7 +16,8 @@ import frappe
 from btu import Result, get_system_datetime_now, make_datetime_naive
 from btu.btu_core.doctype.btu_task_log.btu_task_log import write_log_for_task
 
-def run_task_by_id(task_id: str, site_name: str, schedule_id: str = None, extra_arguments: dict = None):
+def run_task_by_id(task_id: str, site_name: str, schedule_id: str = None,
+                   extra_arguments: dict = None, rq_job_id: str = None):
 	"""
 	Module-level RQ entry point for BTU task execution.
 
@@ -24,6 +25,8 @@ def run_task_by_id(task_id: str, site_name: str, schedule_id: str = None, extra_
 	safe to pickle. Re-fetches the BTU Task document and constructs TaskRunner inside
 	the worker process, avoiding the pickling of bound methods and Frappe Document objects.
 
+	rq_job_id: pre-generated UUID passed from the enqueue site. The actual RQ job ID from
+	           get_current_job() takes precedence; this is the fallback for non-RQ contexts.
 	extra_arguments: optional dict that overrides the task's stored built-in arguments.
 	                 Used by manual tests and programmatic callers that supply runtime values.
 	"""
@@ -34,13 +37,62 @@ def run_task_by_id(task_id: str, site_name: str, schedule_id: str = None, extra_
 		frappe.connect()
 
 	current_job = get_current_job()
-	rq_job_id = current_job.id if current_job else None
+	if current_job:
+		if rq_job_id and current_job.id != rq_job_id:
+			print(f"BTU WARNING: Expected RQ Job ID '{rq_job_id}' does not match actual '{current_job.id}'. Using actual.")
+		rq_job_id = current_job.id  # actual always wins
 
 	btu_task = frappe.get_doc("BTU Task", task_id)
 	runner = TaskRunner(btu_task, site_name=site_name, schedule_id=schedule_id, rq_job_id=rq_job_id)
 	if extra_arguments:
 		runner.add_keyword_arguments(**extra_arguments)
 	runner.function_wrapper()
+
+
+def on_btu_task_failure(job, connection, exc_type, exc_value, traceback_obj):
+	"""
+	RQ on_failure callback. Registered at enqueue time; called by the RQ worker parent
+	process after a BTU task job fails (including SIGKILL of the forked child).
+
+	Looks up the BTU Task Log by rq_job_id and writes the traceback, then saves the
+	document so that on_update() fires and sends failure email notifications.
+
+	Frappe's execute_job() calls frappe.destroy() in its finally block before RQ invokes
+	this callback, so we must reinitialize.
+
+	Note: job.kwargs["kwargs"] holds our task kwargs because Frappe's execute_job() wraps
+	them one level deep: q.enqueue_call(execute_job, kwargs={..., "kwargs": our_kwargs}).
+	"""
+	task_kwargs = job.kwargs.get("kwargs", {})
+	site_name = task_kwargs.get("site_name") or job.kwargs.get("site")
+
+	if not site_name:
+		print(f"BTU on_failure callback: cannot determine site_name for job {job.id}; skipping log update.")
+		return
+
+	try:
+		frappe.init(site=site_name)
+		frappe.connect()
+
+		log_name = frappe.db.get_value(
+			"BTU Task Log",
+			{"rq_job_id": job.id, "success_fail": "In-Progress"},
+			"name"
+		)
+		if not log_name:
+			return
+
+		exc_string = "".join(traceback.format_exception(exc_type, exc_value, traceback_obj))
+		doc_log = frappe.get_doc("BTU Task Log", log_name)
+		doc_log.success_fail = "Failed"
+		doc_log.stdout = (doc_log.stdout or "") + f"\n\n--- RQ Worker Traceback ---\n{exc_string}"
+		doc_log.save(ignore_permissions=True)
+		frappe.db.commit()
+
+	except Exception as ex:
+		print(f"BTU on_failure callback error for job {job.id}: {ex}")
+	finally:
+		frappe.destroy()
 
 
 class StandardOutput(Enum):

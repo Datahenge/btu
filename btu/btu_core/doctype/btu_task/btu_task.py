@@ -316,15 +316,22 @@ class BTUTask(Document):
 		extra_arguments: optional dict of primitive values that override the task's
 		                 stored built-in arguments. Must be JSON-serializable.
 		"""
+		import uuid
+		from btu.btu_core.task_runner import on_btu_task_failure
+
+		rq_job_id = uuid.uuid4().hex
 		frappe.enqueue(
 			method="btu.btu_core.task_runner.run_task_by_id",
 			queue=self.queue_name,
 			timeout=self.max_task_duration or 3600,
 			is_async=True,
+			on_failure=on_btu_task_failure,
+			job_id=rq_job_id,
 			task_id=self.name,
 			site_name=frappe.local.site,
 			schedule_id=schedule_id,
 			extra_arguments=extra_arguments,
+			rq_job_id=rq_job_id,
 		)
 
 

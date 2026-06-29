@@ -115,17 +115,24 @@ def enqueue_for_next_available_worker(task_schedule_key: str):
 	}
 
 	try:
+		import uuid
+		from btu.btu_core.task_runner import on_btu_task_failure
+
 		doc_task_schedule = frappe.get_doc("BTU Task Schedule", task_schedule_key, ignore_permissions=True)
 		doc_task = frappe.get_doc("BTU Task", doc_task_schedule.task, ignore_permissions=True)
 
+		rq_job_id = uuid.uuid4().hex
 		frappe.enqueue(
 			method="btu.btu_core.task_runner.run_task_by_id",
 			queue=doc_task.queue_name,
 			timeout=doc_task.max_task_duration or 3600,
 			is_async=True,
+			on_failure=on_btu_task_failure,
+			job_id=rq_job_id,
 			task_id=doc_task.name,
 			site_name=frappe.local.site,
 			schedule_id=task_schedule_key,
+			rq_job_id=rq_job_id,
 		)
 
 	except Exception as ex:
