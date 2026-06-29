@@ -46,7 +46,6 @@ class BTUTaskLog(Document):
 				message += f"\n{str(ex)}\n"
 				print_both(message)
 				frappe.db.set_value("BTU Task Log", self.name, "stdout", message + (self.stdout or ""))
-				frappe.db.set_value("BTU Task Log", self.name, "success_fail", "Failed")
 
 
 def on_doctype_update():  # Yes, 'on_doctype_update' belongs here, outside the Document class.  Pretty silly.
