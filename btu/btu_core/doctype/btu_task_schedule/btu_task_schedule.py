@@ -242,11 +242,10 @@ def check_day_of_month(run_frequency, day, month=None):
 
 def schedule_to_cron_string(doc_schedule):
 	"""
-	Purpose of this function is to convert individual SQL columns (Hour, Day, Minute, etc.)
-	into a valid Unix cron string.
+	Convert individual schedule fields (Hour, Day, Minute, etc.) into a Unix cron string.
 
 	Input:   A BTU Task Schedule document class.
-	Output:   A Unix cron string.
+	Output:  A Unix cron string.
 	"""
 
 	if not isinstance(doc_schedule, BTUTaskSchedule):
@@ -264,31 +263,22 @@ def schedule_to_cron_string(doc_schedule):
 									second=0, microsecond=0, tzinfo=datetime_now.tzinfo)
 	utc_datetime = new_datetime.astimezone(get_utc_timezone())
 
-	cron = [None] * 5
+	# Default every position to wildcard; only override positions that carry a real value.
+	cron = ["*", "*", "*", "*", "*"]  # [minute, hour, day-of-month, month, day-of-week]
 
-	# Minute of the day
-	if isinstance(doc_schedule.minute, NoneType):
-		cron[0] = "*"
-	else:
+	if not isinstance(doc_schedule.minute, NoneType):
 		cron[0] = str(utc_datetime.minute)
 
-	# Hour of the day
-	if not doc_schedule.hour:
-		cron[1] = "*"
-	else:
+	if doc_schedule.hour:
 		cron[1] = str(utc_datetime.hour)
 
-	# Day of the Month
-	if not doc_schedule.day_of_month:
-		cron[2] = "*"
-	else:
-		str(doc_schedule.day_of_month)
+	if doc_schedule.day_of_month:
+		cron[2] = str(doc_schedule.day_of_month)
 
-	cron[3] = "*" if doc_schedule.month is None else doc_schedule.month
+	if doc_schedule.month is not None:
+		cron[3] = doc_schedule.month
 
-	if not doc_schedule.day_of_week:
-		cron[4] = "*"
-	else:
+	if doc_schedule.day_of_week:
 		cron[4] = str(cron_day_dictionary[doc_schedule.day_of_week[:3]])
 
 	result = " ".join(cron)
