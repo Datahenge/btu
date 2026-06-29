@@ -10,7 +10,6 @@ import redis
 
 # Frappe Framework
 import frappe
-from frappe.exceptions import DoesNotExistError
 
 # Custom Apps
 from temporal import datetime_to_iso_string, validate_datatype
@@ -122,42 +121,38 @@ def create_doc_run_later(comms_type: str,
 	return doc_later.name
 
 
-def _lock_polling_task(verbose=False):
+def _acquire_poll_lock() -> bool:
 	"""
-	Lock the BTU Task that is doing all the polling.
-	This should help prevent 2 instances of the poll from running simultaneously.
+	Acquire a session-scoped concurrency lock that survives frappe.db.commit().
+
+	MariaDB GET_LOCK() and PostgreSQL pg_try_advisory_lock() are both session-scoped,
+	not transaction-scoped. frappe.db.commit() releases row locks (SELECT FOR UPDATE)
+	but has no effect on these — which is exactly what we need for a polling function
+	that commits after each item it processes.
+
+	Returns True if the lock was acquired, False if another instance already holds it.
+	Auto-releases when the database session closes (process crash, connection drop, etc.).
 	"""
+	if frappe.db.db_type == "postgres":
+		result = frappe.db.sql(
+			"SELECT pg_try_advisory_lock(hashtext('btu_poll_for_ready_work')::bigint)"
+		)[0][0]
+		return bool(result)
+	else:
+		result = frappe.db.sql(
+			"SELECT GET_LOCK('btu_poll_for_ready_work', 0)"
+		)[0][0]
+		return result == 1  # 1 = acquired, 0 = held by another session, NULL = error
 
-	# First, find the 'name' primary key of the "Poll for One-Shots" task
-	btu_task = frappe.qb.DocType("BTU Task")
-	sql_query =	(
-	frappe.qb.from_(btu_task)
-	.select(btu_task.name)
-	.where(btu_task.function_string == 'btu.btu_core.run_later.poll_for_ready_work' )
-	.limit(1)
-	)
-	sql_results = sql_query.run()
 
-	try:
-		btu_task_key = sql_results[0][0]
-		if not btu_task_key:
-			raise DoesNotExistError()
-	except Exception:
-		print("WARNING: _lock_polling_task() failed to find the BTU Task 'name' responsible for polling.")
-		return
-
-	# If the 'name' is found, select that Task with a FOR UPDATE lock.
-	if verbose:
-		print(f"Locking down SQL row for BTU Task '{btu_task_key}' FOR UPDATE ...")
-	sql_query =	(
-		frappe.qb.from_(btu_task)
-		.select("*")
-		.where(btu_task.name == btu_task_key)
-		.for_update()
-	)
-	sql_query.run()
-	if verbose:
-		print("...SQL row is now locked.")
+def _release_poll_lock():
+	"""Release the session-scoped concurrency lock acquired by _acquire_poll_lock()."""
+	if frappe.db.db_type == "postgres":
+		frappe.db.sql(
+			"SELECT pg_advisory_unlock(hashtext('btu_poll_for_ready_work')::bigint)"
+		)
+	else:
+		frappe.db.sql("SELECT RELEASE_LOCK('btu_poll_for_ready_work')")
 
 
 @frappe.whitelist()
@@ -170,8 +165,9 @@ def poll_for_ready_work():
 	# 1. Loop through everything that's Ready to be executed.
 	# 2. For each found, create a One-Shot BTU Task, and then immediately run via queue.
 
-	frappe.db.begin()
-	_lock_polling_task()  # prevent another instance of this function from running at the same time, to avoid double-enqueuing.
+	if not _acquire_poll_lock():
+		print("poll_for_ready_work: another instance is already running, skipping.")
+		return
 
 	try:
 		_run_tasks_from_redis_database()
@@ -184,6 +180,7 @@ def poll_for_ready_work():
 		print(f"Unhandled exception during poll_for_ready_work() : {ex}")
 	print()
 	identify_timeouts()
+	_release_poll_lock()
 
 
 def _run_tasks_from_redis_database():
