@@ -7,9 +7,19 @@
 # --------
 
 from contextlib import redirect_stdout
+import importlib
 import io
+import re
 import time
 import frappe
+
+_DOTTED_PATH_RE = re.compile(r'^[a-zA-Z_]\w*(\.[a-zA-Z_]\w*)+$')
+
+
+def get_function_name(function_path: str) -> str:
+    """Return the bare function name from a dotted module path string."""
+    return function_path.rsplit(".", 1)[-1]
+
 
 # pylint: disable=too-many-instance-attributes
 
@@ -23,7 +33,18 @@ class TaskComponent():
 		self.btu_task_id = btu_task_id
 		self.btu_component_id = btu_component_id
 		self.btu_task_schedule_id = btu_task_schedule_id or None
-		self.function_to_run = function
+
+		if not isinstance(function, str):
+			raise TypeError(
+				f"TaskComponent 'function' must be a dotted string path "
+				f"(e.g. 'myapp.module.function_name'), got {type(function).__name__}."
+			)
+		if not _DOTTED_PATH_RE.match(function):
+			raise ValueError(
+				f"TaskComponent 'function' must be a fully-qualified dotted path "
+				f"(e.g. 'myapp.module.function_name'). Got: '{function}'."
+			)
+		self.function_path = function
 		self.max_runtime_seconds = 3600
 		self.queue_name = queue
 		self.timeout = timeout
@@ -40,12 +61,6 @@ class TaskComponent():
 		else:
 			raise RuntimeError("TaskRunner requires an argument 'site_name'.")
 
-	def validate_class_variables(self):
-		if not frappe.db.exists("BTU Task", self.btu_task_id):
-			raise ValueError(f"No such BTU Task with identifier = {self.btu_task_id}")
-		if not frappe.db.exists("BTU Task Schedule", self.btu_task_schedule_id):
-			raise ValueError(f"No such BTU Task with identifier = {self.btu_task_schedule_id}")
-
 	def dprint(self, object_foo):
 		"""
 		Only prints 'object_foo' if the debug_mode is enabled in the class instance.
@@ -61,7 +76,7 @@ class TaskComponent():
 												 btu_component_id=self.btu_component_id,
 												 btu_task_schedule_id=self.btu_task_schedule_id,
 												 frappe_site_name=self.frappe_site_name,
-				 								 function=self.function_to_run,
+				 								 function=self.function_path,
 												 debug_mode_enabled=self.debug_mode_enabled)
 
 		# This supports the idea of passing special keyword arguments to a Task:
@@ -91,7 +106,7 @@ class TaskComponentWrapper():
 		self.btu_component_id = btu_component_id
 		self.btu_task_schedule_id = btu_task_schedule_id
 		self.frappe_site_name = frappe_site_name
-		self.function_to_run = function  # This is a real function, not a path to a function.
+		self.function_path = function  # dotted string path, e.g. 'myapp.module.function_name'
 		self.debug_mode_enabled = bool(debug_mode_enabled)
 		self.kwarg_dict = None
 		self.max_runtime_seconds = 3600
@@ -118,22 +133,22 @@ class TaskComponentWrapper():
 		To help debug and explain what is happening, I've included a 'dprint()' function.
 		This function only prints when TaskRunner argument 'enable_debug_mode' is True.
 		"""
-		# I'm not confident that importing here (instead of the module level) makes any difference.
-		# Still, it "feels right", given this function is executed independently by the Queue.
-		# It's possible that Python + RQ pickle the entire Class and namespace, though.
-		# import importlib
-
 		from btu import Result, get_system_datetime_now, make_datetime_naive
 		from btu.btu_core.doctype.btu_task_log.btu_task_log import write_log_for_task
 
 		self.dprint("\n-------- Begin execution of 'function_payload()' --------\n")
 
-		frappe.init(site=self.frappe_site_name)
-		frappe.connect()
+		if not getattr(frappe.local, "initialised", None):
+			frappe.init(site=self.frappe_site_name)
+			frappe.connect()
 		self.dprint("\u2713 Initialization complete.")
 
+		# Resolve the dotted string path to a callable here in the worker, not at enqueue time.
+		module_path, func_name = self.function_path.rsplit(".", 1)
+		function_to_call = getattr(importlib.import_module(module_path), func_name)
+
 		function_result = None
-		self.dprint(f"Calling function '{self.function_to_run.__name__}'")
+		self.dprint(f"Calling function '{get_function_name(self.function_path)}'")
 		self.dprint("Begin Standard Output (function_payload):\n")
 
 		start_datetime = make_datetime_naive(get_system_datetime_now()) # Recording this in the System Time Zone
@@ -149,17 +164,17 @@ class TaskComponentWrapper():
 			with redirect_stdout(buffer):
 				print(f"--------\nBTU Task Component {self.btu_task_id}-{self.btu_component_id} starting at: {datetime_string}")
 				if self.kwarg_dict:
-					ret = self.function_to_run (**self.kwarg_dict)  # ----call the underlying function----
+					ret = function_to_call(**self.kwarg_dict)
 				else:
-					ret = self.function_to_run()  # ----call the underlying function----
-				stdout_buffer_for_log = buffer.getvalue()  	 # fetch any Stdout from the buffer.
+					ret = function_to_call()
+				stdout_buffer_for_log = buffer.getvalue()
 
-			execution_time = round(time.time() - execution_start,3)
+			execution_time = round(time.time() - execution_start, 3)
 			function_result = Result(True, ret, execution_time=execution_time)
 
 		except Exception as ex:
-			self.dprint(f"Error in call to function '{self.function_to_run.__name__}'\n{ex}")
-			execution_time = round(time.time() - execution_start,3)
+			self.dprint(f"Error in call to function '{get_function_name(self.function_path)}'\n{ex}")
+			execution_time = round(time.time() - execution_start, 3)
 			function_result = Result(False, str(ex), execution_time=execution_time)
 
 		self.dprint(f"\nEnd Standard Output\nFunction Result: {function_result}")

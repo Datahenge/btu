@@ -33,7 +33,7 @@ class btu_aware_example1(BTU_AWARE_FUNCTION):  # pylint: disable=invalid-name
 			              btu_component_id=each_number+1,
 						  btu_task_schedule_id=self.btu_task_schedule_id,
 						  frappe_site_name=frappe.local.site,
-						  function=ordinary_function,
+						  function="btu.examples.ordinary_function",
 						  number_to_count=30).enqueue()
 		return "I am the result of 'btu_aware_example1'"
 
