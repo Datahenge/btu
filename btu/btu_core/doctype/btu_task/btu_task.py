@@ -125,6 +125,20 @@ class BTUTask(Document):
 	def built_in_arguments(self):
 		"""
 		Converts an argument String into an argument Dictionary.
+
+		Parsing strategy: try JSON first, fall back to ast.literal_eval.
+
+		# TODO (v16): The 'arguments' field was originally documented as a "Python Dictionary
+		# of key-values", so early adopters stored values as Python literals (single-quoted
+		# strings, bare True/False, etc.) rather than valid JSON.  Commit 41a3813 (Nov 2022)
+		# reflects this original design.  Commit fb91e4c (Jun 2025) added json.loads() as the
+		# preferred parser and kept ast.literal_eval only for backward compatibility with
+		# existing tasks stored in Python-literal format.
+		#
+		# In v16, run a migration that reads every BTU Task's 'arguments' field, parses it
+		# with ast.literal_eval, and re-saves it as canonical JSON.  Once all rows are
+		# migrated, remove the ast.literal_eval fallback and enforce JSON-only at save time
+		# via BTUTask.validate().
 		"""
 		if not self.arguments:
 			return None
@@ -135,6 +149,7 @@ class BTUTask(Document):
 		except Exception as ex:
 			print(f"built_in_arguments() : {ex}")
 
+		# TODO (v16): remove this fallback once the migration to JSON is complete.
 		return ast.literal_eval(self.arguments)
 
 	def _can_run_on_webserver(self) -> bool:

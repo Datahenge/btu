@@ -203,6 +203,14 @@ class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
 			raise ex
 
 	def built_in_arguments(self):
+		# TODO (v16): The 'argument_overrides' field on BTU Task Schedule uses the same
+		# Python-literal format as the 'arguments' field on BTU Task (see the sister method
+		# on BTUTask for full history).  This function never received the json.loads() upgrade
+		# that BTUTask.built_in_arguments() did in commit fb91e4c (Jun 2025), so it is
+		# still ast.literal_eval-only.
+		#
+		# As part of the v16 JSON migration: migrate 'argument_overrides' alongside
+		# 'arguments', then replace this with json.loads() and remove ast.literal_eval.
 		if not self.argument_overrides:
 			return None
 		return ast.literal_eval(self.argument_overrides)
