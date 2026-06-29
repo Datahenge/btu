@@ -9,7 +9,6 @@ import io
 import sys
 import time
 import traceback
-import uuid
 
 # Frappe
 import frappe
@@ -28,11 +27,17 @@ def run_task_by_id(task_id: str, site_name: str, schedule_id: str = None, extra_
 	extra_arguments: optional dict that overrides the task's stored built-in arguments.
 	                 Used by manual tests and programmatic callers that supply runtime values.
 	"""
+	from rq import get_current_job
+
 	if not getattr(frappe.local, "initialised", None):
 		frappe.init(site=site_name)
 		frappe.connect()
+
+	current_job = get_current_job()
+	rq_job_id = current_job.id if current_job else None
+
 	btu_task = frappe.get_doc("BTU Task", task_id)
-	runner = TaskRunner(btu_task, site_name=site_name, schedule_id=schedule_id)
+	runner = TaskRunner(btu_task, site_name=site_name, schedule_id=schedule_id, rq_job_id=rq_job_id)
 	if extra_arguments:
 		runner.add_keyword_arguments(**extra_arguments)
 	runner.function_wrapper()
@@ -60,7 +65,7 @@ class TaskRunner():
 		function_name = function_path.split('.')[-1]
 		return (module_path, function_name)
 
-	def __init__(self, btu_task, site_name, schedule_id=None, enable_debug_mode=False):
+	def __init__(self, btu_task, site_name, schedule_id=None, enable_debug_mode=False, rq_job_id=None):
 		"""
 		args:
 			btu_task : Either a Document or string that represents the primary key of a BTU Task.
@@ -91,7 +96,7 @@ class TaskRunner():
 			self.debug_mode_enabled = enable_debug_mode
 		else:
 			self.debug_mode_enabled = force_debug_mode == "Always"
-		self.redis_job_id = uuid.uuid4().hex
+		self.rq_job_id = rq_job_id  # real RQ job ID; None when running outside of an RQ worker
 		self.standard_output = StandardOutput.DB_LOG
 
 		# Fetch the Task's built-in arguments.
@@ -168,7 +173,7 @@ class TaskRunner():
 		The code below is complex and very important.
 		"""
 
-		self.dprint(f"\n-------- Begin function_wrapper (Redis Job = {self.redis_job_id})--------\n")
+		self.dprint(f"\n-------- Begin function_wrapper (RQ Job ID = {self.rq_job_id})--------\n")
 		self._initialize_site_and_database()
 		start_datetime = make_datetime_naive(get_system_datetime_now()) # Recording this in the System Time Zone
 		self.create_new_log(start_datetime)  # Create a new BTU Task Log, with a status of "In Progress"
@@ -281,7 +286,7 @@ class TaskRunner():
 		new_log.task_component = 'Main'
 		new_log.date_time_started = date_time_started
 		new_log.success_fail = 'In-Progress'
-		new_log.stdout = f"Redis Job ID: {self.redis_job_id}"
+		new_log.rq_job_id = self.rq_job_id  # real RQ job ID, or None if running outside a worker
 		new_log.save(ignore_permissions=True)  # Not even System Administrators are supposed to create and save these.
 		frappe.db.commit()
 		self.dprint(f"Created a new BTU Task Log record: '{new_log.name}'")
