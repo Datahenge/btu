@@ -6,6 +6,8 @@ from contextlib import redirect_stdout
 from enum import Enum
 import importlib
 import io
+import logging
+import os
 import sys
 import time
 import traceback
@@ -15,6 +17,28 @@ import frappe
 
 from btu import Result, get_system_datetime_now, make_datetime_naive
 from btu.btu_core.doctype.btu_task_log.btu_task_log import write_log_for_task
+
+
+def _configure_btu_logger() -> logging.Logger:
+	"""
+	Return the 'btu' named logger with its level set according to a two-layer policy:
+
+	  1. BTU_LOG_LEVEL environment variable  — deployment-level default (requires worker restart).
+	     Accepts any standard Python level name: DEBUG, INFO, WARNING, ERROR.  Defaults to INFO.
+	  2. BTU Configuration.force_debug_mode  — operator runtime override.
+	     If True, forces DEBUG regardless of the environment variable.
+	     Effective for the next task that starts; no restart required (Frappe invalidates
+	     the document cache on save, so toggling via the UI takes effect immediately).
+	"""
+	logger = frappe.logger("btu")
+	env_level = getattr(logging, os.environ.get("BTU_LOG_LEVEL", "INFO").upper(), logging.INFO)
+	try:
+		force_debug = frappe.db.get_single_value("BTU Configuration", "force_debug_mode", cache=True)
+		level = logging.DEBUG if force_debug else env_level
+	except Exception:
+		level = env_level  # DB not yet available (early init path)
+	logger.setLevel(level)
+	return logger
 
 def run_task_by_id(task_id: str, site_name: str, schedule_id: str = None,
                    extra_arguments: dict = None, rq_job_id: str = None):
@@ -36,10 +60,12 @@ def run_task_by_id(task_id: str, site_name: str, schedule_id: str = None,
 		frappe.init(site=site_name)
 		frappe.connect()
 
+	logger = _configure_btu_logger()
+
 	current_job = get_current_job()
 	if current_job:
 		if rq_job_id and current_job.id != rq_job_id:
-			print(f"BTU WARNING: Expected RQ Job ID '{rq_job_id}' does not match actual '{current_job.id}'. Using actual.")
+			logger.warning("BTU: Expected RQ Job ID '%s' does not match actual '%s'. Using actual.", rq_job_id, current_job.id)
 		rq_job_id = current_job.id  # actual always wins
 
 	btu_task = frappe.get_doc("BTU Task", task_id)
@@ -67,7 +93,7 @@ def on_btu_task_failure(job, connection, exc_type, exc_value, traceback_obj):
 	site_name = task_kwargs.get("site_name") or job.kwargs.get("site")
 
 	if not site_name:
-		print(f"BTU on_failure callback: cannot determine site_name for job {job.id}; skipping log update.")
+		frappe.logger("btu").warning("BTU on_failure callback: cannot determine site_name for job %s; skipping log update.", job.id)
 		return
 
 	try:
@@ -90,7 +116,7 @@ def on_btu_task_failure(job, connection, exc_type, exc_value, traceback_obj):
 		frappe.db.commit()
 
 	except Exception as ex:
-		print(f"BTU on_failure callback error for job {job.id}: {ex}")
+		frappe.logger("btu").error("BTU on_failure callback error for job %s: %s", job.id, ex)
 	finally:
 		frappe.destroy()
 
@@ -117,7 +143,7 @@ class TaskRunner():
 		function_name = function_path.split('.')[-1]
 		return (module_path, function_name)
 
-	def __init__(self, btu_task, site_name, schedule_id=None, enable_debug_mode=False, rq_job_id=None):
+	def __init__(self, btu_task, site_name, schedule_id=None, rq_job_id=None):
 		"""
 		args:
 			btu_task : Either a Document or string that represents the primary key of a BTU Task.
@@ -143,11 +169,6 @@ class TaskRunner():
 			self.site_name = site_name
 
 		self.schedule_id = schedule_id
-		force_debug_mode = frappe.db.get_single_value("BTU Configuration", "force_debug_mode", cache=True)
-		if force_debug_mode == "Defer To Code":
-			self.debug_mode_enabled = enable_debug_mode
-		else:
-			self.debug_mode_enabled = force_debug_mode == "Always"
 		self.rq_job_id = rq_job_id  # real RQ job ID; None when running outside of an RQ worker
 		self.standard_output = StandardOutput.DB_LOG
 
@@ -175,19 +196,12 @@ class TaskRunner():
 		"""
 		return TaskRunner.split_function_path(self.btu_task.function_string)[0]
 
-	def dprint(self, object_foo):
-		"""
-		Only prints 'object_foo' if the 'self.debug_mode_enabled' is enabled in the class instance.
-		"""
-		if self.debug_mode_enabled:
-			print(object_foo)
-
 	def add_keyword_arguments(self, **kwargs):
 		if kwargs:
 			self.kwarg_dict = kwargs
 		else:
 			self.kwarg_dict = None
-		self.dprint(f"Task Runner now has these keyword arguments: {self.kwarg_dict}")
+		frappe.logger("btu").debug("TaskRunner keyword arguments: %s", self.kwarg_dict)
 
 	def is_this_btu_aware_function(self, callable_function):
 		"""
@@ -202,22 +216,19 @@ class TaskRunner():
 				if isinstance(callable_function(btu_task_id=self.btu_task.name), BTU_AWARE_FUNCTION):
 					result = True
 			except Exception as ex:
-				print(ex)
-		self.dprint(f"TaskRunner: Is this a BTU-Aware function = {result}")
-		self.dprint(f"TaskRunner: Current user is {frappe.session.user}\n--------")
+				frappe.logger("btu").debug("BTU-aware check failed (not a BTU-aware class): %s", ex)
+		frappe.logger("btu").debug("TaskRunner: BTU-aware=%s, user=%s", result, frappe.session.user)
 		return result
 
 	def _initialize_site_and_database(self):
 		# TODO: This is not longer working in Frappe v15.  Presence of boot doesn't seem to indicate anything??
 		if not hasattr(frappe, 'boot'):
-			# The missing 'boot' object is the best-indication that this function is running on RQ, not the web server.
-			# This means we have to initialize the frappe namespace, choose a Site, and connect to the SQL database.
-			self.dprint("function_wrapper() Code is running outside of the Web Server.  Need to initialize a few things ...")
+			frappe.logger("btu").debug("function_wrapper(): running outside web server, initializing Frappe.")
 			frappe.init(site=self.site_name)
 			frappe.connect()
-			self.dprint("\u2713 Initialization complete.")
+			frappe.logger("btu").debug("Frappe initialization complete.")
 		else:
-			self.dprint("This code is being executed directly by the Web Server.")
+			frappe.logger("btu").debug("function_wrapper(): running directly on web server.")
 
 	def function_wrapper(self):  # pylint: disable=too-many-locals, too-many-statements, too-many-branches
 		"""
@@ -225,7 +236,8 @@ class TaskRunner():
 		The code below is complex and very important.
 		"""
 
-		self.dprint(f"\n-------- Begin function_wrapper (RQ Job ID = {self.rq_job_id})--------\n")
+		logger = frappe.logger("btu")
+		logger.info("Begin function_wrapper: task=%s rq_job_id=%s", self.btu_task.name, self.rq_job_id)
 		self._initialize_site_and_database()
 		start_datetime = make_datetime_naive(get_system_datetime_now()) # Recording this in the System Time Zone
 		self.create_new_log(start_datetime)  # Create a new BTU Task Log, with a status of "In Progress"
@@ -240,9 +252,8 @@ class TaskRunner():
 
 			module_object = importlib.import_module(self.module_path())  # Need to import the function's module into scope.
 			function_to_call = getattr(module_object, self.function_name())
-			self.dprint(f"Calling function '{self.function_name()}' in module '{self.module_path()}'.")
-			self.dprint("Begin Standard Output (TaskRunner.function_wrapper):\n")
-			self.dprint(f"Keyword arguments are as follows: {self.kwarg_dict}")
+			logger.info("Calling function '%s' in module '%s'.", self.function_name(), self.module_path())
+			logger.debug("Keyword arguments: %s", self.kwarg_dict)
 
 			# Option 1: Function output will be routed to Standard Output, and saved to a log file on disk.
 			if self.standard_output == StandardOutput.STDOUT:
@@ -260,22 +271,19 @@ class TaskRunner():
 				function_result = Result(True, ret, execution_time=execution_time)
 
 		except Exception as ex:
-			self.dprint(f"Error in call to function '{self.function_name()}'\n{ex}")
+			logger.error("Error in function '%s': %s", self.function_name(), ex)
 			execution_time = round(time.time() - execution_start, 3)
 			function_result = Result(False, str(ex), execution_time=execution_time)
 
-		self.dprint(f"\nEnd Standard Output\nFunction Result: {function_result}")
-
-		# The final step is to update BTU Task Log, and record the results!
-		self.dprint("Attempting to write to BTU Task Logs:")
+		logger.info("Function result: %s", function_result)
 		new_log_id = write_log_for_task(task_id=self.btu_task.name,
 							            result=function_result,
 										log_name=self.task_log_name,
 							            stdout=stdout_buffer_for_log or None,
 							            date_time_started=start_datetime,
 										schedule_id=self.schedule_id)
-		self.dprint(f"Updated the BTU Task Log record: '{new_log_id}'")
-		self.dprint("\n-------- End function_wrapper --------\n")
+		logger.info("Updated BTU Task Log: '%s'", new_log_id)
+		logger.info("End function_wrapper: task=%s", self.btu_task.name)
 
 	def option_standard_output(self, datetime_string, function_to_call):
 		print(f"--------\nBTU Task {self.btu_task.name} starting at: {datetime_string}")
@@ -341,5 +349,5 @@ class TaskRunner():
 		new_log.rq_job_id = self.rq_job_id  # real RQ job ID, or None if running outside a worker
 		new_log.save(ignore_permissions=True)  # Not even System Administrators are supposed to create and save these.
 		frappe.db.commit()
-		self.dprint(f"Created a new BTU Task Log record: '{new_log.name}'")
+		frappe.logger("btu").info("Created BTU Task Log: '%s'", new_log.name)
 		self.task_log_name = new_log.name  # Save the BTU Task Log 'name' to this class, so we can reference it later.

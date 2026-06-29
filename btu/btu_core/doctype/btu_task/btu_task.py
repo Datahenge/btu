@@ -182,7 +182,6 @@ class BTUTask(Document):
 				if len(function_argument_defaults) >= index + 1:
 					argument['has_default_value'] = True
 					argument['default_value'] = function_argument_defaults[index]
-					# print(f"Argument {argument['argument_name']} has a default value  = {function_argument_defaults[index]}")
 
 		if function_arguments:
 			function_arguments.sort(key=lambda item: item.get("position"))  # inline sort
@@ -226,8 +225,6 @@ class BTUTask(Document):
 					result = True
 			except Exception as ex:
 				print(ex)
-		# print(f"BTUTask: Is this a BTU-Aware function = {result}\n--------")
-		# print(f"BTUTask: Current user is {frappe.session.user}\n--------")
 		return result
 
 	@frappe.whitelist()

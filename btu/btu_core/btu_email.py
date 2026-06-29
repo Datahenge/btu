@@ -29,9 +29,7 @@ import frappe
 from frappe.utils.password import get_decrypted_password
 
 # BTU
-from btu import dprint, print_both
-
-DEBUG_ENV_VARIABLE="BTU_DEBUG"  # if this OS environment variable = 1, then dprint() messages will print to stdout.
+from btu import print_both
 
 def new_mandrill_client(doc_configuration=None):
 	"""
@@ -341,7 +339,7 @@ def email_on_task_start(doc_task_log, send_via_queue=False):
 		body += f"\nTask Schedule {doc_task_log.schedule}"
 
 	for each_recipient in recipients:  # Value of 'each_recipient' is a String email address
-		dprint(f"Sending email to {each_recipient} because Task {doc_task_log.task} has started.")
+		frappe.logger("btu").debug("Sending email to %s because Task %s has started.", each_recipient, doc_task_log.task)
 		if not send_via_queue:
 			Emailer(sender=sender,
 					emailto_list=each_recipient or None,
@@ -350,7 +348,7 @@ def email_on_task_start(doc_task_log, send_via_queue=False):
 		else:
 			raise NotImplementedError("Not Yet Implemented: Sending email via Redis Queue.")
 
-	dprint(f"Sent email message to recipients {recipients}", DEBUG_ENV_VARIABLE)
+	frappe.logger("btu").debug("Sent email message to recipients: %s", recipients)
 
 
 def email_on_task_conclusion(doc_task_log, send_via_queue=False):
@@ -395,4 +393,4 @@ def email_on_task_conclusion(doc_task_log, send_via_queue=False):
 		else:
 			raise NotImplementedError("Not Yet Implemented: Sending email via Redis Queue.")
 
-	dprint(f"Sent email message to recipients {list(email_recipients)}", DEBUG_ENV_VARIABLE)
+	frappe.logger("btu").debug("Sent email message to recipients: %s", list(email_recipients))

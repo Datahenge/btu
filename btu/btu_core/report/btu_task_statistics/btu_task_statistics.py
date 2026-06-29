@@ -46,7 +46,6 @@ def get_data():
 	.groupby(task_log.task, task_log.task_desc_short)
 	.orderby(task_log.task)
 	)
-	# print( query.get_sql())
 	return query.run(as_dict=True)
 
 

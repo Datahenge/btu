@@ -132,17 +132,6 @@ def make_datetime_naive(any_datetime):
 	return any_datetime.replace(tzinfo=None)
 
 
-def dprint(msg, check_env=None, force=None):
-	"""
-	A print() that only prints when an environment variable is set.
-	Very useful for conditional printing, depending on whether you want to debug code, or not.
-	"""
-	if force:
-		print(msg)
-	elif is_env_var_set(check_env):
-		print(msg)
-
-
 def date_to_iso_string(any_date):
 	"""
 	Given a date, create an ISO String.  For example, 2021-12-26.
@@ -223,8 +212,6 @@ def rq_job_to_dict(rq_job):
 		"redis_server_version":	rq_job.redis_server_version,
 		"last_heartbeat":  date_to_iso_string(rq_job.last_heartbeat),
 	}
-	#for each_key, each_value in rq_job_dict.items():
-	#	print(f"key = {each_key}, value type = {type(each_value)}")
 	return result
 
 
@@ -264,11 +251,8 @@ def print_job_details(queue_name, job_id):
 		frappe.msgprint(f"Unable to find RQ Job with identifier = '{job_id}' in queue named '{queue_name}'")
 	else:
 		rq_job_dict = rq_job_to_dict(this_job)
-		#for each_key, each_value in rq_job_dict.items():
-		#	print(f"key = {each_key}, value type = {type(each_value)}")
 		prettier_string = json.dumps(rq_job_dict, indent=4)
 		prettier_string = prettier_string.replace("\n", "<br>")
-		# print(prettier_string)
 		frappe.msgprint(prettier_string)
 
 
