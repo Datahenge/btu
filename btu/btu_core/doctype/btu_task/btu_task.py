@@ -316,6 +316,14 @@ class BTUTask(Document):
 		import uuid
 		from btu.btu_core.task_runner import on_btu_task_failure
 
+		existing_log = _task_has_active_log(self.name)
+		if existing_log:
+			frappe.logger("btu").warning(
+				"Task %s already has an In-Progress log (%s); skipping enqueue.",
+				self.name, existing_log
+			)
+			return
+
 		rq_job_id = uuid.uuid4().hex
 		frappe.enqueue(
 			method="btu.btu_core.task_runner.run_task_by_id",
@@ -330,6 +338,22 @@ class BTUTask(Document):
 			extra_arguments=extra_arguments,
 			rq_job_id=rq_job_id,
 		)
+
+
+def _task_has_active_log(task_id: str) -> str | None:
+	"""
+	Return the BTU Task Log name if an In-Progress execution already exists for task_id,
+	otherwise None.  Used as an idempotency guard before enqueueing.
+
+	Gap: a brand-new one-shot task will never have an In-Progress log yet, so this guard
+	cannot protect Window A (process dies after commit, before enqueue) for one-shots.
+	It does prevent double-enqueue for recurring tasks fired by the scheduler or the UI.
+	"""
+	return frappe.db.get_value(
+		"BTU Task Log",
+		{"task": task_id, "success_fail": "In-Progress"},
+		"name"
+	)
 
 
 def create_and_run_one_shot(short_description: str,

@@ -125,7 +125,7 @@ class StandardOutput(Enum):
 	NONE = 0
 	STDOUT = 1
 	DB_LOG = 2
-	FILE = 3
+	# FILE was removed: writing to disk is not container-safe and was never used.
 
 # Further Reading:
 # https://www.geeksforgeeks.org/decorators-with-parameters-in-python/
@@ -262,7 +262,8 @@ class TaskRunner():
 			elif self.standard_output == StandardOutput.DB_LOG:
 				function_threw_exception, ret, stdout_buffer_for_log = self.option_log_to_sql(datetime_string, function_to_call)
 			else:
-				raise ValueError(f"No code implemented for Standard Output option = '{self.standard_output}'")
+				# StandardOutput.FILE was explicitly removed (not container-safe, never used).
+				raise ValueError(f"Unsupported StandardOutput mode '{self.standard_output}'. Only STDOUT and DB_LOG are valid.")
 
 			execution_time = round(time.time() - execution_start, 3)
 			if function_threw_exception:

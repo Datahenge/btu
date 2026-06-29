@@ -8,6 +8,7 @@ import frappe
 
 # BTU Library
 from btu.btu_api import Sanchez, execute_job
+from btu.btu_core.doctype.btu_task.btu_task import _task_has_active_log
 
 
 @frappe.whitelist()
@@ -120,6 +121,14 @@ def enqueue_for_next_available_worker(task_schedule_key: str):
 
 		doc_task_schedule = frappe.get_doc("BTU Task Schedule", task_schedule_key, ignore_permissions=True)
 		doc_task = frappe.get_doc("BTU Task", doc_task_schedule.task, ignore_permissions=True)
+
+		existing_log = _task_has_active_log(doc_task.name)
+		if existing_log:
+			frappe.logger("btu").warning(
+				"Task %s already has an In-Progress log (%s); skipping scheduled enqueue for schedule %s.",
+				doc_task.name, existing_log, task_schedule_key
+			)
+			return response
 
 		rq_job_id = uuid.uuid4().hex
 		frappe.enqueue(
