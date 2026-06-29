@@ -70,7 +70,7 @@ def write_log_for_task(task_id, result, log_name=None, stdout=None, date_time_st
 		log_name :	Optional.  The name of the Task Log.  Useful when updating an existing, pending log.
 	"""
 
-	print(f"BTU Task {task_id} has overall result {bool(result)}")
+	frappe.logger("btu").info("BTU Task %s overall result: %s", task_id, bool(result))
 
 	# Important Fields in BTU Task Log:
 	#     1.  task
@@ -123,7 +123,7 @@ def write_log_for_task(task_id, result, log_name=None, stdout=None, date_time_st
 	frappe.db.commit()
 
 	if task_values and task_values["repeat_log_in_stdout"]:
-		print(new_log.stdout)
+		print(new_log.stdout)  # intentional: BTU Task field 'repeat_log_in_stdout' explicitly requests echoing captured output to process stdout
 
 	return new_log.name
 
@@ -161,11 +161,11 @@ def check_in_progress_logs_for_timeout(verbose=False):
 
 	# This function is called via a cron schedule in BTU hooks.py
 	if verbose:
-		print("Checking for any BTU Task Logs that are 'In-Progress' and have exceeded their Max Task Duration...")
+		frappe.logger("btu").info("Checking BTU Task Logs that are In-Progress and have exceeded Max Task Duration.")
 	in_progress_logs = frappe.get_list("BTU Task Log", filters={"success_fail": "In-Progress"}, pluck="name")
 
 	if verbose:
-		print(f"Found {len(in_progress_logs)} BTU Task Logs that are In-Progress.")
+		frappe.logger("btu").info("Found %d BTU Task Logs that are In-Progress.", len(in_progress_logs))
 
 	datetime_now_tz_aware = get_system_datetime_now()
 
@@ -180,9 +180,9 @@ def check_in_progress_logs_for_timeout(verbose=False):
 		log_creation_tz_aware = make_datetime_naive(doc_log.creation) if is_datetime_naive(doc_log.creation) else doc_log.creation
 		seconds_since_log_creation = (datetime_now_tz_aware - log_creation_tz_aware).total_seconds()
 		if seconds_since_log_creation > max_task_duration:
-			print(f"BTU Task Log {doc_log.name}.  {seconds_since_log_creation} seconds have passed since creation.  Changing status from 'In-Progress' to 'Failed'")
+			frappe.logger("btu").warning("BTU Task Log %s: %ss elapsed, exceeds max_task_duration=%s. Marking Timeout.", doc_log.name, seconds_since_log_creation, max_task_duration)
 			doc_log.success_fail = 'Timeout'
 			doc_log.save()
 			frappe.db.commit()
 		elif verbose:
-			print(f"BTU Task Log {doc_log.name}.  {seconds_since_log_creation} seconds have passed since creation, but 'max_task_duration' is {max_task_duration}")
+			frappe.logger("btu").info("BTU Task Log %s: %ss elapsed, within max_task_duration=%s.", doc_log.name, seconds_since_log_creation, max_task_duration)

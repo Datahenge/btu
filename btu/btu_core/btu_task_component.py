@@ -138,6 +138,7 @@ class TaskComponentWrapper():
 
 			buffer = io.StringIO()
 			with redirect_stdout(buffer):
+				# intentional: redirect_stdout captures this into stdout_buffer_for_log → BTU Task Log stdout field.
 				print(f"--------\nBTU Task Component {self.btu_task_id}-{self.btu_component_id} starting at: {datetime_string}")
 				if self.kwarg_dict:
 					ret = function_to_call(**self.kwarg_dict)

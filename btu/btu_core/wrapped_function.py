@@ -29,12 +29,12 @@ def enqueued_run_later_instance(run_later_key: str):
 	# do some other stuff.
 	try:
 		if doc_run_later.btu_task:
-			print(f"Running BTU Task '{doc_run_later.btu_task}' on web server ...")
+			frappe.logger("btu").info("Running BTU Task '%s' on web server.", doc_run_later.btu_task)
 			doc_btu_task = frappe.get_doc("BTU Task", doc_run_later.btu_task)
 			result = doc_btu_task.run_task_on_webserver()
-			print(f"Result = {result}")
+			frappe.logger("btu").info("Result = %s", result)
 		else:
-			print("Creating and running a One-Shot task in the current thread of execution ...")
+			frappe.logger("btu").info("Creating and running a One-Shot task in the current thread of execution.")
 			# Run a One-Shot task, but don't enqueue...we're already in one.
 			create_and_run_one_shot(
 					short_description=doc_run_later.new_task_name,
@@ -47,7 +47,7 @@ def enqueued_run_later_instance(run_later_key: str):
 
 	except Exception as ex:
 		# Something went wrong with whatever I'm supposed to be doing.
-		print(f"Error during enqueued_run_later_instance(): {ex}")
+		frappe.logger("btu").error("Error during enqueued_run_later_instance(): %s", ex)
 		doc_run_later.last_result = 'Error'
 		if doc_run_later.can_retry():
 			doc_run_later.execution_status = 'Pending Future'

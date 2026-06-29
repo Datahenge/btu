@@ -286,7 +286,7 @@ class TaskRunner():
 		logger.info("End function_wrapper: task=%s", self.btu_task.name)
 
 	def option_standard_output(self, datetime_string, function_to_call):
-		print(f"--------\nBTU Task {self.btu_task.name} starting at: {datetime_string}")
+		print(f"--------\nBTU Task {self.btu_task.name} starting at: {datetime_string}")  # intentional: STDOUT mode streams directly to process stdout (e.g. log file via supervisor)
 		if self.kwarg_dict:
 			if self.is_this_btu_aware_function(function_to_call):
 				ret = function_to_call(self.btu_task.name).run(**self.kwarg_dict)    # create an instance of the BTU-aware class, and call its run() method.
@@ -308,6 +308,9 @@ class TaskRunner():
 		function_response = None
 		buffer = io.StringIO()
 		with redirect_stdout(buffer):
+			# All print() calls inside this block are intentional: redirect_stdout captures them
+			# into stdout_buffer_for_log, which is written to the BTU Task Log's stdout field.
+			# Replacing these with logger calls would bypass the buffer and lose the captured output.
 			try:
 				print(f"--------\nBTU Task {self.btu_task.name} starting at: {datetime_string}")
 				# Yes, has keyword arguments:

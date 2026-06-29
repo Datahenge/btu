@@ -72,7 +72,7 @@ def enqueue_for_later(short_name: str,
 	validate_datatype("arguments", arguments, (dict, NoneType), False)
 
 	if unique_identifier and exists_unique_identifier(unique_identifier):
-		print(f"Skipping; task with unique identifer '{unique_identifier}' is already pending future execution.")
+		frappe.logger("btu").info("Skipping enqueue_for_later: unique_identifier '%s' is already pending.", unique_identifier)
 		return  # do nothing, because the same task is already scheduled
 
 	not_before_time_utc = not_before_time.astimezone(ZoneInfo("UTC"))
@@ -92,7 +92,7 @@ def enqueue_for_later(short_name: str,
 		"unique_identifier": unique_identifier or ""
 	}
 	new_redis_queue_connection().hmset(new_key, payload)
-	print(f"Added a new key to Redis Queue database: {new_key}")
+	frappe.logger("btu").info("Added run_later key to Redis: %s", new_key)
 
 
 def create_doc_run_later(comms_type: str,
@@ -166,19 +166,17 @@ def poll_for_ready_work():
 	# 2. For each found, create a One-Shot BTU Task, and then immediately run via queue.
 
 	if not _acquire_poll_lock():
-		print("poll_for_ready_work: another instance is already running, skipping.")
+		frappe.logger("btu").debug("poll_for_ready_work: another instance is already running, skipping.")
 		return
 
 	try:
 		_run_tasks_from_redis_database()
 	except Exception as ex:
-		print(f"Unhandled exception during poll_for_ready_work() : {ex}")
-	print()
+		frappe.logger("btu").error("Unhandled exception in poll_for_ready_work (Redis): %s", ex)
 	try:
 		_run_tasks_from_sql_database()
 	except Exception as ex:
-		print(f"Unhandled exception during poll_for_ready_work() : {ex}")
-	print()
+		frappe.logger("btu").error("Unhandled exception in poll_for_ready_work (SQL): %s", ex)
 	identify_timeouts()
 	_release_poll_lock()
 
@@ -197,7 +195,7 @@ def _run_tasks_from_redis_database():
 
 	redis_conn = new_redis_queue_connection()
 	tasks_to_examine = list(redis_conn.scan_iter(match="btu_scheduler:run_later:*", count=100))  # generator to List
-	print(f"Examining {len(tasks_to_examine)} one-shot Redis tasks, queued for future execution ...")
+	frappe.logger("btu").debug("Examining %d one-shot Redis tasks queued for future execution.", len(tasks_to_examine))
 
 	for key in tasks_to_examine:
 
@@ -213,7 +211,7 @@ def _run_tasks_from_redis_database():
 			arguments = json.loads(arguments)
 
 		try:
-			print(f"Queuing task for execution: {data.get('uid')} ...")
+			frappe.logger("btu").info("Queuing Redis run_later task: %s", data.get('uid'))
 			create_and_run_one_shot(
 				short_description = data.get("short_name"),
 				function_path = data.get("path_to_function"),
@@ -222,9 +220,9 @@ def _run_tasks_from_redis_database():
 			)
 			redis_conn.delete(key)  # remove the key from the "To Do" list
 		except Exception as ex:
-			print(f"ERROR in _run_tasks_from_redis_database() : {ex}.  Moving on to next Redis key ...")
+			frappe.logger("btu").error("Error in _run_tasks_from_redis_database() for key %s: %s", key, ex)
 
-	print("Okay, finished polling all the 'pending' keys")
+	frappe.logger("btu").debug("Finished polling Redis run_later keys.")
 	frappe.db.commit()
 
 
@@ -239,7 +237,7 @@ def _run_tasks_from_sql_database(disable_enqueue=False):
 		"execution_status": 'Pending Future'
 	}
 	tasks_to_examine = frappe.get_list("BTU Run Later", filters, pluck="name")
-	print(f"Examining {len(tasks_to_examine)} one-shot SQL tasks, queued for future execution ...")
+	frappe.logger("btu").debug("Examining %d one-shot SQL tasks queued for future execution.", len(tasks_to_examine))
 
 	for run_later_key in tasks_to_examine:
 
@@ -272,9 +270,9 @@ def _run_tasks_from_sql_database(disable_enqueue=False):
 			frappe.db.commit()
 		except Exception as ex:
 			frappe.db.rollback()
-			print(f"ERROR in _run_tasks_from_sql_database() : {ex}.  Moving on to next SQL key ...")
+			frappe.logger("btu").error("Error in _run_tasks_from_sql_database() for key %s: %s", run_later_key, ex)
 
-	print("_run_tasks_from_sql_database() : function concluded.")
+	frappe.logger("btu").debug("_run_tasks_from_sql_database() concluded.")
 
 
 def identify_timeouts():
@@ -303,4 +301,4 @@ def identify_timeouts():
 				frappe.db.commit()
 			frappe.db.commit()
 		except Exception as ex:
-			print(f"identify_timeouts() : {ex}")
+			frappe.logger("btu").error("identify_timeouts() error for %s: %s", run_later_key, ex)

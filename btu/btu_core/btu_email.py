@@ -64,7 +64,7 @@ def get_mandrill_response_status_overall(mandrill_response: list) -> MandrillRes
 			if each_dict.get('status', None) != 'sent':
 				return MandrillResponse.REJECTED
 	except Exception as ex:
-		print(f"Unhandled exception in get_mandrill_response_status_overall() : {ex}")
+		frappe.logger("btu").warning("Unhandled exception in get_mandrill_response_status_overall(): %s", ex)
 		return MandrillResponse.UNHANDLED_ERROR
 	return MandrillResponse.SUCCESS
 
@@ -239,7 +239,7 @@ class Emailer():
 			else:
 				error_string = str(ex)
 			print_both(f"Error while sending email via Mandrill: {error_string}")
-			print(f"Message sent to Mandrill:\n{json.dumps(new_message, indent=4)}")
+			frappe.logger("btu").debug("Message sent to Mandrill:\n%s", json.dumps(new_message, indent=4))
 			frappe.msgprint(f"Error while sending email via Mandrill: {error_string}")
 
 	def _create_plaintext_message(self):
