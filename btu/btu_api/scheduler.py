@@ -1,109 +1,107 @@
-""" btu/but_api/scheduler.py """
-
-from enum import Enum
-import time
+""" btu/btu_api/scheduler.py """
 
 import json
-import pathlib
-import socket
+import uuid
+from enum import Enum
+
 import frappe
 
-# https://realpython.com/python-sockets/#application-protocol-header
+# Redis key where the BTU Scheduler daemon listens for incoming commands.
+REDIS_COMMAND_QUEUE = "btu:scheduler:commands"
 
-# pylint: disable=invalid-name
+# Prefix for per-request response keys.  Each call appends a UUID: btu:scheduler:rpc:{uuid}
+REDIS_RPC_RESPONSE_PREFIX = "btu:scheduler:rpc"
+
+# How long (seconds) the web worker blocks waiting for the scheduler's receipt ACK.
+# The scheduler ACKs on receipt, before executing, so this should be near-instant
+# under normal conditions.  5 seconds is generous; a timeout means the scheduler is
+# down, unreachable, or its Redis connection is broken.
+REDIS_RPC_TIMEOUT_SECONDS = 5
+
+
 class RequestType(Enum):
 	create_task_schedule = 0
 	ping = 1
 	cancel_task_schedule = 2
 
+
+def _get_redis_connection():
+	"""Return a Redis connection pointed at Frappe's RQ database."""
+	import redis as redis_lib
+	return redis_lib.from_url(frappe.local.conf.redis_queue, decode_responses=True)
+
+
 class SchedulerAPI():
 	"""
-	Static methods are for external use.
+	Client-side API for communicating with the BTU Scheduler daemon.
+
+	Commands are delivered via Redis RPC: the caller pushes a JSON command onto
+	REDIS_COMMAND_QUEUE, then blocks on a unique response key.  The scheduler
+	ACKs receipt immediately (before executing), which keeps the caller's wait
+	time near-instantaneous regardless of queue depth.
+
+	See docs/scheduler_redis_rpc.md for the full protocol description.
 	"""
 
 	@staticmethod
 	def send_ping():
-		"""
-		Ask the BTU Scheduler to reply with a 'pong'
-		"""
-		response = SchedulerAPI().send_message(RequestType.ping, content=None)
-		return response
+		"""Ask the BTU Scheduler to reply with a receipt acknowledgement."""
+		return SchedulerAPI().send_message(RequestType.ping, content=None)
 
 	@staticmethod
 	def reload_task_schedule(task_schedule_id):
 		"""
-		Ask the BTU Scheduler to reload the Task Schedule in RQ, using the latest information.
-		NOTE: This does not perform an immediate Task execution; it only refreshes the JQ Job and CRON schedule.
+		Ask the BTU Scheduler to reload the Task Schedule in RQ using the latest information.
+		Does not trigger an immediate execution; only refreshes the schedule entry.
 		"""
-		response = SchedulerAPI().send_message(RequestType.create_task_schedule,
-		                                       content=task_schedule_id)
-		return response
+		return SchedulerAPI().send_message(RequestType.create_task_schedule, content=task_schedule_id)
 
 	@staticmethod
 	def cancel_task_schedule(task_schedule_id):
-		"""
-		Ask the BTU Scheduler to cancel the Task Schedule in RQ.
-		"""
-		response = SchedulerAPI().send_message(RequestType.cancel_task_schedule,
-		                                       content=task_schedule_id)
-		return response
-
+		"""Ask the BTU Scheduler to remove the Task Schedule from RQ."""
+		return SchedulerAPI().send_message(RequestType.cancel_task_schedule, content=task_schedule_id)
 
 	def send_message(self, request_type: RequestType, content):
-
 		if not isinstance(request_type, RequestType):
 			raise TypeError("Argument 'request_type' must be an enum of RequestType.")
-		new_message = {
-			'request_type': request_type.name,
-			'request_content': content
-		}
-		message_as_string = json.dumps(new_message)
-		return self._send_message_to_scheduler_socket(message_as_string)
+		return self._send_message_via_redis_rpc(request_type.name, content)
 
-	def _send_message_to_scheduler_socket(self, message, debug=False):
+	def _send_message_via_redis_rpc(self, request_type_name: str, content):
 		"""
-		Establish a connection to the BTU scheduler daemon's Unix Domain Socket, and send a message.
+		Push a command onto the BTU Scheduler's Redis command queue and block-wait
+		for the receipt acknowledgement.
+
+		Returns the parsed JSON response dict on success, or None on timeout/error.
+		A None return means the scheduler is not running or not reachable via Redis —
+		it does NOT mean the command failed to execute.
 		"""
-		if not isinstance(message, str):
-			raise TypeError("Argument 'message' must be a UTF-8 string.")
-
-		socket_str = frappe.db.get_single_value("BTU Configuration", "path_to_btu_scheduler_uds")
-		if not socket_str:
-			raise ValueError("BTU Configuration is missing a path to the Unix Domain Socket for the scheduler daemon.")
-
-		# Create a UDS socket; connect to the port where the BTU Scheduler daemon is listening.
-		socket_path = pathlib.Path(socket_str)
-		if not socket_path.exists():
-			raise FileNotFoundError(f"Path to socket file does not exists: '{socket_path.absolute()}'")
+		response_key = f"{REDIS_RPC_RESPONSE_PREFIX}:{uuid.uuid4().hex}"
+		command = json.dumps({
+			"request_type": request_type_name,
+			"request_content": content,
+			"response_key": response_key,
+		})
 
 		try:
-			scheduler_socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-			scheduler_socket.settimeout(5)  # Very important, otherwise indefinite wait time.
-			scheduler_socket.connect(str(socket_path.absolute()))
-			if debug:
-				print(f"Connected to BTU Scheduler daemon via Unix Domain Socket at '{socket_path}'")
-				print(f"Blocking: {scheduler_socket.getblocking()}")
-				print(f"Timeout: {scheduler_socket.gettimeout()}")
-		except Exception as ex:
-			return f"Exception while connecting to BTU Scheduler socket: {str(ex)}"
+			redis_conn = _get_redis_connection()
+			redis_conn.lpush(REDIS_COMMAND_QUEUE, command)
 
-		message_bytes = message.encode('utf-8')
-		uds_response = None
-		try:
-			bytes_sent = scheduler_socket.send(message_bytes)
-			if debug:
-				print(f"Transmitted this quantity of bytes to UDS server: {bytes_sent}")
-			time.sleep(0.5)  # brief wait for server to reply
-			uds_response = scheduler_socket.recv(2048)  # response should be much smaller than 2kb
-			if debug:
-				print(f"Response (as bytes) from BTU Scheduler: {uds_response}")
-		except Exception as ex:
-			print(f"Exception while communicating with the BTU Scheduler daemon's Unix Domain Socket: {ex}")
-		finally:
-			scheduler_socket.close()
-			if debug:
-				print("Socket connection to BTU Scheduler daemon is now closed.")
+			# BLPOP blocks until the scheduler pushes an ACK, or the timeout expires.
+			result = redis_conn.blpop(response_key, timeout=REDIS_RPC_TIMEOUT_SECONDS)
 
-		if uds_response:
-			uds_response = uds_response.decode('utf-8')  # return UTF-8 string
-		return uds_response
+			if result is None:
+				frappe.logger("btu").warning(
+					"BTU Scheduler did not acknowledge command '%s' within %s seconds. "
+					"Scheduler may be down or Redis connectivity is broken.",
+					request_type_name, REDIS_RPC_TIMEOUT_SECONDS
+				)
+				return None
+
+			_, response_json = result  # BLPOP returns (key_name, value)
+			return json.loads(response_json)
+
+		except Exception as ex:
+			frappe.logger("btu").error(
+				"Error communicating with BTU Scheduler via Redis RPC: %s", ex
+			)
+			return None
