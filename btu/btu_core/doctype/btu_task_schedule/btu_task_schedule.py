@@ -21,7 +21,7 @@ from frappe import _
 from frappe.model.document import Document
 
 # BTU
-from btu import ( validate_cron_string, Result, get_system_datetime_now, print_both)
+from btu import ( validate_cron_string, Result, print_both)
 from btu.btu_api.scheduler import SchedulerAPI
 
 NoneType = type(None)
@@ -43,6 +43,9 @@ class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
 	def before_validate(self):
 
 		self.task_description = self.get_task_doc().desc_short
+
+		if not self.cron_timezone:
+			self.cron_timezone = frappe.db.get_system_setting('time_zone')
 
 		# Clear fields that are not relevant for this schedule type.
 		if self.run_frequency == "Cron Style":
@@ -128,11 +131,10 @@ class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
 
 		response = SchedulerAPI.reload_task_schedule(task_schedule_id=self.name)
 		if not response:
-			raise ConnectionError("Error, no response from BTU Task Scheduler daemon.  Check logs in directory '/etc/btu_scheduler.logs'")
-		if response.startswith('Exception while connecting'):
-			raise ConnectionError(response)
-		print(f"Response from BTU Scheduler: {response}")
-		frappe.msgprint(f"Response from BTU Scheduler daemon:<br>{response}")
+			raise ConnectionError("Error, no response from BTU Task Scheduler daemon. Check logs in '/etc/btu_scheduler/logs'.")
+		message = response.get("message", str(response))
+		print(f"Response from BTU Scheduler: {message}")
+		frappe.msgprint(f"Response from BTU Scheduler daemon:<br>{message}")
 		if autosave:
 			self.save()
 
@@ -141,7 +143,8 @@ class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
 		Ask the BTU Scheduler daemon to cancel this Task Schedule in the Redis Queue.
 		"""
 		response = SchedulerAPI.cancel_task_schedule(task_schedule_id=self.name)
-		message = f"Request = Cancel Task Schedule.\nResponse from BTU Scheduler: {response}"
+		ack = response.get("message", str(response)) if response else "No response from BTU Scheduler daemon."
+		message = f"Request = Cancel Task Schedule.\nResponse from BTU Scheduler: {ack}"
 		print(message)
 		frappe.msgprint(message)
 		self.redis_job_id = ""
@@ -253,7 +256,12 @@ def schedule_to_cron_string(doc_schedule):
 	Convert individual schedule fields (Hour, Day, Minute, etc.) into a Unix cron string.
 
 	Input:   A BTU Task Schedule document class.
-	Output:  A Unix cron string.
+	Output:  A Unix cron string in local time (never UTC).
+
+	Timezone-aware conversion to UTC happens in the BTU Scheduler daemon at scheduling time,
+	using the cron_timezone field.  Storing the cron in local time is what allows DST to be
+	handled correctly — a single "0 18 * * *" in America/New_York fires at 18:00 Eastern
+	year-round, producing 23:00 UTC in winter and 22:00 UTC in summer.
 	"""
 
 	if not isinstance(doc_schedule, BTUTaskSchedule):
@@ -262,23 +270,14 @@ def schedule_to_cron_string(doc_schedule):
 	if doc_schedule.run_frequency == 'Cron Style':
 		return doc_schedule.cron_string
 
-	datetime_now = get_system_datetime_now()  # Local datetime using System's time zone settings.
-	new_datetime = datetime_type(year=datetime_now.year,
-									month=datetime_now.month,
-									day=datetime_now.day,
-									hour=int(doc_schedule.hour) if doc_schedule.hour else 0,
-									minute=int(doc_schedule.minute) if doc_schedule.minute else 0,
-									second=0, microsecond=0, tzinfo=datetime_now.tzinfo)
-	utc_datetime = new_datetime.astimezone(get_utc_timezone())
-
 	# Default every position to wildcard; only override positions that carry a real value.
 	cron = ["*", "*", "*", "*", "*"]  # [minute, hour, day-of-month, month, day-of-week]
 
 	if not isinstance(doc_schedule.minute, NoneType):
-		cron[0] = str(utc_datetime.minute)
+		cron[0] = str(int(doc_schedule.minute))
 
 	if doc_schedule.hour:
-		cron[1] = str(utc_datetime.hour)
+		cron[1] = str(int(doc_schedule.hour))
 
 	if doc_schedule.day_of_month:
 		cron[2] = str(doc_schedule.day_of_month)
@@ -311,9 +310,6 @@ def resubmit_all_task_schedules():
 			print_both(message)
 			doc_schedule.enabled = False
 			doc_schedule.save()
-
-def get_utc_timezone():
-	return pytz.timezone('UTC')
 
 def get_system_timezone():
 	"""

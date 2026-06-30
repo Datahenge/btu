@@ -17,6 +17,7 @@
   "sb_schedule",
   "cron_string",
   "schedule_description",
+  "cron_timezone",
   "cb2",
   "run_frequency",
   "day_of_week",
@@ -68,7 +69,7 @@
    "reqd": 1
   },
   {
-   "description": "UNIX crontab format: \"minute hour day-of-month month day-of-week\"<br>Example:  0 22 * * 1-5.",
+   "description": "UNIX crontab format: \"minute hour day-of-month month day-of-week\"<br>Example:  0 22 * * 1-5.<br><strong>Always enter times in local time, never UTC.</strong>",
    "fieldname": "cron_string",
    "fieldtype": "Data",
    "label": "Cron String",
@@ -123,6 +124,12 @@
    "in_list_view": 1,
    "label": "Schedule Description",
    "read_only": 1
+  },
+  {
+   "description": "IANA time zone name for this schedule (e.g. 'America/New_York'). Defaults to the site time zone from System Settings. The cron string is always stored in this local time — UTC conversion happens automatically at scheduling time.",
+   "fieldname": "cron_timezone",
+   "fieldtype": "Data",
+   "label": "Cron Time Zone"
   },
   {
    "columns": 3,
