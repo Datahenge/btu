@@ -5,7 +5,8 @@
 | Path | Role |
 |------|------|
 | `hooks.py` | Frappe hooks (scheduler events, fixtures, `before_job`) |
-| `__init__.py` | Version, `Result`, shared date/cron utilities; re-exports deprecated RQ admin paths |
+| `__init__.py` | Version; re-exports `btu.utils` and deprecated RQ admin paths |
+| `utils/` | `Result`, date/time helpers, cron validation, `print_both` |
 | `btu_core/` | Product code: DocTypes, task execution, email, reports, housekeeping |
 | `btu_api/` | Scheduler daemon integration (Redis RPC, HTTP endpoints) |
 | `samples/` | **BTU Task target examples** (`btu.samples.*`) |
@@ -15,7 +16,7 @@
 
 ## Tests
 
-DocType unit tests live beside controllers (`test_*.py`). Integration tests may be added under `btu/tests/` later.
+DocType unit tests live beside controllers (`test_*.py`). Cross-module tests live in `btu/tests/`.
 
 ## User documentation
 

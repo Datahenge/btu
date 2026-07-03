@@ -40,7 +40,8 @@ Scheduler ↔ Frappe communication uses a Redis RPC protocol documented in [docs
 ```
 btu/                          # Python package root (Frappe app)
 ├── hooks.py                  # Frappe hooks (scheduler_events, fixtures, before_job)
-├── __init__.py               # Version, Result class, shared utilities
+├── __init__.py               # Version; re-exports btu.utils and rq_admin shims
+├── utils/                    # Result, dates, cron, messaging helpers
 ├── samples/                  # Example BTU Task target functions
 ├── diagnostics/              # bench execute smoke tests (not production tasks)
 ├── examples.py               # Deprecated shim → btu.samples
@@ -85,7 +86,7 @@ Key hook in [btu/hooks.py](btu/hooks.py):
 - **Result type:** Use `btu.Result` for functions that return success/failure with a message.
 - **Logging:** BTU tasks use the `btu` logger; level is controlled by `BTU_LOG_LEVEL` env var and `BTU Configuration.force_debug_mode`.
 - **Patches:** Add data migrations in [btu/patches.txt](btu/patches.txt) under `btu/patches/`.
-- **Tests:** DocType tests live alongside DocTypes (`test_<doctype>.py`). Run via bench, not standalone pytest.
+- **Tests:** DocType tests live alongside DocTypes (`test_<doctype>.py`). Cross-module tests live in `btu/tests/`. Run via bench, not standalone pytest.
 - **Do not** add cross-dependencies on other custom Frappe apps unless explicitly requested.
 
 ## Editor setup
