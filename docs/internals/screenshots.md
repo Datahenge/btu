@@ -38,9 +38,9 @@ Share screenshots in chat or commit directly to `docs/assets/images/` — either
 
 ## Logo
 
-Place **Datahenge** or **BTU** logo files in `docs/assets/`:
+Official mark: [`docs/assets/datahenge-logo.svg`](../assets/datahenge-logo.svg) — used in the site header via `theme.logo` in `mkdocs.yml`. The blue `#709dcd` icon works on light and dark backgrounds without inversion.
 
-- `logo.svg` — header (light background); used when present
-- `favicon.png` — browser tab icon (optional)
+Optional later:
 
-Until a BTU-specific mark exists, the Datahenge logo is fine. Update `theme.logo` in [`mkdocs.yml`](https://github.com/Datahenge/btu/blob/version-15/mkdocs.yml) after adding files.
+- `favicon.png` — browser tab icon (export a small square crop from the SVG)
+- BTU-specific mark if one is designed separately

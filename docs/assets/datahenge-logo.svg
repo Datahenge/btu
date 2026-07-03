@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   version="1.1"
+   id="datahenge-logo-improved"
+   width="762.6"
+   height="724.6"
+   viewBox="0 0 762.6 724.6"
+   xmlns="http://www.w3.org/2000/svg">
+
+  <!-- Central arch: single continuous outline (like the original), so there are
+       no internal seam lines. Pillar widths are standardized to the average of
+       the original hand-drawn left/right pillars (105.6). Overall outer width
+       (399.4) and height (315.6) and lintel thickness (107.4) match the
+       original arch almost exactly. Shifted up 16.75 units (vs. vertically
+       centered) so it sits closer to the top 3 circles and further from the
+       bottom 3, per request; circle positions are untouched. -->
+  <path
+     fill="#709dcd"
+     d="M 181.60,538.75 L 181.60,223.15 L 581.00,223.15 L 581.00,538.75 L 475.40,538.75 L 475.40,330.55 L 287.20,330.55 L 287.20,538.75 Z"
+     id="central-arch" />
+
+  <!-- Eight circles, radius = average of the original 8 (53.4). The four
+       corner circles are horizontally centered on the pillars' outer edges
+       (181.6 for the left pillar, 581.0 for the right pillar), so top-left
+       aligns vertically with bottom-left, and top-right aligns vertically
+       with bottom-right. The left/right circles sit at y=362.3, the exact
+       vertical midpoint between the top-center and bottom-center circles.
+       Top-to-bottom distances intentionally differ, matching the original's
+       asymmetric-but-charming placement. -->
+  <g id="outer-circles">
+    <circle fill="#709dcd" cx="381.30" cy="68.40"  r="53.4" id="circle-top-center" />
+    <circle fill="#709dcd" cx="181.60" cy="137.60" r="53.4" id="circle-top-left" />
+    <circle fill="#709dcd" cx="581.00" cy="137.60" r="53.4" id="circle-top-right" />
+
+    <circle fill="#709dcd" cx="68.40"  cy="362.30" r="53.4" id="circle-left" />
+    <circle fill="#709dcd" cx="694.20" cy="362.30" r="53.4" id="circle-right" />
+
+    <circle fill="#709dcd" cx="381.30" cy="656.20" r="53.4" id="circle-bottom-center" />
+    <circle fill="#709dcd" cx="181.60" cy="624.30" r="53.4" id="circle-bottom-left" />
+    <circle fill="#709dcd" cx="581.00" cy="624.30" r="53.4" id="circle-bottom-right" />
+  </g>
+</svg>

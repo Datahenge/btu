@@ -7,7 +7,7 @@ edit_uri: edit/version-15/docs/
 
 theme:
   name: material
-  logo: assets/logo.svg
+  logo: assets/datahenge-logo.svg
   font:
     text: Inter
     code: Roboto Mono

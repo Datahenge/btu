@@ -45,10 +45,21 @@
 	background-color: var(--md-default-fg-color--lightest);
 }
 
-[data-md-color-scheme="slate"] .md-header__button.md-logo img,
-[data-md-color-scheme="slate"] .md-header__button.md-logo svg {
-	filter: brightness(0) invert(1);
-	opacity: 0.9;
+/* Datahenge mark — square SVG; constrain height in header */
+.md-header__button.md-logo {
+	padding: 0.2rem 0.4rem 0.2rem 0;
+}
+
+.md-header__button.md-logo img,
+.md-header__button.md-logo svg {
+	height: 1.75rem;
+	width: auto;
+	max-width: none;
+}
+
+.md-header__title {
+	font-weight: 600;
+	letter-spacing: -0.01em;
 }
 
 .md-tabs__link {
