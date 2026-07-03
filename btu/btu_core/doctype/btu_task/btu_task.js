@@ -15,6 +15,22 @@ frappe.ui.form.on('BTU Task', {
 		frm.events._run_task_on_webserver(frm)
 	},
 
+	button_push_into_queue(frm) {
+		frappe.call({
+			doc: frm.doc,
+			method: 'btn_push_into_queue',
+			freeze: true,
+			freeze_message: __('Submitting to Redis Queue...'),
+			error: (r) => {
+				frappe.msgprint({
+					title: __('Queue submission failed'),
+					indicator: 'red',
+					message: r?.message || __('Unable to submit task to the Redis queue.'),
+				});
+			},
+		});
+	},
+
 	_revert_to_draft(frm) {
 		frappe.call({
 			doc: frm.doc,

@@ -8,10 +8,11 @@ from datetime import datetime
 import frappe
 from frappe.model.document import Document
 from pypika import functions as fn
-from temporal_lib.core import get_system_datetime_now, is_datetime_naive, make_datetime_naive
+from temporal_lib.core import is_datetime_naive
 
 from btu import Result, print_both
 from btu.btu_core import btu_email
+from btu.utils.datetime import get_system_datetime_now, make_datetime_naive
 
 
 class BTUTaskLog(Document):

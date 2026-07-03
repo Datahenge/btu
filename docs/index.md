@@ -21,7 +21,7 @@ Background Tasks Unleashed is:
 Answers to frequently asked questions [can be found here.](https://datahenge.github.io/btu/faq.html)
 
 ### Technical Design
-[This article](https://datahenge.github.io/btu/technical_design.html) describes the technology and architecture behind the BTU.
+[Technical design](technical_design.md) describes why BTU is split across a Frappe app and a scheduler daemon, and the product constraints behind Run Later and Redis RPC. Maintainer ADRs: [docs/dev/adr/](dev/adr/README.md).
 
 ### Developer
 * [Repository layout](dev/repository_layout.md)

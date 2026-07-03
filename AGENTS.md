@@ -12,6 +12,7 @@
 | 4 | Topic-specific docs under [docs/](docs/) | Installation, configuration, CLI/web guides, FAQ |
 | 5 | [docs/scheduler_redis_rpc.md](docs/scheduler_redis_rpc.md) | Scheduler Redis RPC protocol (when touching scheduler integration) |
 | 6 | [docs/dev/index.md](docs/dev/index.md) | Contributor layout and archived scripts index |
+| 7 | [docs/technical_design.md](docs/technical_design.md) | Why BTU is two components; product constraints |
 
 Official user documentation: <https://datahenge.github.io/btu/>
 
@@ -41,9 +42,16 @@ Scheduler ↔ Frappe communication uses a Redis RPC protocol documented in [docs
 btu/                          # Python package root (Frappe app)
 ├── hooks.py                  # Frappe hooks (scheduler_events, fixtures, before_job)
 ├── __init__.py               # Version; re-exports btu.utils and rq_admin shims
-├── utils/                    # Result, dates, cron, messaging helpers
+├── logging.py                # BTU logger configuration
+├── utils/                    # Shared helpers (Result, dates, cron, messaging)
+│   ├── result.py
+│   ├── datetime.py
+│   ├── cron.py
+│   ├── messaging.py
+│   └── misc.py
 ├── samples/                  # Example BTU Task target functions
 ├── diagnostics/              # bench execute smoke tests (not production tasks)
+├── tests/                    # Cross-module unit tests (utils, auto_report, …)
 ├── examples.py               # Deprecated shim → btu.samples
 ├── manual_tests.py           # Deprecated shim → btu.diagnostics
 ├── auto_report.py            # Deprecated shim → btu.btu_core.auto_report
@@ -53,10 +61,14 @@ btu/                          # Python package root (Frappe app)
 │   ├── housekeeping.py       # BTU-specific maintenance (e.g. transient log cleanup)
 │   ├── rq_admin.py           # Failed RQ job tools (BTU Configuration UI)
 │   ├── auto_report.py        # Scheduled report build and delivery
+│   ├── btu_email.py          # Email helpers for configuration and notifications
 │   ├── wrapped_function.py   # Function wrapping for logging
-│   └── doctype/              # BTU Task, BTU Task Schedule, BTU Task Log, etc.
+│   ├── doctype/              # BTU Task, BTU Task Schedule, BTU Task Log, etc.
+│   └── report/               # Frappe Script Reports (statistics, summaries)
 ├── btu_api/                  # Scheduler daemon API (Redis RPC, endpoints)
 ├── patches/                  # Migration patches
+├── fixtures/                 # Exported Workspaces (see hooks.py)
+├── templates/                # Frappe web templates
 └── config/                   # Desktop module config
 
 docs/                         # Markdown documentation (published to GitHub Pages)
@@ -70,7 +82,7 @@ Frappe modules (see [btu/modules.txt](btu/modules.txt)): `btu_core`, `btu_api`.
 2. **BTU Task Schedule** — binds a Task to a cron expression (with timezone support).
 3. **BTU Task Log** — records execution output, status, and timing.
 4. **RQ (Redis Queue)** — Frappe workers execute tasks via `run_task_by_id` in `task_runner.py`.
-5. **External scheduler** (optional) — polls schedules and enqueues work; controlled via Redis RPC.
+5. **Scheduler daemon** (required for recurring schedules) — polls schedules and enqueues work; controlled via Redis RPC. See [docs/technical_design.md](docs/technical_design.md).
 
 Key hook in [btu/hooks.py](btu/hooks.py):
 

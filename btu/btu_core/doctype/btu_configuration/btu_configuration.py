@@ -13,17 +13,7 @@ from btu.btu_core.btu_email import send_hello_email_to_current_user
 
 
 class BTUConfiguration(Document):
-	"""Site-wide BTU settings including email, scheduler, and timezone configuration."""
-
-	def validate(self) -> None:
-		"""Validate the configured cron timezone name."""
-		from pytz import timezone
-
-		try:
-			timezone(self.cron_time_zone)
-		except Exception:
-			link_text = '<a href="https://en.wikipedia.org/wiki/List_of_tz_database_time_zones" target="_blank"><u>this website.</u></a>'
-			raise ValueError(f"Invalid name for Time Zone.  For a list of available names, visit {link_text}")  # pylint: disable=raise-missing-from
+	"""Site-wide BTU settings including email and scheduler configuration."""
 
 	@frappe.whitelist()
 	def button_send_hello_email(self) -> None:
@@ -32,7 +22,7 @@ class BTUConfiguration(Document):
 
 	@frappe.whitelist()
 	def button_send_ping(self) -> None:
-		"""Send a ping to the BTU Scheduler daemon on its Unix Domain Socket."""
+		"""Send a ping to the BTU Scheduler daemon via Redis RPC."""
 		response = SchedulerAPI.send_ping()
 		frappe.msgprint(f"Response from BTU Scheduler daemon:<br>{response}")
 

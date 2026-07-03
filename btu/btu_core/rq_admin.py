@@ -9,8 +9,9 @@ import frappe
 from frappe.utils.background_jobs import get_redis_conn
 from rq import Queue
 from rq.job import Job
+from temporal_lib.tlib_types import datetime_to_iso_string
 
-from btu.utils.datetime import date_to_iso_string, iso_string_to_date
+from btu.utils.datetime import iso_string_to_date
 from btu.utils.messaging import print_both
 
 
@@ -18,14 +19,14 @@ def rq_job_to_dict(rq_job: Job) -> dict[str, Any]:
 	"""Build a display-friendly dictionary from an RQ Job."""
 	return {
 		"job_id": rq_job._id,  # pylint: disable=protected-access
-		"created_at": date_to_iso_string(rq_job.created_at),
+		"created_at": datetime_to_iso_string(rq_job.created_at),
 		"function_name": rq_job.func_name,
 		"instance": rq_job._instance,  # pylint: disable=protected-access
 		"description": rq_job.description,
 		"origin": rq_job.origin,
-		"datetime_enqueued": date_to_iso_string(rq_job.enqueued_at) if rq_job.enqueued_at else None,
-		"datetime_started": date_to_iso_string(rq_job.started_at) if rq_job.started_at else None,
-		"datetime_ended": date_to_iso_string(rq_job.ended_at) if rq_job.ended_at else None,
+		"datetime_enqueued": datetime_to_iso_string(rq_job.enqueued_at) if rq_job.enqueued_at else None,
+		"datetime_started": datetime_to_iso_string(rq_job.started_at) if rq_job.started_at else None,
+		"datetime_ended": datetime_to_iso_string(rq_job.ended_at) if rq_job.ended_at else None,
 		"result": str(rq_job._result),  # pylint: disable=protected-access
 		"execution_info": str(rq_job.exc_info),
 		"timeout": rq_job.timeout,
@@ -38,7 +39,7 @@ def rq_job_to_dict(rq_job: Job) -> dict[str, Any]:
 		"retries_left": rq_job.retries_left,
 		"retry_intervals": rq_job.retry_intervals,
 		"redis_server_version": rq_job.redis_server_version,
-		"last_heartbeat": date_to_iso_string(rq_job.last_heartbeat),
+		"last_heartbeat": datetime_to_iso_string(rq_job.last_heartbeat),
 	}
 
 

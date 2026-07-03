@@ -28,7 +28,7 @@ email_account_name = "my_email_account@datahenge.com"
 email_account_password  = "my_email_password"
 
 # Email Features
-email_addresses = [ "brian@datahenge.com" ]
+email_addresses = [ "foo@example.com" ]
 email_on_level="INFO"
 email_when_queuing=true
 
@@ -39,12 +39,14 @@ mysql_host = "localhost"
 mysql_port = 3313
 mysql_database = "erpnext_db_13"
 
-# RQ
+# RQ / Redis (job queues and scheduler control channel)
 rq_host = "127.0.0.1"
 rq_port = 11000
-socket_path = "/tmp/btu_scheduler.sock"
-socket_file_group_owner = "erpnext_group"
+
+# Frappe web server (HTTP enqueue endpoint used when a schedule fires)
 webserver_ip = "127.0.0.1"
 webserver_port = 8000
 webserver_token = "token abcdefghij12345:lmnopq678901234"
 ```
+
+Scheduler control commands from the Frappe app use **Redis RPC** on the same Redis instance as RQ (`btu:scheduler:commands`). See [scheduler_redis_rpc.md](scheduler_redis_rpc.md).

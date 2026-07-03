@@ -1,5 +1,7 @@
 """RQ worker entry point and TaskRunner for executing BTU Tasks."""
 
+from __future__ import annotations
+
 import importlib
 import io
 import logging

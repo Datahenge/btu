@@ -270,8 +270,16 @@ class BTUTask(Document):
 		return (self._callable_function().__name__, success, new_log_id)
 
 	@frappe.whitelist()
-	def btn_push_into_queue(self, quiet: bool = False) -> None:
+	def btn_push_into_queue(self) -> None:
 		"""Enqueue the BTU Task for execution by an RQ worker."""
+		# DocType buttons call this via Frappe's run_doc_method, which passes None
+		# positionally for any optional parameter beyond self.  Since v15, @whitelist
+		# methods with type hints are validated at runtime; quiet=None fails bool check.
+		# Keep this signature as (self) only; use submit_to_queue() for typed options.
+		self.submit_to_queue(quiet=False)
+
+	def submit_to_queue(self, quiet: bool = False) -> None:
+		"""Enqueue this task via RQ. Use ``quiet=True`` for programmatic calls."""
 		self.reload()
 		if not self._can_run_on_webserver():
 			return
@@ -353,7 +361,7 @@ def create_and_run_one_shot(
 	frappe.db.commit()
 
 	if doc_task.queue_name:
-		doc_task.btn_push_into_queue(quiet=quiet)
+		doc_task.submit_to_queue(quiet=quiet)
 	else:
 		doc_task.run_task_on_webserver()
 	return doc_task.name

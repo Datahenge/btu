@@ -12,15 +12,12 @@ The purpose of this DocType is setup and configuration.  Before you create Tasks
 #### DocFields
 
 ##### BTU Scheduler
-* Path to BTU Scheduler Unix socket (DocField name = `path_to_btu_scheduler_uds`)
-  * This is the absolute path, on your Frappe Web, to the Unix Domain Socket file for the scheduler daemon.  The default value is `/tmp/btu_scheduler.sock`.  If you change this, you must also reconfigure the scheduler daemon to match.
 
-* Time Zone for Scheduling
-  * For now, I recommend using a value of **UTC**.  There are some complications with converting UTC cron expressions into non-UTC cron expressions, that this project has not-yet resolved.
+Scheduler control messages (ping, reload schedule, cancel schedule) are sent over **Redis RPC** using the same Redis instance as Frappe's job queues. See [Scheduler Redis RPC](scheduler_redis_rpc.md) for protocol details.
 
 **TESTS**:
 
-* There is a button named "Send 'ping' to Schedule Bot".  When clicked, it will communicate with the BTU Scheduler daemon over the Unix Domain Socket, and send a 'ping' message.  If the communication is successful, the daemon should reply with 'pong'
+* **Send 'ping' to Schedule Bot**: communicates with the BTU Scheduler daemon via Redis RPC. If the scheduler is running and reachable, the UI shows its acknowledgement response.
 * Send Hello Email:  When clicked, this button will send a simple "Hello" email to the User.  (see more information below about configuring email)
 
 ##### Advanced Logging

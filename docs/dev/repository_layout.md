@@ -7,6 +7,7 @@
 | `hooks.py` | Frappe hooks (scheduler events, fixtures, `before_job`) |
 | `__init__.py` | Version; re-exports `btu.utils` and deprecated RQ admin paths |
 | `utils/` | `Result`, date/time helpers, cron validation, `print_both` |
+| `tests/` | Cross-module unit tests (`test_utils_*`, `test_auto_report`, …) |
 | `btu_core/` | Product code: DocTypes, task execution, email, reports, housekeeping |
 | `btu_api/` | Scheduler daemon integration (Redis RPC, HTTP endpoints) |
 | `samples/` | **BTU Task target examples** (`btu.samples.*`) |

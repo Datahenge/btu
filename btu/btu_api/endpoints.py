@@ -89,8 +89,7 @@ def enqueue_for_next_available_worker(task_schedule_key: str) -> dict[str, int |
 	#
 	# Since BTU Scheduler was having to call ERP *regardless*, why the complexity?  Just tell ERP "enqueue now"
 	#
-	# The only way to avoid HTTP is by writing some kind of Frappe CLI App that does the pickling + Redis.
-	# And then call *that* standalone applicatoni via Unix domain sockets, or system calls.
+	# The only way to avoid HTTP is a Frappe CLI that pickles jobs and enqueues via Redis.
 	# It's just not worth the effort: the ERP Web Server should not be offline *anyway*
 
 	response: dict[str, int | str] = {"has_errors": 0, "error_message": ""}

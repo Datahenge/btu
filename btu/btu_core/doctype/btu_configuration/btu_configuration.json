@@ -9,8 +9,6 @@
  "engine": "InnoDB",
  "field_order": [
   "btu_scheduler_section",
-  "path_to_btu_scheduler_uds",
-  "cron_time_zone",
   "cb2",
   "tests",
   "btn_send_ping",
@@ -108,13 +106,6 @@
    "label": "BTU Scheduler"
   },
   {
-   "default": "/tmp/btu_scheduler.sock",
-   "description": "This is the absolute path to the BTU Scheduler daemon's Unix Domain Socket.  Example:  /tmp/btu_scheduler.sock\n",
-   "fieldname": "path_to_btu_scheduler_uds",
-   "fieldtype": "Data",
-   "label": "Path to BTU Scheduler Unix socket"
-  },
-  {
    "description": "Sends a 'ping' request to the BTU Scheduler background daemon.",
    "fieldname": "btn_send_ping",
    "fieldtype": "Button",
@@ -136,15 +127,6 @@
    "fieldname": "tests",
    "fieldtype": "Heading",
    "label": "Tests"
-  },
-  {
-   "default": "UTC",
-   "description": "Time zone of cron jobs, used to calculated Run Times for scheduling.<br>A complete list can be found <b><a href=\"https://en.wikipedia.org/wiki/List_of_tz_database_time_zones\" target=\"_blank\">here</a></b>",
-   "fieldname": "cron_time_zone",
-   "fieldtype": "Data",
-   "in_list_view": 1,
-   "label": "Time Zone for Scheduling",
-   "reqd": 1
   },
   {
    "default": "1",

@@ -2,9 +2,7 @@
 
 ## Why this exists
 
-The original BTU Scheduler communicated with the Frappe web application via a Unix Domain Socket (UDS). UDS works well on a single machine but breaks entirely in containerised deployments, because two processes in separate containers cannot share a socket file path without a shared filesystem volume — which is fragile, non-standard, and unavailable in most container orchestration environments (Docker, Kubernetes, etc.).
-
-The replacement is a Redis-based request/reply protocol. Redis is already required by both Frappe (for Python RQ job queues) and the BTU Scheduler itself, so this adds no new infrastructure dependency and works across containers out of the box.
+The Frappe app and BTU Scheduler daemon must exchange control commands (ping, reload schedule, cancel schedule) reliably across processes and containers. **Redis RPC** is the control channel: both sides already use the same Redis instance for Python RQ job queues, so no extra infrastructure is required.
 
 ---
 
@@ -116,9 +114,3 @@ A `null` response (BLPOP timeout) means the scheduler did not respond within 5 s
 ## Disabling the Redis RPC listener
 
 Set `disable_redis_rpc = true` in `/etc/btu_scheduler/btu_scheduler.toml` to prevent the scheduler from starting the listener. This should only be needed for debugging.
-
----
-
-## Relationship to TCP and Unix Domain Sockets
-
-The Redis RPC listener is the **primary** control channel as of 2025. The TCP and UDS listeners remain available for backward compatibility and local debugging but are no longer required for normal operation. The Frappe `SchedulerAPI` class now uses Redis RPC exclusively.

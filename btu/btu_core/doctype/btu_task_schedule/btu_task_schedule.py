@@ -23,6 +23,7 @@ from frappe.model.document import Document
 # BTU
 from btu import Result, print_both, validate_cron_string
 from btu.btu_api.scheduler import SchedulerAPI
+from btu.utils.datetime import get_system_timezone
 
 NoneType = type(None)
 cron_day_dictionary = {"Sun": 0, "Mon": 1, "Tue": 2, "Wed": 3, "Thu": 4, "Fri": 5, "Sat": 6}
@@ -285,14 +286,6 @@ def resubmit_all_task_schedules() -> None:
 			print_both(message)
 			doc_schedule.enabled = False
 			doc_schedule.save()
-
-
-def get_system_timezone() -> pytz.BaseTzInfo:
-	"""Return the site timezone from System Settings."""
-	system_time_zone = frappe.db.get_system_setting("time_zone")
-	if not system_time_zone:
-		raise ValueError("Please configure a Time Zone under 'System Settings'.")
-	return pytz.timezone(system_time_zone)
 
 
 def localize_datetime(any_datetime: datetime_type) -> datetime_type:
