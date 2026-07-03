@@ -1,33 +1,26 @@
-"""SMTP and Mandrill email helpers for BTU."""
+"""Email helpers for BTU task notifications and configuration tests."""
 
 # Copyright (c) 2021-2026, Datahenge LLC and contributors
 # For license information, please see license.txt
 
 #
-# Basic SMTP email functionality for BTU.
-#
-
-# pylint: disable=too-many-instance-attributes
-
 # NOTE: The Python standard library already has a module named 'email'
 #       So, I am deliberately naming this module "btu_email" to avoid namespace collision or mistakes.
 # NOTE: To avoiding spam detection, when sending HTML, it's important to send both the plain text --and-- HTML parts.
 
 # Standard Library
 import json
-import smtplib
-from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from enum import Enum
 from typing import TYPE_CHECKING, Any
 
 # Frappe Library
 import frappe
+from frappe import _
 
 # Third Party
 import mailchimp_transactional as MailchimpTransactional  # This is the official Python SDK for Mandrill
 from frappe.model.document import Document
-from frappe.utils.password import get_decrypted_password
 
 # BTU
 from btu import print_both
@@ -65,8 +58,18 @@ def get_mandrill_response_status_overall(mandrill_response: list[dict[str, Any]]
 	return MandrillResponse.SUCCESS
 
 
+def get_default_sender() -> str | None:
+	"""Return the configured default sender address for BTU notification emails."""
+	config = frappe.get_single("BTU Configuration")
+	if config.send_email_via == "Email Account" and config.default_email_account:
+		return frappe.db.get_value("Email Account", config.default_email_account, "email_id")
+	if config.send_email_via == "Mandrill":
+		return config.mandrill_from_email_address
+	return None
+
+
 class Emailer:
-	"""Create and send emails without using standard DocTypes 'Email Domain' or 'Email Account'."""
+	"""Create and send emails using Frappe Email Account or Mandrill."""
 
 	def __init__(
 		self,
@@ -132,8 +135,8 @@ class Emailer:
 	@frappe.whitelist()
 	def send(self) -> None:
 		"""Send an email using BTU."""
-		if self.doc_btu_config.send_email_via == "SMTP":
-			self._send_via_smtp()
+		if self.doc_btu_config.send_email_via == "Email Account":
+			self._send_via_email_account()
 
 		elif self.doc_btu_config.send_email_via == "Mandrill":
 			self._send_via_mandrill()
@@ -142,53 +145,37 @@ class Emailer:
 				f"Unexpected configuration value '{self.doc_btu_config.send_email_via}' in BTU Configuration."
 			)
 
-	def _send_via_smtp(self) -> None:
-		"""Send the email using SMTP protocol and library."""
-		password = get_decrypted_password(
-			doctype="BTU Configuration", name="BTU Configuration", fieldname="email_auth_password"
-		)
+	def _send_via_email_account(self) -> None:
+		"""Send the email using a linked Frappe Email Account."""
+		account_name = self.doc_btu_config.default_email_account
+		if not account_name:
+			frappe.throw(_("BTU Configuration requires a Default Email Account."))
 
-		if bool(self.doc_btu_config.email_body_is_html):
-			# 1. Create a new MIMEMultipart object
-			message = MIMEMultipart("alternative")
-			message["Subject"] = self.subject
-			message["From"] = self.sender if self.sender else self.doc_btu_config.email_auth_username
-			# 2. Add various recipients as necessary:
-			if self.to_as_string:
-				message["To"] = self.to_as_string
-			if self.cc_as_string:
-				message["CC"] = self.cc_as_string
-			if self.bcc_as_string:
-				message["Bcc"] = self.bcc_as_string
+		email_account = frappe.get_doc("Email Account", account_name)
+		if not email_account.enable_outgoing:
+			frappe.throw(_("Email Account {0} does not have outgoing email enabled.").format(account_name))
 
-			text_part = MIMEText(self.body, "plain")
-			# 3. Create the HTML part of the message.
+		recipients = list(self.emailto_list)
+		if not recipients:
+			raise ValueError("At least one recipient is required to send email.")
+
+		message = self.body
+		if self.doc_btu_config.email_body_is_html:
 			html_body = self.body.replace("\n", "<br>")
-			html_body = "<html> <head></head> <body>" + html_body + "</body></html>"
-			html_part = MIMEText(html_body, "html")
-			# 4. Attach the plain text and HTML parts.
-			message.attach(text_part)
-			message.attach(html_part)
-			message = message.as_string()
-		else:
-			message = self._create_plaintext_message()
+			message = f"<html><body>{html_body}</body></html>"
 
-		with smtplib.SMTP(
-			self.doc_btu_config.email_server, self.doc_btu_config.email_server_port
-		) as smtp_server:
-			if not smtp_server.ehlo()[0] == 250:
-				raise ValueError("SMTP 'Hello' check failed.")
-
-			# Use 'STARTTLS' if configured to do so:
-			if self.doc_btu_config.email_encryption == "STARTTLS":
-				smtp_server.starttls()  # Secure the connection
-
-			smtp_server.login(user=self.doc_btu_config.email_auth_username, password=password)
-			smtp_server.sendmail(
-				from_addr=self.sender,
-				to_addrs=self.to_as_string.split(","),  # requires a Python List of Recipients
-				msg=message,
-			)
+		frappe.sendmail(
+			recipients=recipients,
+			sender=self.sender or email_account.email_id,
+			subject=self.subject,
+			message=message,
+			cc=list(self.ccto_list) or None,
+			bcc=list(self.bccto_list) or None,
+			delayed=False,
+			now=True,
+			reference_doctype="BTU Configuration",
+			reference_name="BTU Configuration",
+		)
 
 	def _send_via_mandrill(self) -> None:
 		new_message = {
@@ -236,33 +223,6 @@ class Emailer:
 			print_both(f"Error while sending email via Mandrill: {error_string}")
 			frappe.logger("btu").debug("Message sent to Mandrill:\n%s", json.dumps(new_message, indent=4))
 			frappe.msgprint(f"Error while sending email via Mandrill: {error_string}")
-
-	def _create_plaintext_message(self) -> str:
-		"""Build a plain-text email message with RFC-style headers."""
-		header = f"From: {self.sender}\n"
-		header += f"To: {self.to_as_string}\n"
-		if self.cc_as_string:
-			header += f"CC: {self.cc_as_string}\n"
-		if self.bcc_as_string:
-			header += f"CC: {self.bcc_as_string}\n"
-		header += f"Subject: {self.subject}\n\n"
-		return header + self.body
-
-	def _apply_subject_prefix(self, subject: str) -> str:
-		"""Apply an environment prefix to the email subject when configured."""
-		return (
-			f"({self.doc_btu_config.environment_name}) {subject}"
-			if self.doc_btu_config.environment_name
-			else subject
-		)
-
-	def _apply_body_prefix(self, body: str) -> str:
-		"""Apply an environment prefix to the email body when configured."""
-		if not body:
-			body = ""
-		if self.doc_btu_config.environment_name:
-			body = f"(sent from the ERPNext {self.doc_btu_config.environment_name} environment)\n\n" + body
-		return body
 
 
 def _build_recipients_from_task_log(doc_task_log: "BTUTaskLog") -> dict[str, dict[str, int]]:
@@ -337,7 +297,6 @@ def email_on_task_start(doc_task_log: "BTUTaskLog", send_via_queue: bool = False
 
 	subject = f"Started: BTU Task {doc_task_log.task_desc_short}"
 	body = f"Task {doc_task_log.task} ({doc_task_log.task_desc_short}) is now In-Progress."
-	sender = frappe.get_doc("BTU Configuration").email_auth_username
 
 	# If Optionally, add emails associated with the Task Schedule:
 	if doc_task_log.schedule:
@@ -348,7 +307,7 @@ def email_on_task_start(doc_task_log: "BTUTaskLog", send_via_queue: bool = False
 			"Sending email to %s because Task %s has started.", each_recipient, doc_task_log.task
 		)
 		if not send_via_queue:
-			Emailer(sender=sender, emailto_list=each_recipient or None, subject=subject, body=body).send()
+			Emailer(sender=get_default_sender(), emailto_list=each_recipient or None, subject=subject, body=body).send()
 		else:
 			raise NotImplementedError("Not Yet Implemented: Sending email via Redis Queue.")
 
@@ -389,9 +348,10 @@ def email_on_task_conclusion(doc_task_log: "BTUTaskLog", send_via_queue: bool = 
 			body += "\nTimeout!\n"
 			body += "Task has not returned results in a timely manner; it may have timed-out or died inside Python RQ."
 
-		sender = frappe.get_doc("BTU Configuration").email_auth_username
 		if not send_via_queue:
-			Emailer(sender=sender, emailto_list=each_recipient or None, subject=subject, body=body).send()
+			Emailer(
+				sender=get_default_sender(), emailto_list=each_recipient or None, subject=subject, body=body
+			).send()
 		else:
 			raise NotImplementedError("Not Yet Implemented: Sending email via Redis Queue.")
 
@@ -427,6 +387,6 @@ def send_hello_email_to_current_user(debug: bool = False) -> str:
 	frappe.msgprint(f"Sending test email to address '{user_doc.email}' ...")
 
 	subject = f"From BTU: Hello {user_doc.full_name}"
-	Emailer(subject=subject, body=message_body, sender=None, emailto_list=user_doc.email).send()
+	Emailer(subject=subject, body=message_body, sender=get_default_sender(), emailto_list=user_doc.email).send()
 
 	return "If successful, a test email will arrive soon."

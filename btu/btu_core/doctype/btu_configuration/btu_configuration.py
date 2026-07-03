@@ -4,6 +4,7 @@
 # For license information, please see license.txt
 
 import frappe
+from frappe import _
 from frappe.model.document import Document
 from mailchimp_transactional.api_client import ApiClientError
 
@@ -14,6 +15,11 @@ from btu.btu_core.btu_email import send_hello_email_to_current_user
 
 class BTUConfiguration(Document):
 	"""Site-wide BTU settings including email and scheduler configuration."""
+
+	def validate(self) -> None:
+		"""Ensure email settings are complete for the selected delivery method."""
+		if self.send_email_via == "Email Account" and not self.default_email_account:
+			frappe.throw(_("Default Email Account is required when sending via Email Account."))
 
 	@frappe.whitelist()
 	def button_send_hello_email(self) -> None:

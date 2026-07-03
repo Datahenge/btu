@@ -17,7 +17,7 @@
    "hidden": 0,
    "is_query_report": 0,
    "label": "Configuration",
-   "link_count": 2,
+   "link_count": 1,
    "link_type": "DocType",
    "onboard": 0,
    "type": "Card Break"
@@ -28,16 +28,6 @@
    "label": "BTU Configuration",
    "link_count": 0,
    "link_to": "BTU Configuration",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "BTU Queue",
-   "link_count": 0,
-   "link_to": "BTU Queue",
    "link_type": "DocType",
    "onboard": 0,
    "type": "Link"

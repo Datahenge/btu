@@ -21,6 +21,7 @@ from frappe.model.document import Document
 # BTU
 from btu import Result, dict_to_dateless_dict, get_system_datetime_now, make_datetime_naive
 from btu.btu_core.doctype.btu_task_log.btu_task_log import write_log_for_task
+from btu.btu_core.form_options import validate_rq_queue_name
 
 NoneType = type(None)
 
@@ -95,6 +96,7 @@ class BTUTask(Document):
 	def validate(self, debug: bool = False) -> None:
 		"""Validate that the configured Python function exists."""
 		FunctionPathString(self.function_string, debug).validate()
+		validate_rq_queue_name(self.queue_name)
 
 		# TODO: Ensure function is an instance of btu.TaskWrapper()
 		# callable_function = self._callable_function()

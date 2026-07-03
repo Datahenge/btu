@@ -34,11 +34,11 @@ frappe.ui.form.on('BTU Configuration', {
 				width: 100,
 				fields: [
 					{
-						'fieldtype': 'Data',
-						'fieldname': 'queue_name',
-						'label': __('Queue'),
-						'default': 'default',
-						reqd: 1
+						fieldtype: 'Autocomplete',
+						fieldname: 'queue_name',
+						label: __('Queue'),
+						default: 'default',
+						reqd: 1,
 					},
 					{
 						'fieldtype': 'Data',
@@ -48,6 +48,10 @@ frappe.ui.form.on('BTU Configuration', {
 					}
 				]
 			});
+
+			my_dialog.fields_dict.queue_name.set_query(
+				'btu.btu_core.form_options.get_rq_queue_names'
+			);
 
 			my_dialog.set_primary_action(__('Show'), args => {
 

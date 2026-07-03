@@ -45,11 +45,10 @@
   },
   {
    "default": "default",
-   "description": "The name of the Redis Queue and Worker to be used when running this Task.",
+   "description": "RQ worker queue from bench common_site_config (short, default, long, or custom workers).",
    "fieldname": "queue_name",
-   "fieldtype": "Link",
+   "fieldtype": "Autocomplete",
    "label": "Queue Name",
-   "options": "BTU Queue",
    "reqd": 1
   },
   {
@@ -128,7 +127,7 @@
   {
    "description": "IANA time zone name for this schedule (e.g. 'America/New_York'). Defaults to the site time zone from System Settings. The cron string is always stored in this local time — UTC conversion happens automatically at scheduling time.",
    "fieldname": "cron_timezone",
-   "fieldtype": "Data",
+   "fieldtype": "Autocomplete",
    "label": "Cron Time Zone"
   },
   {

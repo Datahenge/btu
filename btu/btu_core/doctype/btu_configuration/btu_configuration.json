@@ -9,26 +9,19 @@
  "engine": "InnoDB",
  "field_order": [
   "btu_scheduler_section",
+  "environment_name",
+  "force_debug_mode",
   "cb2",
   "tests",
   "btn_send_ping",
   "btn_send_hello_email",
-  "section_break_cskj",
-  "environment_name",
-  "force_debug_mode",
   "email_tab",
   "email_section",
   "send_email_via",
+  "default_email_account",
   "email_body_is_html",
   "sb_default_recipients",
   "email_recipients",
-  "sb_smtp_email",
-  "email_server",
-  "email_server_port",
-  "column_break_5",
-  "email_auth_username",
-  "email_auth_password",
-  "email_encryption",
   "misc_tab",
   "sb_advanced_logging",
   "create_in_progress_logs",
@@ -56,43 +49,18 @@
    "label": "Email"
   },
   {
-   "fieldname": "email_server",
-   "fieldtype": "Data",
-   "label": "SMTP Server Address"
-  },
-  {
-   "description": "Typical values are 587 for TLS, or 465 for older SSL.",
-   "fieldname": "email_server_port",
-   "fieldtype": "Data",
-   "label": "Email Server Port"
-  },
-  {
-   "fieldname": "email_auth_username",
-   "fieldtype": "Data",
-   "label": "Auth Username"
-  },
-  {
-   "fieldname": "email_auth_password",
-   "fieldtype": "Password",
-   "label": "Auth Password"
-  },
-  {
-   "fieldname": "column_break_5",
-   "fieldtype": "Column Break"
+   "depends_on": "eval:doc.send_email_via=='Email Account'",
+   "fieldname": "default_email_account",
+   "fieldtype": "Link",
+   "label": "Default Email Account",
+   "mandatory_depends_on": "eval:doc.send_email_via=='Email Account'",
+   "options": "Email Account"
   },
   {
    "default": "0",
    "fieldname": "email_body_is_html",
    "fieldtype": "Check",
    "label": "Send email Body as HTML"
-  },
-  {
-   "default": "STARTTLS",
-   "description": "Starts the negotiation between server and client, to begin encryption.",
-   "fieldname": "email_encryption",
-   "fieldtype": "Select",
-   "label": "Encryption Options",
-   "options": "None\nSSL\nSTARTTLS"
   },
   {
    "description": "This prefix will be applied to emails to indicate environment (e.g. DEV, TEST, LIVE)",
@@ -143,15 +111,10 @@
   {
    "fieldname": "send_email_via",
    "fieldtype": "Select",
+   "in_list_view": 1,
    "label": "Send Email Via",
-   "options": "SMTP\nMandrill",
+   "options": "Email Account\nMandrill",
    "reqd": 1
-  },
-  {
-   "collapsible": 1,
-   "fieldname": "sb_smtp_email",
-   "fieldtype": "Section Break",
-   "label": "SMTP Email"
   },
   {
    "fieldname": "mandrill_email_section",
@@ -162,6 +125,7 @@
    "description": "Emails sent from BTU will have this email address as the \"From\" sender.",
    "fieldname": "mandrill_from_email_address",
    "fieldtype": "Data",
+   "in_list_view": 1,
    "label": "From Email Address",
    "reqd": 1
   },
@@ -206,11 +170,6 @@
    "label": "Server Prefix"
   },
   {
-   "fieldname": "section_break_cskj",
-   "fieldtype": "Section Break",
-   "label": "Debugging"
-  },
-  {
    "fieldname": "column_break_kfdc",
    "fieldtype": "Column Break"
   },
@@ -225,6 +184,7 @@
    "description": "Allows admins to forcibly enable/disable the TaskRunner debug mode.",
    "fieldname": "force_debug_mode",
    "fieldtype": "Select",
+   "in_list_view": 1,
    "label": "Debug Mode",
    "options": "Defer To Code\nAlways\nNever",
    "reqd": 1
@@ -233,7 +193,7 @@
  "hide_toolbar": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-01-09 14:59:02.490893",
+ "modified": "2026-07-03 09:53:36.436450",
  "modified_by": "Administrator",
  "module": "btu_core",
  "name": "BTU Configuration",

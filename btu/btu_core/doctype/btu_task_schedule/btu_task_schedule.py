@@ -23,6 +23,7 @@ from frappe.model.document import Document
 # BTU
 from btu import Result, print_both, validate_cron_string
 from btu.btu_api.scheduler import SchedulerAPI
+from btu.btu_core.form_options import validate_cron_timezone, validate_rq_queue_name
 from btu.utils.datetime import get_system_timezone
 
 NoneType = type(None)
@@ -35,10 +36,9 @@ class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
 	def on_trash(self) -> None:
 		"""Cancel scheduler state after this Task Schedule is deleted."""
 		try:
-			self.cancel_schedule()
+			self.cancel_schedule(quiet=True, warn_only=True)
 		except Exception as ex:
-			print(ex)
-			frappe.msgprint(ex)
+			frappe.log_error(title="BTU Task Schedule cancel on trash", message=str(ex))
 
 	def before_validate(self) -> None:
 		"""Normalize schedule fields before validation."""
@@ -65,6 +65,9 @@ class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
 
 	def validate(self) -> None:
 		"""Validate schedule fields and build the cron string and description."""
+		validate_rq_queue_name(self.queue_name)
+		validate_cron_timezone(self.cron_timezone)
+
 		if self.run_frequency == "Hourly":
 			check_minutes(self.minute)
 			self.cron_string = schedule_to_cron_string(self)
@@ -98,49 +101,65 @@ class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
 		self.schedule_description = cron_descriptor.get_description(self.cron_string)
 
 	def before_save(self) -> None:
-		"""Resubmit or cancel scheduler state when enabled status changes."""
+		"""Reject invalid primary keys before save."""
 		if "|" in self.name:
 			raise ValueError("Task Schedules cannot have the pipe character (|) in their primary key 'name'.")
 
-		if bool(self.enabled) is True:
-			try:
-				self.resubmit_task_schedule()
-			except Exception as ex:
-				frappe.msgprint(ex, indicator="red")
-		else:
-			doc_orig = self.get_doc_before_save()
-			if doc_orig and doc_orig.enabled != self.enabled:
-				try:
-					self.cancel_schedule()
-				except Exception as ex:
-					print_both(ex)
+	def on_update(self) -> None:
+		"""Sync enabled schedules with the BTU Scheduler daemon after save."""
+		self._sync_with_scheduler()
 
-	def resubmit_task_schedule(self, autosave: bool = False) -> None:
+	def _sync_with_scheduler(self) -> None:
+		"""Push schedule changes to the daemon without blocking document save."""
+		doc_before = self.get_doc_before_save()
+		if bool(self.enabled):
+			self.resubmit_task_schedule(warn_only=True)
+		elif doc_before and doc_before.enabled:
+			self.cancel_schedule(quiet=True, warn_only=True)
+
+	def resubmit_task_schedule(self, autosave: bool = False, warn_only: bool = False) -> None:
 		"""Ask the BTU Scheduler daemon to reload this Task Schedule."""
 		try:
-			self.cancel_schedule()
+			self.cancel_schedule(quiet=True, warn_only=True)
 		except Exception as ex:
-			frappe.msgprint(f"Error while attempting to cancel Task Schedule {self.name}")
+			if not warn_only:
+				frappe.msgprint(_("Error while attempting to cancel Task Schedule {0}").format(self.name))
 			print(ex)
 
 		response = SchedulerAPI.reload_task_schedule(task_schedule_id=self.name)
 		if not response:
-			raise ConnectionError(
-				"Error, no response from BTU Task Scheduler daemon. Check logs in '/etc/btu_scheduler/logs'."
+			message = _(
+				"No response from BTU Task Scheduler daemon. The schedule was saved, but the daemon may be offline. Check logs in '/etc/btu_scheduler/logs'."
 			)
-		message = response.get("message", str(response))
-		print(f"Response from BTU Scheduler: {message}")
-		frappe.msgprint(f"Response from BTU Scheduler daemon:<br>{message}")
+			if warn_only:
+				frappe.msgprint(message, indicator="orange", title=_("Scheduler unavailable"))
+				return
+			raise ConnectionError(message)
+		scheduler_message = response.get("message", str(response))
+		print(f"Response from BTU Scheduler: {scheduler_message}")
+		if not warn_only:
+			frappe.msgprint(_("Response from BTU Scheduler daemon:<br>{0}").format(scheduler_message))
 		if autosave:
 			self.save()
 
-	def cancel_schedule(self) -> dict[str, Any] | None:
+	def cancel_schedule(self, quiet: bool = False, warn_only: bool = False) -> dict[str, Any] | None:
 		"""Ask the BTU Scheduler daemon to cancel this Task Schedule."""
 		response = SchedulerAPI.cancel_task_schedule(task_schedule_id=self.name)
-		ack = response.get("message", str(response)) if response else "No response from BTU Scheduler daemon."
-		message = f"Request = Cancel Task Schedule.\nResponse from BTU Scheduler: {ack}"
-		print(message)
-		frappe.msgprint(message)
+		if not response:
+			message = _("No response from BTU Scheduler daemon.")
+			if warn_only:
+				if not quiet:
+					frappe.msgprint(message, indicator="orange", title=_("Scheduler unavailable"))
+				self.redis_job_id = ""
+				return None
+			ack = message
+		else:
+			ack = response.get("message", str(response))
+		if not quiet:
+			frappe.msgprint(
+				_("Request = Cancel Task Schedule.<br>Response from BTU Scheduler: {0}").format(ack)
+			)
+		print(f"Request = Cancel Task Schedule.\nResponse from BTU Scheduler: {ack}")
 		self.redis_job_id = ""
 		return response
 

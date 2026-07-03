@@ -135,10 +135,10 @@
   },
   {
    "default": "default",
+   "description": "RQ worker queue from bench common_site_config (short, default, long, or custom workers).",
    "fieldname": "queue_name",
-   "fieldtype": "Link",
+   "fieldtype": "Autocomplete",
    "label": "Queue Name",
-   "options": "BTU Queue",
    "reqd": 1,
    "reqd_in_database": 1
   },

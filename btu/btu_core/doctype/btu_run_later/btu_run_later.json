@@ -185,8 +185,10 @@
    "search_index": 1
   },
   {
+   "default": "short",
+   "description": "RQ worker queue from bench common_site_config.",
    "fieldname": "redis_queue_name",
-   "fieldtype": "Data",
+   "fieldtype": "Autocomplete",
    "label": "Redis Queue",
    "set_only_once": 1
   }
