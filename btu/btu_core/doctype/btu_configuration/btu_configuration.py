@@ -1,20 +1,19 @@
 # Copyright (c) 2022-Present, Datahenge LLC and contributors
 # For license information, please see license.txt
 
-from mailchimp_transactional.api_client import ApiClientError
-
 import frappe
 from frappe.model.document import Document
+from mailchimp_transactional.api_client import ApiClientError
 
 from btu import print_both
-from btu.manual_tests import send_hello_email_to_user
 from btu.btu_api.scheduler import SchedulerAPI
+from btu.manual_tests import send_hello_email_to_user
 
 
 class BTUConfiguration(Document):
-
 	def validate(self):
 		from pytz import timezone
+
 		try:
 			timezone(self.cron_time_zone)
 		except Exception:
@@ -44,6 +43,7 @@ class BTUConfiguration(Document):
 		NOTE: This does not immediately execute an RQ Job; only schedule it.
 		"""
 		from btu.btu_core.doctype.btu_task_schedule.btu_task_schedule import resubmit_all_task_schedules
+
 		resubmit_all_task_schedules()
 
 	@frappe.whitelist()
@@ -52,7 +52,11 @@ class BTUConfiguration(Document):
 		Confirm configuration is working by sending an email to the current User.
 		See also: https://mailchimp.com/developer/transactional/api/messages/send-new-message/
 		"""
-		from btu.btu_core.btu_email import new_mandrill_client, get_mandrill_response_status_overall, MandrillResponse
+		from btu.btu_core.btu_email import (
+			MandrillResponse,
+			get_mandrill_response_status_overall,
+			new_mandrill_client,
+		)
 
 		subject = "Hello from ERPNext + Mailchimp Transactional"
 		# Prefix the Subject with an environment name, if configured to do so
@@ -69,22 +73,20 @@ class BTUConfiguration(Document):
 			<li>Path to this function: 'btu.btu_core.doctype.btu_configuration.btu_configuration, BTUConfiguration.button_send_test_mandrill_email()'</li>
 			<li>By reading this email, you can be confident that ERPNext is successfully authenticating and communicating with Mailchimp Transactional (Mandrill) email.</li>
 			</ul>""",
-			"to": [
-				{ "email": user_doc.email, "type": "to" }
-			]
+			"to": [{"email": user_doc.email, "type": "to"}],
 		}
 		try:
 			print_both(f"Attempting to send a test email via Mandrill to '{user_doc.email}'.")
-			http_response = new_mandrill_client(self).messages.send({"message":message})
+			http_response = new_mandrill_client(self).messages.send({"message": message})
 			response = get_mandrill_response_status_overall(http_response)
 			if response == MandrillResponse.SUCCESS:
 				message = f"Successfully sent a Mandrill Transactional Email to '{user_doc.email}'."
 				print_both(message)
 			else:
-				raise IOError(response)
+				raise OSError(response)
 		except ApiClientError as error:
 			message = f"An error occurred while sending email via Mandrill: {error.text}"
 			print_both(message)
 		except Exception as error:
-			message = f"An error occurred while sending email via Mandrill: {repr(error)}"
+			message = f"An error occurred while sending email via Mandrill: {error!r}"
 			print_both(message)

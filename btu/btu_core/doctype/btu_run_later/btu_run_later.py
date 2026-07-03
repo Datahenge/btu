@@ -3,10 +3,11 @@
 
 # import frappe
 from frappe.model.document import Document
+
 from btu import get_system_datetime_now
 
-class BTURunLater(Document):
 
+class BTURunLater(Document):
 	def can_retry(self) -> bool:
 		"""
 		Can this task be attempted again?

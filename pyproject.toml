@@ -6,7 +6,7 @@ authors = [
 description = "Background Tasks Unleashed: A task scheduler for Frappe Framework"
 dynamic = [ "version" ]
 readme = "README.md"
-requires-python = ">=3.10,<3.13"
+requires-python = ">=3.10,<3.14"
 
 dependencies = [
 	"rq~=1.15.1",
@@ -14,7 +14,6 @@ dependencies = [
 	"cron-descriptor",
     "mailchimp_transactional",
 	"temporal-lib~=0.1.2"
-	# "pystemd~=0.13.2"
 ]
 
 [tool.setuptools]
@@ -22,3 +21,13 @@ py-modules = [ "btu" ]
 
 [tool.setuptools.dynamic]
 version = {attr = "btu.__version__"}
+
+[project.optional-dependencies]
+dev = [
+	"ruff>=0.8",
+]
+
+# Inherits Frappe's lint/format rules (tabs, line-length 110, etc.).
+# Requires this repo to live at <bench>/apps/btu with Frappe at <bench>/apps/frappe.
+[tool.ruff]
+extend = "../frappe/pyproject.toml"

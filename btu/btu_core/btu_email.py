@@ -1,4 +1,4 @@
-""" btu/btu_core/btu_email.py """
+"""btu/btu_core/btu_email.py"""
 
 # Copyright (c) 2021-2025, Datahenge LLC and contributors
 # For license information, please see license.txt
@@ -13,23 +13,23 @@
 #       So, I am deliberately naming this module "btu_email" to avoid namespace collision or mistakes.
 # NOTE: To avoiding spam detection, when sending HTML, it's important to send both the plain text --and-- HTML parts.
 
-
 # Standard Library
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-from enum import Enum
 import json
 import smtplib
-
-# Third Party
-import mailchimp_transactional as MailchimpTransactional  # This is the official Python SDK for Mandrill
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from enum import Enum
 
 # Frappe Library
 import frappe
+
+# Third Party
+import mailchimp_transactional as MailchimpTransactional  # This is the official Python SDK for Mandrill
 from frappe.utils.password import get_decrypted_password
 
 # BTU
 from btu import print_both
+
 
 def new_mandrill_client(doc_configuration=None):
 	"""
@@ -52,16 +52,16 @@ def get_mandrill_response_status_overall(mandrill_response: list) -> MandrillRes
 	Mandrill responses are a List of Dictionary:
 		[{
 			'email': 'foo@bar.com',
-		 	'status': 'sent',
-		 	'_id': 'e89b5467ac7c4805a8d415c972ba4007',
-		 	'reject_reason': None,
-		 	'queued_reason': None
+	                'status': 'sent',
+	                '_id': 'e89b5467ac7c4805a8d415c972ba4007',
+	                'reject_reason': None,
+	                'queued_reason': None
 		}]
 	"""
 	# Look for bad 'status' or any kind of rejection reason.
 	try:
 		for each_dict in mandrill_response:
-			if each_dict.get('status', None) != 'sent':
+			if each_dict.get("status", None) != "sent":
 				return MandrillResponse.REJECTED
 	except Exception as ex:
 		frappe.logger("btu").warning("Unhandled exception in get_mandrill_response_status_overall(): %s", ex)
@@ -69,7 +69,7 @@ def get_mandrill_response_status_overall(mandrill_response: list) -> MandrillRes
 	return MandrillResponse.SUCCESS
 
 
-class Emailer():
+class Emailer:
 	"""
 	Create and send emails without using standard DocTypes 'Email Domain' or 'Email Account'
 	"""
@@ -104,8 +104,8 @@ class Emailer():
 		if not recipients:
 			return []
 		if isinstance(recipients, str):
-			temp = recipients.replace(',', ';').split(';')
-			return { each.strip() for each in temp }
+			temp = recipients.replace(",", ";").split(";")
+			return {each.strip() for each in temp}
 		if isinstance(recipients, list):
 			return recipients
 		raise TypeError(f"Argument 'recipients' has an unhandled data type '{type(recipients)}'")
@@ -126,8 +126,8 @@ class Emailer():
 	def parse_recipients(self):
 
 		self.emailto_list = Emailer._parse_recipients_into_list(self.emailto_list)
-		self.ccto_list    = Emailer._parse_recipients_into_list(self.ccto_list)
-		self.bccto_list   = Emailer._parse_recipients_into_list(self.bccto_list)
+		self.ccto_list = Emailer._parse_recipients_into_list(self.ccto_list)
+		self.bccto_list = Emailer._parse_recipients_into_list(self.bccto_list)
 
 		self.to_as_string = Emailer.recipients_to_csv_string(self.emailto_list)
 		self.cc_as_string = Emailer.recipients_to_csv_string(self.ccto_list)
@@ -144,15 +144,17 @@ class Emailer():
 		elif self.doc_btu_config.send_email_via == "Mandrill":
 			self._send_via_mandrill()
 		else:
-			raise ValueError(f"Unexpected configuration value '{self.doc_btu_config.send_email_via}' in BTU Configuration.")
+			raise ValueError(
+				f"Unexpected configuration value '{self.doc_btu_config.send_email_via}' in BTU Configuration."
+			)
 
 	def _send_via_smtp(self):
 		"""
 		Send the email using SMTP protocol and library.
 		"""
-		password = get_decrypted_password(doctype="BTU Configuration",
-										  name="BTU Configuration",
-										  fieldname="email_auth_password")
+		password = get_decrypted_password(
+			doctype="BTU Configuration", name="BTU Configuration", fieldname="email_auth_password"
+		)
 
 		if bool(self.doc_btu_config.email_body_is_html):
 			# 1. Create a new MIMEMultipart object
@@ -169,8 +171,8 @@ class Emailer():
 
 			text_part = MIMEText(self.body, "plain")
 			# 3. Create the HTML part of the message.
-			html_body = self.body.replace('\n', '<br>')
-			html_body = '<html> <head></head> <body>' + html_body + '</body></html>'
+			html_body = self.body.replace("\n", "<br>")
+			html_body = "<html> <head></head> <body>" + html_body + "</body></html>"
 			html_part = MIMEText(html_body, "html")
 			# 4. Attach the plain text and HTML parts.
 			message.attach(text_part)
@@ -179,20 +181,22 @@ class Emailer():
 		else:
 			message = self._create_plaintext_message()
 
-		with smtplib.SMTP(self.doc_btu_config.email_server, self.doc_btu_config.email_server_port) as smtp_server:
-
+		with smtplib.SMTP(
+			self.doc_btu_config.email_server, self.doc_btu_config.email_server_port
+		) as smtp_server:
 			if not smtp_server.ehlo()[0] == 250:
 				raise ValueError("SMTP 'Hello' check failed.")
 
 			# Use 'STARTTLS' if configured to do so:
-			if self.doc_btu_config.email_encryption == 'STARTTLS':
-				smtp_server.starttls() # Secure the connection
+			if self.doc_btu_config.email_encryption == "STARTTLS":
+				smtp_server.starttls()  # Secure the connection
 
-			smtp_server.login(user=self.doc_btu_config.email_auth_username,
-							password=password)
-			smtp_server.sendmail(from_addr=self.sender,
-								 to_addrs=self.to_as_string.split(","),  # requires a Python List of Recipients
-								 msg=message)
+			smtp_server.login(user=self.doc_btu_config.email_auth_username, password=password)
+			smtp_server.sendmail(
+				from_addr=self.sender,
+				to_addrs=self.to_as_string.split(","),  # requires a Python List of Recipients
+				msg=message,
+			)
 
 	def _send_via_mandrill(self):
 
@@ -200,29 +204,29 @@ class Emailer():
 			"from_email": self.doc_btu_config.mandrill_from_email_address,
 			"subject": self.subject,
 			"to": [],
-			'Reply-To': "",  # TODO: This custom reply-to is not working.
+			"Reply-To": "",  # TODO: This custom reply-to is not working.
 		}
 
 		# Loop through each Destination email address, and append to new_message.
 		for each_email_address in self.emailto_list:
-			new_message["to"].append({ "email": each_email_address, "type": "to" })
+			new_message["to"].append({"email": each_email_address, "type": "to"})
 
 		# Loop through each CC email address, and append to new_message.
 		for each_cc in self.ccto_list:
 			if each_cc not in self.emailto_list:
-				new_message["to"].append({ "email": each_cc, "type": "cc" })
+				new_message["to"].append({"email": each_cc, "type": "cc"})
 
 		# Optional: Add BCC to the email, assuming the Recipient isn't the same value.
 		for each_bcc in self.bccto_list:
 			if each_bcc not in self.emailto_list:
-				new_message['to'].append({ "email": each_bcc, "type": "bcc" })
+				new_message["to"].append({"email": each_bcc, "type": "bcc"})
 
 		try:
 			# ========
 			# ERPNEXT TEMPLATE
 			# ========
 			if bool(self.doc_btu_config.email_body_is_html):
-				html_body = self.body.replace('\n', '<br>')
+				html_body = self.body.replace("\n", "<br>")
 				new_message["html"] = html_body
 			else:
 				new_message["text"] = MIMEText(self.body, "plain")
@@ -231,9 +235,9 @@ class Emailer():
 
 			if get_mandrill_response_status_overall(response) == MandrillResponse.UNHANDLED_ERROR:
 				print_both(f"Unhandled error response from Mandrill API: {response}")
-				raise IOError(response)
+				raise OSError(response)
 
-		except IOError as ex:
+		except OSError as ex:
 			if isinstance(ex, list):
 				error_string = json.dumps(ex)
 			else:
@@ -259,7 +263,11 @@ class Emailer():
 		"""
 		Given an email subject, apply a Environment prefix (if applicable)
 		"""
-		return f"({self.doc_btu_config.environment_name}) {subject}" if self.doc_btu_config.environment_name else subject
+		return (
+			f"({self.doc_btu_config.environment_name}) {subject}"
+			if self.doc_btu_config.environment_name
+			else subject
+		)
 
 	def _apply_body_prefix(self, body):
 		"""
@@ -279,10 +287,14 @@ def _build_recipients_from_task_log(doc_task_log) -> dict:
 	Example response:
 		{ 'brian@datahenge.com': {'email_on_start': 1, 'email_on_success': 1, 'email_on_error': 1, 'email_on_timeout': 1} }
 	"""
-	from btu.btu_core.doctype.btu_task_log.btu_task_log import BTUTaskLog as BTUTaskLogType  # late import to avoid any circular reference problems.
+	from btu.btu_core.doctype.btu_task_log.btu_task_log import (
+		BTUTaskLog as BTUTaskLogType,  # late import to avoid any circular reference problems.
+	)
 
 	if not doc_task_log or not isinstance(doc_task_log, BTUTaskLogType):
-		raise frappe.MandatoryError("Function requires argument 'doc_task_log', which should be an instance of 'BTU Task Log' document.")
+		raise frappe.MandatoryError(
+			"Function requires argument 'doc_task_log', which should be an instance of 'BTU Task Log' document."
+		)
 
 	result = {}
 	doc_task = frappe.get_doc("BTU Task", doc_task_log.task)
@@ -291,27 +303,36 @@ def _build_recipients_from_task_log(doc_task_log) -> dict:
 			"email_on_start": each_recipient.email_on_start,
 			"email_on_success": each_recipient.email_on_success,
 			"email_on_error": each_recipient.email_on_error,
-			"email_on_timeout": each_recipient.email_on_timeout
+			"email_on_timeout": each_recipient.email_on_timeout,
 		}
 
 	if doc_task_log.schedule:
 		doc_schedule = frappe.get_doc("BTU Task Schedule", doc_task_log.schedule)
 		for each_recipient in doc_schedule.email_recipients:
-
 			# Add new key to dictionary:
 			if not result.get(each_recipient.email_address):
 				result[each_recipient.email_address] = {
 					"email_on_start": each_recipient.email_on_start,
 					"email_on_success": each_recipient.email_on_success,
 					"email_on_error": each_recipient.email_on_error,
-					"email_on_timeout": each_recipient.email_on_timeout
+					"email_on_timeout": each_recipient.email_on_timeout,
 				}
 			else:
 				# Apply "OR" logic to each selection:
-				result[each_recipient.email_address]["email_on_start"] = result[each_recipient.email_address]["email_on_start"] or each_recipient.email_on_start
-				result[each_recipient.email_address]["email_on_success"] = result[each_recipient.email_address]["email_on_success"] or each_recipient.email_on_success
-				result[each_recipient.email_address]["email_on_error"] = result[each_recipient.email_address]["email_on_error"] or each_recipient.email_on_error
-				result[each_recipient.email_address]["email_on_timeout"] = result[each_recipient.email_address]["email_on_timeout"] or each_recipient.email_on_timeout
+				result[each_recipient.email_address]["email_on_start"] = (
+					result[each_recipient.email_address]["email_on_start"] or each_recipient.email_on_start
+				)
+				result[each_recipient.email_address]["email_on_success"] = (
+					result[each_recipient.email_address]["email_on_success"]
+					or each_recipient.email_on_success
+				)
+				result[each_recipient.email_address]["email_on_error"] = (
+					result[each_recipient.email_address]["email_on_error"] or each_recipient.email_on_error
+				)
+				result[each_recipient.email_address]["email_on_timeout"] = (
+					result[each_recipient.email_address]["email_on_timeout"]
+					or each_recipient.email_on_timeout
+				)
 
 	return result
 
@@ -321,14 +342,20 @@ def email_on_task_start(doc_task_log, send_via_queue=False):
 	"""
 	Sent immediately when a Task Log is first inserted into the database.
 	"""
-	from btu.btu_core.doctype.btu_task_log.btu_task_log import BTUTaskLog as BTUTaskLogType  # late import to avoid any circular reference problems.
+	from btu.btu_core.doctype.btu_task_log.btu_task_log import (
+		BTUTaskLog as BTUTaskLogType,  # late import to avoid any circular reference problems.
+	)
 
 	if not doc_task_log or not isinstance(doc_task_log, BTUTaskLogType):
-		raise frappe.MandatoryError("Function requires argument 'doc_task_log', which should be an instance of BTU Task Log document.")
+		raise frappe.MandatoryError(
+			"Function requires argument 'doc_task_log', which should be an instance of BTU Task Log document."
+		)
 
 	# Add emails associated with the Task:
 	recipients: dict = _build_recipients_from_task_log(doc_task_log)
-	recipients = { key:value for key, value in recipients.items() if value["email_on_start"] }  # reduce to recipients who opted-in 'Email on Start'
+	recipients = {
+		key: value for key, value in recipients.items() if value["email_on_start"]
+	}  # reduce to recipients who opted-in 'Email on Start'
 
 	subject = f"Started: BTU Task {doc_task_log.task_desc_short}"
 	body = f"Task {doc_task_log.task} ({doc_task_log.task_desc_short}) is now In-Progress."
@@ -339,12 +366,11 @@ def email_on_task_start(doc_task_log, send_via_queue=False):
 		body += f"\nTask Schedule {doc_task_log.schedule}"
 
 	for each_recipient in recipients:  # Value of 'each_recipient' is a String email address
-		frappe.logger("btu").debug("Sending email to %s because Task %s has started.", each_recipient, doc_task_log.task)
+		frappe.logger("btu").debug(
+			"Sending email to %s because Task %s has started.", each_recipient, doc_task_log.task
+		)
 		if not send_via_queue:
-			Emailer(sender=sender,
-					emailto_list=each_recipient or None,
-					subject=subject,
-					body=body).send()
+			Emailer(sender=sender, emailto_list=each_recipient or None, subject=subject, body=body).send()
 		else:
 			raise NotImplementedError("Not Yet Implemented: Sending email via Redis Queue.")
 
@@ -355,19 +381,22 @@ def email_on_task_conclusion(doc_task_log, send_via_queue=False):
 	"""
 	Send an email about the Task Log's success or failure.
 	"""
-	from btu.btu_core.doctype.btu_task_log.btu_task_log import BTUTaskLog as BTUTaskLogType  # late import to avoid any circular reference problems.
+	from btu.btu_core.doctype.btu_task_log.btu_task_log import (
+		BTUTaskLog as BTUTaskLogType,  # late import to avoid any circular reference problems.
+	)
 
 	if not doc_task_log or not isinstance(doc_task_log, BTUTaskLogType):
-		raise frappe.MandatoryError("Function requires argument 'doc_task_log', which should be an instance of BTU Task Log document.")
+		raise frappe.MandatoryError(
+			"Function requires argument 'doc_task_log', which should be an instance of BTU Task Log document."
+		)
 
 	email_recipients: dict = _build_recipients_from_task_log(doc_task_log)
 	for each_recipient, options in email_recipients.items():
-
-		if doc_task_log.success_fail == 'Success' and not options["email_on_success"]:
+		if doc_task_log.success_fail == "Success" and not options["email_on_success"]:
 			continue
-		if doc_task_log.success_fail == 'Failed' and not options["email_on_error"]:
+		if doc_task_log.success_fail == "Failed" and not options["email_on_error"]:
 			continue
-		if doc_task_log.success_fail == 'Timeout' and not options["email_on_timeout"]:
+		if doc_task_log.success_fail == "Timeout" and not options["email_on_timeout"]:
 			continue
 
 		# Create the email "Subject" string:
@@ -380,16 +409,13 @@ def email_on_task_conclusion(doc_task_log, send_via_queue=False):
 			body += f"Function returned this Result:\n'{doc_task_log.result_message}'\n\n"
 		if doc_task_log.stdout:
 			body += f"Standard Output:\n{doc_task_log.stdout}"
-		if doc_task_log.success_fail == 'Timeout':
+		if doc_task_log.success_fail == "Timeout":
 			body += "\nTimeout!\n"
 			body += "Task has not returned results in a timely manner; it may have timed-out or died inside Python RQ."
 
 		sender = frappe.get_doc("BTU Configuration").email_auth_username
 		if not send_via_queue:
-			Emailer(sender=sender,
-					emailto_list=each_recipient or None,
-					subject=subject,
-					body=body).send()
+			Emailer(sender=sender, emailto_list=each_recipient or None, subject=subject, body=body).send()
 		else:
 			raise NotImplementedError("Not Yet Implemented: Sending email via Redis Queue.")
 

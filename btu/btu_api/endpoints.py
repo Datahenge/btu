@@ -1,4 +1,4 @@
-""" endpoints.py """
+"""endpoints.py"""
 
 # NOTE: This describes how to get rid of the outer 'message" key in Frappe HTTP responses:
 # https://discuss.erpnext.com/t/returning-plain-text-from-whitelisted-method/32621
@@ -44,8 +44,10 @@ def get_pickled_task(task_id, task_schedule_id=None):
 	new_sanchez.build_internals(func=execute_job, _args=None, _kwargs=queue_args)
 	return new_sanchez.get_serialized_rq_job()  # bytes
 
+
 # The purpose of the following endpoints: to enable the BTU CLI and Scheduler
 # to test and validate connectivity with the Frappe web server.
+
 
 @frappe.whitelist()
 def test_ping():
@@ -54,6 +56,7 @@ def test_ping():
 	"""
 	return "pong"
 
+
 @frappe.whitelist()
 def test_hello_world_bytes():
 	"""
@@ -61,12 +64,13 @@ def test_hello_world_bytes():
 	"""
 	from werkzeug.wrappers import Response
 
-	hello_bytes: bytes = "Hello World".encode()
+	hello_bytes: bytes = b"Hello World"
 	response = Response()
 	response.mimetype = "application/octet-stream"
 	response.data = hello_bytes
 	response.status_code = 200
 	return response
+
 
 @frappe.whitelist()
 def test_function_ping_now_bytes():
@@ -82,7 +86,7 @@ def test_function_ping_now_bytes():
 		"event": None,
 		"job_name": "ping_now",
 		"is_async": True,  # always true; we want to run Tasks via the Redis Queue, not on the Web Server.
-		"kwargs": {}  # if 'ping_now' had keyword arguments, we'd set them here.
+		"kwargs": {},  # if 'ping_now' had keyword arguments, we'd set them here.
 	}
 
 	new_sanchez = Sanchez()
@@ -110,13 +114,11 @@ def enqueue_for_next_available_worker(task_schedule_key: str):
 	# And then call *that* standalone applicatoni via Unix domain sockets, or system calls.
 	# It's just not worth the effort: the ERP Web Server should not be offline *anyway*
 
-	response = {
-		"has_errors": 0,
-		"error_message": ""
-	}
+	response = {"has_errors": 0, "error_message": ""}
 
 	try:
 		import uuid
+
 		from btu.btu_core.task_runner import on_btu_task_failure
 
 		doc_task_schedule = frappe.get_doc("BTU Task Schedule", task_schedule_key, ignore_permissions=True)
@@ -126,7 +128,9 @@ def enqueue_for_next_available_worker(task_schedule_key: str):
 		if existing_log:
 			frappe.logger("btu").warning(
 				"Task %s already has an In-Progress log (%s); skipping scheduled enqueue for schedule %s.",
-				doc_task.name, existing_log, task_schedule_key
+				doc_task.name,
+				existing_log,
+				task_schedule_key,
 			)
 			return response
 
@@ -146,9 +150,6 @@ def enqueue_for_next_available_worker(task_schedule_key: str):
 
 	except Exception as ex:
 		frappe.db.rollback()
-		response = {
-			"has_errors": 1,
-			"error_message": str(ex)
-		}
+		response = {"has_errors": 1, "error_message": str(ex)}
 
 	return response

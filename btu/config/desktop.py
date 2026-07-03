@@ -4,6 +4,7 @@
 
 from frappe import _
 
+
 def get_data():
 	return [
 		{
@@ -11,6 +12,6 @@ def get_data():
 			"color": "grey",
 			"icon": "octicon octicon-file-directory",
 			"type": "module",
-			"label": _("Background Task Core")
+			"label": _("Background Task Core"),
 		}
 	]

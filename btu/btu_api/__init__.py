@@ -1,19 +1,17 @@
-""" btu/btu_api """
+"""btu/btu_api"""
 
-from functools import partial
 import inspect
 import os
 import pickle
 import time
-
-from rq.compat import string_types, as_text
+from functools import partial
 
 import frappe
 from frappe.utils import cstr
+from rq.compat import as_text, string_types
 
 
-class Sanchez():
-
+class Sanchez:
 	def __init__(self):
 		self.function_name = None
 		self.instance = None
@@ -31,9 +29,9 @@ class Sanchez():
 			self.function_name = f"{func.__module__}.{func.__qualname__}"
 		elif isinstance(func, string_types):
 			self.function_name = as_text(func)
-		elif not inspect.isclass(func) and hasattr(func, '__call__'):  # a callable class instance
+		elif not inspect.isclass(func) and hasattr(func, "__call__"):  # a callable class instance
 			self._instance = func
-			self.function_name = '__call__'
+			self.function_name = "__call__"
 		else:
 			raise TypeError(f"Expected a callable or a string, but got: {func}")
 
@@ -55,6 +53,7 @@ class Sanchez():
 		dumps = partial(pickle.dumps, protocol=pickle.HIGHEST_PROTOCOL)  # defines how to do the pickling.
 		return dumps(job_tuple)  # this is the serialized/pickled job
 
+
 # The following function was copied from 'frappe.utils.background_jobs'
 # pylint: disable=too-many-branches, inconsistent-return-statements
 def execute_job(site, method, event, job_name, kwargs, user=None, is_async=True, retry=0):
@@ -63,7 +62,7 @@ def execute_job(site, method, event, job_name, kwargs, user=None, is_async=True,
 	"""
 	if is_async:
 		frappe.connect(site)
-		if os.environ.get('CI'):
+		if os.environ.get("CI"):
 			frappe.flags.in_test = True
 
 		if user:
@@ -86,17 +85,17 @@ def execute_job(site, method, event, job_name, kwargs, user=None, is_async=True,
 	except (frappe.db.InternalError, frappe.RetryBackgroundJobError) as ex:
 		frappe.db.rollback()
 
-		if (retry < 5 and
-			(isinstance(ex, frappe.RetryBackgroundJobError) or
-				(frappe.db.is_deadlocked(ex) or frappe.db.is_timedout(ex)))):
+		if retry < 5 and (
+			isinstance(ex, frappe.RetryBackgroundJobError)
+			or (frappe.db.is_deadlocked(ex) or frappe.db.is_timedout(ex))
+		):
 			# retry the job if
 			# 1213 = deadlock
 			# 1205 = lock wait timeout
 			# or RetryBackgroundJobError is explicitly raised
 			frappe.destroy()
-			time.sleep(retry+1)
-			return execute_job(site, method, event, job_name, kwargs,
-				is_async=is_async, retry=retry+1)
+			time.sleep(retry + 1)
+			return execute_job(site, method, event, job_name, kwargs, is_async=is_async, retry=retry + 1)
 
 		frappe.log_error(title=method_name)
 		raise
@@ -117,7 +116,7 @@ def execute_job(site, method, event, job_name, kwargs, user=None, is_async=True,
 			frappe.destroy()
 
 
-class TransientTask():
+class TransientTask:
 	"""
 	The Transient Task is a kind of temporary BTU Task.  It only runs 1 time, then is discarded.
 
@@ -137,22 +136,30 @@ class TransientTask():
 	"""
 
 	@staticmethod
-	def create_new_transient(function_path, description, task_group="Transient",
-	                         max_task_duration='600s', queue_name='short', **kwargs):
+	def create_new_transient(
+		function_path,
+		description,
+		task_group="Transient",
+		max_task_duration="600s",
+		queue_name="short",
+		**kwargs,
+	):
 		"""
 		Create a new, transient Subtask.
 		"""
 		doc_task = frappe.new_doc("BTU Task")
 		doc_task.desc_short = description
 		doc_task.task_group = task_group
-		doc_task.task_type = 'Subtask'
+		doc_task.task_type = "Subtask"
 		doc_task.function_string = function_path
 		doc_task.arguments = str(kwargs)
 		doc_task.run_only_as_worker = True
 		doc_task.max_task_duration = max_task_duration
 		doc_task.repeat_log_in_stdout = True
 		doc_task.queue_name = queue_name
-		document_name = frappe.generate_hash("BTU", 12)  # Don't use the Naming Series; transient documents just get hash names.
+		document_name = frappe.generate_hash(
+			"BTU", 12
+		)  # Don't use the Naming Series; transient documents just get hash names.
 		# NOTE: Ignoring permissions, because employees should never have access to BTU Tasks.
 		doc_task.flags.ignore_permissions = 1
 		doc_task.insert(set_name=document_name)
@@ -162,8 +169,11 @@ class TransientTask():
 
 	def __init__(self, doc_task):
 		from btu.btu_core.doctype.btu_task.btu_task import BTUTask
+
 		if not isinstance(doc_task, BTUTask):
-			raise TypeError("Class instantiation argument 'doc_task' must be an instance of 'BTU Task' document.")
+			raise TypeError(
+				"Class instantiation argument 'doc_task' must be an instance of 'BTU Task' document."
+			)
 		self.doc_task = doc_task
 
 	def enqueue(self):
@@ -171,7 +181,7 @@ class TransientTask():
 		Called via button on document's main page.
 		Sends a function call into the Redis Queue named 'default'
 		"""
-		if self.doc_task.task_type != 'Subtask':
+		if self.doc_task.task_type != "Subtask":
 			raise ValueError(f"BTU Task {self.doc_task.name} is not a transient Subtask.")
 
 		self.doc_task.push_task_into_queue()

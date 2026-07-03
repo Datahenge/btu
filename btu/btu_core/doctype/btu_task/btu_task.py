@@ -2,32 +2,32 @@
 # For license information, please see license.txt
 
 import ast
-from contextlib import redirect_stdout
 import importlib
 import inspect
 import io
 import json
 import time
+from contextlib import redirect_stdout
 
 # Frappe
 import frappe
 from frappe.model.document import Document
 
 # BTU
-from btu import Result, get_system_datetime_now, make_datetime_naive, dict_to_dateless_dict
-from btu.btu_core.task_runner import TaskRunner
+from btu import Result, dict_to_dateless_dict, get_system_datetime_now, make_datetime_naive
 from btu.btu_core.doctype.btu_task_log.btu_task_log import write_log_for_task
+from btu.btu_core.task_runner import TaskRunner
 
 NoneType = type(None)
 
-class BTU_AWARE_FUNCTION():  # pylint: disable=invalid-name
 
+class BTU_AWARE_FUNCTION:  # pylint: disable=invalid-name
 	def __init__(self, btu_task_id):
 		self.btu_task_id = btu_task_id
 		self.btu_task_schedule_id = None
 
 
-class FunctionPathString():
+class FunctionPathString:
 	"""
 	String representing the path to a Python function.
 	"""
@@ -37,10 +37,10 @@ class FunctionPathString():
 		self.debug_mode = bool(debug)
 
 	def module_path(self) -> str:
-		return '.'.join(self.function_path_string.split('.')[0:-1])
+		return ".".join(self.function_path_string.split(".")[0:-1])
 
 	def function_name(self) -> str:
-		return self.function_path_string.split('.')[-1]
+		return self.function_path_string.split(".")[-1]
 
 	def create_module_object(self):
 		return importlib.import_module(self.module_path(), package=None)
@@ -51,14 +51,17 @@ class FunctionPathString():
 		# 1. Import the Module.
 		module_imported = self.create_module_object()
 		# 2. Ensure function exists in the Module.
-		if not self.function_name() in dir(module_imported):
-			raise ImportError(f"Cannot find function '{self.function_name()}' in module path '{self.module_path()}'.")
+		if self.function_name() not in dir(module_imported):
+			raise ImportError(
+				f"Cannot find function '{self.function_name()}' in module path '{self.module_path()}'."
+			)
 
 
 class BTUTask(Document):
 	"""
 	A SQL record that contains a path to a class of type TaskWrapper
 	"""
+
 	@frappe.whitelist()
 	def revert_to_draft(self):
 		# Revert the BTU Task back into an editable Draft status.
@@ -77,8 +80,8 @@ class BTUTask(Document):
 		"""
 		Return the callable function associated with this BTU Task.
 		"""
-		result = getattr( self._imported_module(), self._function_name())
-		if not hasattr(result, '__call__'):
+		result = getattr(self._imported_module(), self._function_name())
+		if not hasattr(result, "__call__"):
 			raise RuntimeError(f"The function string '{self.function_string}' is not a callable function.")
 		return result
 
@@ -96,8 +99,12 @@ class BTUTask(Document):
 
 	def before_save(self):
 		if self.arguments:
-			self.arguments = self.arguments.replace('“', '"')  # replace the unsupported curly forward double quote with the regular one.
-			self.arguments = self.arguments.replace('”', '"')  # replace the unsupported curly backward double quote with the regular one.
+			self.arguments = self.arguments.replace(
+				"“", '"'
+			)  # replace the unsupported curly forward double quote with the regular one.
+			self.arguments = self.arguments.replace(
+				"”", '"'
+			)  # replace the unsupported curly backward double quote with the regular one.
 
 	def before_insert(self):
 		# New Tasks should automatically inherit the default Email Recipients from BTU Configuration.
@@ -107,14 +114,15 @@ class BTUTask(Document):
 		if not doc_config.email_recipients:
 			return
 		for each_recipient in doc_config.email_recipients:
-			self.append("email_recipients",
+			self.append(
+				"email_recipients",
 				{
 					"email_address": each_recipient.email_address,
 					"email_on_start": each_recipient.email_on_start,
 					"email_on_success": each_recipient.email_on_success,
 					"email_on_error": each_recipient.email_on_error,
-					"email_on_timeout": each_recipient.email_on_timeout
-				}
+					"email_on_timeout": each_recipient.email_on_timeout,
+				},
 			)
 
 	def on_trash(self):
@@ -164,12 +172,9 @@ class BTUTask(Document):
 		function_arguments = []
 
 		for index, each in enumerate(function_argument_keys):
-			function_arguments.append({
-				'argument_name': each,
-				'position': index,
-				'has_default_value': False,
-				'default_value': None
-			})
+			function_arguments.append(
+				{"argument_name": each, "position": index, "has_default_value": False, "default_value": None}
+			)
 		# Sort by reverse order
 		if function_arguments:
 			function_arguments.sort(key=lambda item: item.get("position"), reverse=True)  # inline sort
@@ -180,14 +185,16 @@ class BTUTask(Document):
 			list(function_argument_defaults).reverse()  # inline reverse and convert to a List.
 			for index, argument in enumerate(function_arguments):
 				if len(function_argument_defaults) >= index + 1:
-					argument['has_default_value'] = True
-					argument['default_value'] = function_argument_defaults[index]
+					argument["has_default_value"] = True
+					argument["default_value"] = function_argument_defaults[index]
 
 		if function_arguments:
 			function_arguments.sort(key=lambda item: item.get("position"))  # inline sort
 
 		if not self.is_this_btu_aware_function():
-			mandatory_argument_names = [ arg['argument_name'] for arg in function_arguments if arg['has_default_value'] is False ]
+			mandatory_argument_names = [
+				arg["argument_name"] for arg in function_arguments if arg["has_default_value"] is False
+			]
 		else:
 			# TODO: Find the mandatory arguments by examining the run() method on the BTU-aware class function.
 			mandatory_argument_names = []
@@ -196,7 +203,6 @@ class BTUTask(Document):
 		message = None
 
 		if self.built_in_arguments():  # there are arguments specifically annotated on the BTU Task
-
 			for mandatory_argument in mandatory_argument_names:
 				if mandatory_argument not in self.built_in_arguments().keys():
 					if number_of_missing_arguments == 0:
@@ -256,31 +262,41 @@ class BTUTask(Document):
 				print(f"Task '{self.name}' starting at: {datetime_string}")
 				if self.built_in_arguments():
 					if self.is_this_btu_aware_function():
-						any_result = callable_function(self.name).run(**self.built_in_arguments())  # create an instance of the BTU-aware class, and call its run() method.
+						any_result = callable_function(self.name).run(
+							**self.built_in_arguments()
+						)  # create an instance of the BTU-aware class, and call its run() method.
 					else:
-						any_result = callable_function(**self.built_in_arguments())  # read function string, create callable function, and run it.
+						any_result = callable_function(
+							**self.built_in_arguments()
+						)  # read function string, create callable function, and run it.
 				else:
 					# No keyword arguments for this Task:
 					if self.is_this_btu_aware_function():
-						any_result = callable_function(self.name).run()  # create an instance of the BTU-aware class, and call its run() method.
+						any_result = callable_function(
+							self.name
+						).run()  # create an instance of the BTU-aware class, and call its run() method.
 					else:
-						any_result = callable_function()  # read function string, create callable function, and run it.
+						any_result = (
+							callable_function()
+						)  # read function string, create callable function, and run it.
 			success = True
 		except Exception as ex:
 			any_result = str(ex)
 			success = False
 		finally:
-			stdout_buffer_for_log = buffer.getvalue()  	 # fetch any Stdout from the buffer.
+			stdout_buffer_for_log = buffer.getvalue()  # fetch any Stdout from the buffer.
 
-		execution_time = round(time.time() - execution_start,3)
+		execution_time = round(time.time() - execution_start, 3)
 		# Create an instance of Result class:
 		result_object = Result(success=success, message=any_result or "", execution_time=execution_time)
 
 		# Write to the BTU Task Log
-		new_log_id = write_log_for_task(task_id=self.name,
-							result=result_object,
-							stdout=stdout_buffer_for_log or None,
-							date_time_started=start_datetime)
+		new_log_id = write_log_for_task(
+			task_id=self.name,
+			result=result_object,
+			stdout=stdout_buffer_for_log or None,
+			date_time_started=start_datetime,
+		)
 
 		self.reload()
 		# Return a tuple to (probably) btu_task.js.
@@ -299,7 +315,9 @@ class BTUTask(Document):
 
 		self.push_task_into_queue()
 
-		message = f"BTU Task {self.name} has been submitted to the Redis Queue. No callback alerts are possible."
+		message = (
+			f"BTU Task {self.name} has been submitted to the Redis Queue. No callback alerts are possible."
+		)
 		message += "\nTo see the status of this Task, review the BTU Task Logs."
 		if not quiet:
 			frappe.msgprint(message)
@@ -314,13 +332,13 @@ class BTUTask(Document):
 		                 stored built-in arguments. Must be JSON-serializable.
 		"""
 		import uuid
+
 		from btu.btu_core.task_runner import on_btu_task_failure
 
 		existing_log = _task_has_active_log(self.name)
 		if existing_log:
 			frappe.logger("btu").warning(
-				"Task %s already has an In-Progress log (%s); skipping enqueue.",
-				self.name, existing_log
+				"Task %s already has an In-Progress log (%s); skipping enqueue.", self.name, existing_log
 			)
 			return
 
@@ -349,18 +367,12 @@ def _task_has_active_log(task_id: str) -> str | None:
 	cannot protect Window A (process dies after commit, before enqueue) for one-shots.
 	It does prevent double-enqueue for recurring tasks fired by the scheduler or the UI.
 	"""
-	return frappe.db.get_value(
-		"BTU Task Log",
-		{"task": task_id, "success_fail": "In-Progress"},
-		"name"
-	)
+	return frappe.db.get_value("BTU Task Log", {"task": task_id, "success_fail": "In-Progress"}, "name")
 
 
-def create_and_run_one_shot(short_description: str,
-                            function_path: str,
-							arguments: dict,
-							queue_name='short',
-							quiet=False) -> str:
+def create_and_run_one_shot(
+	short_description: str, function_path: str, arguments: dict, queue_name="short", quiet=False
+) -> str:
 	"""
 	NOTE: Returns a BTU Task Log document ID.
 	"""
@@ -373,14 +385,14 @@ def create_and_run_one_shot(short_description: str,
 	arguments = dict_to_dateless_dict(arguments)  # necessary to convert Date objects into ISO 8601 strings.
 
 	doc_task = frappe.new_doc("BTU Task")
-	doc_task.task_type = 'One-Shot'
+	doc_task.task_type = "One-Shot"
 	doc_task.desc_short = short_description
 	doc_task.function_string = function_path
 	doc_task.arguments = json.dumps(arguments, indent=4) if arguments else None
 	doc_task.run_only_as_worker = bool(queue_name)
 	doc_task.queue_name = queue_name
 	doc_task.max_task_duration = 3600  # timeout after 60 minutes
-	doc_task.flags.ignore_permissions=1
+	doc_task.flags.ignore_permissions = 1
 	doc_task.save()
 	doc_task.submit()
 	frappe.db.commit()  # Brian: It's importantly to commit immediately, before enqueuing, or you risk a Race Condition because SQL commit happens very late.

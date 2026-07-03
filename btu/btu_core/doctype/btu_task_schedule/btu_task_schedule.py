@@ -1,10 +1,8 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2015, Codrotech Inc. and contributors
 #
 # Copyright (c) 2021-2025, Datahenge LLC and contributors
 # For license information, please see license.txt
 
-from __future__ import unicode_literals
 
 import ast
 import calendar
@@ -13,23 +11,22 @@ from datetime import datetime as datetime_type
 
 # Third Party
 import cron_descriptor
-import pytz
 
 # Frappe
 import frappe
+import pytz
 from frappe import _
 from frappe.model.document import Document
 
 # BTU
-from btu import ( validate_cron_string, Result, print_both)
+from btu import Result, print_both, validate_cron_string
 from btu.btu_api.scheduler import SchedulerAPI
 
 NoneType = type(None)
-cron_day_dictionary = {'Sun': 0, 'Mon': 1, 'Tue': 2, 'Wed': 3, 'Thu': 4, 'Fri': 5, 'Sat': 6}
+cron_day_dictionary = {"Sun": 0, "Mon": 1, "Tue": 2, "Wed": 3, "Thu": 4, "Fri": 5, "Sat": 6}
 
 
 class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
-
 	def on_trash(self):
 		"""
 		After deleting this Task Schedule, delete the corresponding Python RQ data.
@@ -45,7 +42,7 @@ class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
 		self.task_description = self.get_task_doc().desc_short
 
 		if not self.cron_timezone:
-			self.cron_timezone = frappe.db.get_system_setting('time_zone')
+			self.cron_timezone = frappe.db.get_system_setting("time_zone")
 
 		# Clear fields that are not relevant for this schedule type.
 		if self.run_frequency == "Cron Style":
@@ -100,14 +97,14 @@ class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
 
 	def before_save(self):
 
-		if '|' in self.name:
+		if "|" in self.name:
 			raise ValueError("Task Schedules cannot have the pipe character (|) in their primary key 'name'.")
 
 		if bool(self.enabled) is True:
 			try:
 				self.resubmit_task_schedule()
 			except Exception as ex:
-				frappe.msgprint(ex, indicator='red')
+				frappe.msgprint(ex, indicator="red")
 		else:  # Task is not enabled, so Cancel it.
 			doc_orig = self.get_doc_before_save()
 			if doc_orig and doc_orig.enabled != self.enabled:
@@ -117,7 +114,7 @@ class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
 				except Exception as ex:
 					print_both(ex)
 
-# -----end of standard controller methods-----
+	# -----end of standard controller methods-----
 
 	def resubmit_task_schedule(self, autosave=False):
 		"""
@@ -131,7 +128,9 @@ class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
 
 		response = SchedulerAPI.reload_task_schedule(task_schedule_id=self.name)
 		if not response:
-			raise ConnectionError("Error, no response from BTU Task Scheduler daemon. Check logs in '/etc/btu_scheduler/logs'.")
+			raise ConnectionError(
+				"Error, no response from BTU Task Scheduler daemon. Check logs in '/etc/btu_scheduler/logs'."
+			)
 		message = response.get("message", str(response))
 		print(f"Response from BTU Scheduler: {message}")
 		frappe.msgprint(f"Response from BTU Scheduler daemon:<br>{message}")
@@ -159,6 +158,7 @@ class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
 		Query the Python RQ database for information about the last execution of this Job.
 		"""
 		import zlib
+
 		from frappe.utils.background_jobs import get_redis_conn
 
 		if not self.redis_job_id:
@@ -167,16 +167,16 @@ class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
 
 		try:
 			conn = get_redis_conn()
-			job_status =  conn.hget(f'rq:job:{self.redis_job_id}', 'status').decode('utf-8')
+			job_status = conn.hget(f"rq:job:{self.redis_job_id}", "status").decode("utf-8")
 		except Exception:
 			frappe.msgprint(f"No job information is available for Job {self.redis_job_id}")
 			return
 
-		if job_status == 'finished':
+		if job_status == "finished":
 			frappe.msgprint(f"Job {self.redis_job_id} completed successfully.")
 			return
 		frappe.msgprint(f"Job status = {job_status}")
-		compressed_data = conn.hget(f'rq:job:{self.redis_job_id}', 'exc_info')
+		compressed_data = conn.hget(f"rq:job:{self.redis_job_id}", "exc_info")
 		if not compressed_data:
 			frappe.msgprint("No results available; job may not have been processed yet.")
 		else:
@@ -187,16 +187,20 @@ class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
 		"""
 		Write an entry to the BTU Task Log, which should trigger emails.  Then delete the entry.
 		"""
-		from btu.btu_core.doctype.btu_task_log.btu_task_log import write_log_for_task  # late import to avoid circular reference
+		from btu.btu_core.doctype.btu_task_log.btu_task_log import (
+			write_log_for_task,  # late import to avoid circular reference
+		)
+
 		if not self.email_recipients:
 			frappe.msgprint("Task Schedule does not have any Email Recipients; no emails can be tested.")
 			return
 
 		try:
-			result_obj = Result(success=True, message="This test demonstrates how Task Logs can trigger an email on completion.")
-			log_key = write_log_for_task(task_id=self.task,
-			                             result=result_obj,
-										 schedule_id=self.name)
+			result_obj = Result(
+				success=True,
+				message="This test demonstrates how Task Logs can trigger an email on completion.",
+			)
+			log_key = write_log_for_task(task_id=self.task, result=result_obj, schedule_id=self.name)
 			frappe.db.commit()
 			frappe.delete_doc("BTU Task Log", log_key)
 			frappe.msgprint("Log written; emails should arrive shortly.")
@@ -218,22 +222,27 @@ class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
 			return None
 		return ast.literal_eval(self.argument_overrides)
 
+
 # ----------------
 # STATIC FUNCTIONS
 # ----------------
+
 
 def check_minutes(minute):
 	if isinstance(minute, NoneType) or not 0 <= int(minute) < 60:
 		raise ValueError(_("Minute value must be between 0 and 59"))
 
+
 def check_hours(hour):
 	if not hour or not hour.isdigit() or not 0 <= int(hour) < 24:
 		raise ValueError(_("Hour value must be between 0 and 23"))
+
 
 def check_day_of_week(day_of_week):
 
 	if not day_of_week or day_of_week is None:
 		raise ValueError(_("Please choose a day of the week"))
+
 
 def check_day_of_month(run_frequency, day, month=None):
 
@@ -243,13 +252,12 @@ def check_day_of_month(run_frequency, day, month=None):
 	if run_frequency == "Yearly":
 		if day and month:
 			month_dict = {value: key for key, value in enumerate(calendar.month_abbr)}
-			last = monthrange(datetime_type.now().year,
-							  month_dict.get(str(month).title()))[1]
+			last = monthrange(datetime_type.now().year, month_dict.get(str(month).title()))[1]
 			if int(day) > last:
-				raise ValueError(
-					_("Day value for {0} must be between 1 and {1}").format(month, last))
+				raise ValueError(_("Day value for {0} must be between 1 and {1}").format(month, last))
 		else:
 			raise ValueError(_("Please choose a day of the week and a month"))
+
 
 def schedule_to_cron_string(doc_schedule):
 	"""
@@ -267,7 +275,7 @@ def schedule_to_cron_string(doc_schedule):
 	if not isinstance(doc_schedule, BTUTaskSchedule):
 		raise ValueError("Function argument 'doc_schedule' should be a BTU Task Schedule document.")
 
-	if doc_schedule.run_frequency == 'Cron Style':
+	if doc_schedule.run_frequency == "Cron Style":
 		return doc_schedule.cron_string
 
 	# Default every position to wildcard; only override positions that carry a real value.
@@ -292,14 +300,15 @@ def schedule_to_cron_string(doc_schedule):
 	validate_cron_string(result, error_on_invalid=True)
 	return result
 
+
 @frappe.whitelist()
 def resubmit_all_task_schedules():
 	"""
 	Purpose: Loop through all enabled Task Schedules, and ask the BTU Scheduler daemon to resubmit them for scheduling.
 	NOTE: This does -not- immediately execute an RQ Job; it only schedules it.
 	"""
-	filters = { "enabled": True }
-	task_schedule_ids = frappe.db.get_all("BTU Task Schedule", filters=filters, pluck='name')
+	filters = {"enabled": True}
+	task_schedule_ids = frappe.db.get_all("BTU Task Schedule", filters=filters, pluck="name")
 	for task_schedule_id in task_schedule_ids:
 		try:
 			doc_schedule = frappe.get_doc("BTU Task Schedule", task_schedule_id)
@@ -311,14 +320,16 @@ def resubmit_all_task_schedules():
 			doc_schedule.enabled = False
 			doc_schedule.save()
 
+
 def get_system_timezone():
 	"""
 	Returns the Time Zone of the Site.
 	"""
-	system_time_zone = frappe.db.get_system_setting('time_zone')
+	system_time_zone = frappe.db.get_system_setting("time_zone")
 	if not system_time_zone:
 		raise ValueError("Please configure a Time Zone under 'System Settings'.")
 	return pytz.timezone(system_time_zone)
+
 
 def localize_datetime(any_datetime):
 	"""
@@ -332,12 +343,14 @@ def localize_datetime(any_datetime):
 		raise TypeError("Argument 'any_datetime' must be a Python datetime object.")
 
 	if any_datetime.tzinfo:
-		raise ValueError(f"Datetime value {any_datetime} is already localized and time zone aware (tzinfo={any_datetime.tzinfo})")
+		raise ValueError(
+			f"Datetime value {any_datetime} is already localized and time zone aware (tzinfo={any_datetime.tzinfo})"
+		)
 
 	# What kind of time zone object was passed?
 	type_name = type(time_zone).__name__
 
-	if type_name == 'ZoneInfo':
+	if type_name == "ZoneInfo":
 		# Only available in Python 3.9+
 		# DO NOT USE:  naive_datetime.astimezone(timezone).  This implicitly shifts you the UTC offset.
 		return any_datetime.replace(tzinfo=time_zone)

@@ -1,4 +1,4 @@
-""" btu/btu_api/scheduler.py """
+"""btu/btu_api/scheduler.py"""
 
 import json
 import uuid
@@ -28,10 +28,11 @@ class RequestType(Enum):
 def _get_redis_connection():
 	"""Return a Redis connection pointed at Frappe's RQ database."""
 	import redis as redis_lib
+
 	return redis_lib.from_url(frappe.local.conf.redis_queue, decode_responses=True)
 
 
-class SchedulerAPI():
+class SchedulerAPI:
 	"""
 	Client-side API for communicating with the BTU Scheduler daemon.
 
@@ -76,11 +77,13 @@ class SchedulerAPI():
 		it does NOT mean the command failed to execute.
 		"""
 		response_key = f"{REDIS_RPC_RESPONSE_PREFIX}:{uuid.uuid4().hex}"
-		command = json.dumps({
-			"request_type": request_type_name,
-			"request_content": content,
-			"response_key": response_key,
-		})
+		command = json.dumps(
+			{
+				"request_type": request_type_name,
+				"request_content": content,
+				"response_key": response_key,
+			}
+		)
 
 		try:
 			redis_conn = _get_redis_connection()
@@ -93,7 +96,8 @@ class SchedulerAPI():
 				frappe.logger("btu").warning(
 					"BTU Scheduler did not acknowledge command '%s' within %s seconds. "
 					"Scheduler may be down or Redis connectivity is broken.",
-					request_type_name, REDIS_RPC_TIMEOUT_SECONDS
+					request_type_name,
+					REDIS_RPC_TIMEOUT_SECONDS,
 				)
 				return None
 
@@ -101,7 +105,5 @@ class SchedulerAPI():
 			return json.loads(response_json)
 
 		except Exception as ex:
-			frappe.logger("btu").error(
-				"Error communicating with BTU Scheduler via Redis RPC: %s", ex
-			)
+			frappe.logger("btu").error("Error communicating with BTU Scheduler via Redis RPC: %s", ex)
 			return None

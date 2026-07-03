@@ -1,8 +1,7 @@
-# -*- coding: utf-8 -*-
 #
 # Background Tasks Unleashed: A Frappe Framework task scheduling App.
 #
-# Copyright (c) 2022-2024, Datahenge LLC and contributors
+# Copyright (c) 2022-2026, Datahenge LLC and contributors
 # For license information, please see LICENSE.txt
 #
 # Inspired by and initially based on:
@@ -10,31 +9,31 @@
 #   Copyright (c) 2015, Codrotech Inc. and contributors
 
 import copy
-from datetime import datetime as DateTimeType # standard Python library
-from datetime import date as DateType
 import json
 import os
 import re
+from datetime import date as DateType
+from datetime import datetime as DateTimeType  # standard Python library
 
+import frappe
+import pytz  # https://pypi.org/project/pytz/
 from dateutil import parser
 from dateutil.parser._parser import ParserError
 from dateutil.tz import tzutc
-import pytz  # https://pypi.org/project/pytz/
-from rq import Queue
-
-import frappe
 from frappe.utils.background_jobs import get_redis_conn
+from rq import Queue
 
 NoneType = type(None)
 
-__version__ = '15.1.0'
+__version__ = "15.1.0"
 
 
-class Result():
+class Result:
 	"""
 	Inspired by Rust's Result type which has Ok(None) or Error(message)
 	Functions can return an instance of this class, instead of True/False or None.
 	"""
+
 	def __init__(self, success, message, execution_time=None):
 		"""
 		Arguments:
@@ -48,10 +47,12 @@ class Result():
 			if isinstance(message, bool):
 				message = "True" if message else "False"
 			if not isinstance(message, (str, dict, list, int, NoneType)):
-				raise TypeError(f"Result class argument 'message' must be a Python String, Integer, List, or Dictionary.  Found a type '{type(message)}' instead.")
+				raise TypeError(
+					f"Result class argument 'message' must be a Python String, Integer, List, or Dictionary.  Found a type '{type(message)}' instead."
+				)
 		self.okay = success
 		self.message = message or None
-		self.execution_time = round(execution_time,2) if execution_time else None
+		self.execution_time = round(execution_time, 2) if execution_time else None
 
 	def __bool__(self):
 		"""
@@ -63,11 +64,7 @@ class Result():
 		"""
 		Dictionary representation of the class instance.
 		"""
-		return {
-		    "okay": self.okay,
-		    "message": self.message,
-		    "execution_time": self.execution_time
-		}
+		return {"okay": self.okay, "message": self.message, "execution_time": self.execution_time}
 
 	def as_msgprint(self):
 		msg = f"Success: {self.okay}"
@@ -110,7 +107,7 @@ def get_system_timezone():
 	"""
 	Returns the Time Zone of the Site.
 	"""
-	system_time_zone = frappe.db.get_system_setting('time_zone')
+	system_time_zone = frappe.db.get_system_setting("time_zone")
 	if not system_time_zone:
 		raise ValueError("Please configure a Time Zone under 'System Settings'.")
 	return pytz.timezone(system_time_zone)
@@ -121,7 +118,7 @@ def get_system_datetime_now():
 	Return a timezone-aware DateTime value, using the Frappe webserver's System Settings.
 	"""
 	utc_datetime = DateTimeType.now(tzutc())  # Get the current UTC datetime.
-	return utc_datetime.astimezone( get_system_timezone())  # Convert to the site's Time Zone:
+	return utc_datetime.astimezone(get_system_timezone())  # Convert to the site's Time Zone:
 
 
 def make_datetime_naive(any_datetime):
@@ -145,10 +142,10 @@ def encode_slack_text(any_text):
 	"""
 	Slack requires encoding 3 symbols: &, >, and <
 	"""
-	any_text = any_text.replace('&', '&amp;')
-	any_text = any_text.replace('<', '&lt;')
-	any_text = any_text.replace('>', '&gt;')
-	any_text = any_text.replace('|', '%7C')
+	any_text = any_text.replace("&", "&amp;")
+	any_text = any_text.replace("<", "&lt;")
+	any_text = any_text.replace(">", "&gt;")
+	any_text = any_text.replace("|", "%7C")
 	return any_text
 
 
@@ -175,7 +172,7 @@ def iso_string_to_date(any_string):
 		return any_string.date()
 	elif isinstance(any_string, DateType):
 		return any_string
-	return DateTimeType.strptime(any_string,"%Y-%m-%d").date()
+	return DateTimeType.strptime(any_string, "%Y-%m-%d").date()
 
 
 def rq_job_to_dict(rq_job):
@@ -190,7 +187,7 @@ def rq_job_to_dict(rq_job):
 		"function_name": rq_job.func_name,
 		"instance": rq_job._instance,  # pylint: disable=protected-access
 		# "args": rq_job._args,  # pylint: disable=protected-access
-		#"kwargs": rq_job._kwargs,  # pylint: disable=protected-access
+		# "kwargs": rq_job._kwargs,  # pylint: disable=protected-access
 		"description": rq_job.description,
 		"origin": rq_job.origin,
 		"datetime_enqueued": date_to_iso_string(rq_job.enqueued_at) if rq_job.enqueued_at else None,
@@ -198,19 +195,19 @@ def rq_job_to_dict(rq_job):
 		"datetime_ended": date_to_iso_string(rq_job.ended_at) if rq_job.ended_at else None,
 		"result": str(rq_job._result),  # pylint: disable=protected-access
 		"execution_info": str(rq_job.exc_info),  # NOTE: This can be a very large amount of string text.
-		"timeout":	rq_job.timeout,
+		"timeout": rq_job.timeout,
 		"result_ttl": rq_job.result_ttl,
 		"failure_ttl": rq_job.failure_ttl,
 		"ttl": rq_job.ttl,
-		"worker_name":	rq_job.worker_name,
-		"status":	rq_job._status,  # pylint: disable=protected-access
-		#"dependency_ids": rq_job._dependency_ids,  # pylint: disable=protected-access
-		#"meta":	rq_job.meta,
-		"serializer":	rq_job.serializer.__name__,
-		"retries_left":	rq_job.retries_left,
-		"retry_intervals":	rq_job.retry_intervals,
-		"redis_server_version":	rq_job.redis_server_version,
-		"last_heartbeat":  date_to_iso_string(rq_job.last_heartbeat),
+		"worker_name": rq_job.worker_name,
+		"status": rq_job._status,  # pylint: disable=protected-access
+		# "dependency_ids": rq_job._dependency_ids,  # pylint: disable=protected-access
+		# "meta":	rq_job.meta,
+		"serializer": rq_job.serializer.__name__,
+		"retries_left": rq_job.retries_left,
+		"retry_intervals": rq_job.retry_intervals,
+		"redis_server_version": rq_job.redis_server_version,
+		"last_heartbeat": date_to_iso_string(rq_job.last_heartbeat),
 	}
 	return result
 
@@ -256,7 +253,7 @@ def print_job_details(queue_name, job_id):
 		frappe.msgprint(prettier_string)
 
 
-@frappe.whitelist(methods=['DELETE'])
+@frappe.whitelist(methods=["DELETE"])
 def remove_failed_jobs(date_from, date_to, wildcard_text=None):
 	"""
 	Delete RQ Jobs from the Redis database, with filters for dates and text.
@@ -270,7 +267,9 @@ def remove_failed_jobs(date_from, date_to, wildcard_text=None):
 	queues = Queue.all(conn)
 
 	jobs_deleted = 0
-	frappe.msgprint(f"Searching for Failed Jobs from {date_from} to {date_to}, with a description containing '{wildcard_text}' ...")
+	frappe.msgprint(
+		f"Searching for Failed Jobs from {date_from} to {date_to}, with a description containing '{wildcard_text}' ..."
+	)
 	for each_queue in queues:
 		# 'each_queue' is an object of RQ.Queue
 		fail_registry = each_queue.failed_job_registry
@@ -282,7 +281,11 @@ def remove_failed_jobs(date_from, date_to, wildcard_text=None):
 			if not job:
 				frappe.msgprint(f"Unable to find details for Job with identifier = '{job_id}'")
 				continue
-			if job.last_heartbeat and (job.last_heartbeat.date() >= date_from) and (job.last_heartbeat.date() <= date_to):
+			if (
+				job.last_heartbeat
+				and (job.last_heartbeat.date() >= date_from)
+				and (job.last_heartbeat.date() <= date_to)
+			):
 				# Delete this job:
 				if not wildcard_text:
 					fail_registry.remove(job, delete_job=True)
@@ -316,7 +319,7 @@ def dict_to_dateless_dict(some_object):
 	if isinstance(some_object, dict):
 		new_dict = {}
 		for key, value in some_object.items():
-			new_dict[ key ] = dict_to_dateless_dict(value)  # recursive call to this function.
+			new_dict[key] = dict_to_dateless_dict(value)  # recursive call to this function.
 		return new_dict
 
 	# Scenario 4: Argument is something not covered above (e.g. Integers)

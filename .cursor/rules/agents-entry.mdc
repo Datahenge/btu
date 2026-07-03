@@ -1,0 +1,8 @@
+---
+description: Read AGENTS.md before making any changes in this repository
+alwaysApply: true
+---
+
+# Start here
+
+Before editing code, running migrations, or answering architecture questions in this repo, read [AGENTS.md](../../AGENTS.md) for project layout, conventions, and boundaries.

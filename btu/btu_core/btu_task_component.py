@@ -1,4 +1,4 @@
-""" btu_task_component.py """
+"""btu_task_component.py"""
 
 # --------
 #
@@ -6,29 +6,39 @@
 #
 # --------
 
-from contextlib import redirect_stdout
 import importlib
 import io
 import re
 import time
+from contextlib import redirect_stdout
+
 import frappe
 
 from btu.btu_core.task_runner import _configure_btu_logger
 
-_DOTTED_PATH_RE = re.compile(r'^[a-zA-Z_]\w*(\.[a-zA-Z_]\w*)+$')
+_DOTTED_PATH_RE = re.compile(r"^[a-zA-Z_]\w*(\.[a-zA-Z_]\w*)+$")
 
 
 def get_function_name(function_path: str) -> str:
-    """Return the bare function name from a dotted module path string."""
-    return function_path.rsplit(".", 1)[-1]
+	"""Return the bare function name from a dotted module path string."""
+	return function_path.rsplit(".", 1)[-1]
 
 
 # pylint: disable=too-many-instance-attributes
 
-class TaskComponent():
 
-	def __init__(self, btu_task_id, btu_component_id, btu_task_schedule_id, frappe_site_name,
-				 function, queue='default', timeout=None, **kwargs):
+class TaskComponent:
+	def __init__(
+		self,
+		btu_task_id,
+		btu_component_id,
+		btu_task_schedule_id,
+		frappe_site_name,
+		function,
+		queue="default",
+		timeout=None,
+		**kwargs,
+	):
 		"""
 		Initialize the class instance.
 		"""
@@ -66,11 +76,13 @@ class TaskComponent():
 		"""
 		Put this thingie into a queue.
 		"""
-		component_wrapper = TaskComponentWrapper(btu_task_id=self.btu_task_id,
-												 btu_component_id=self.btu_component_id,
-												 btu_task_schedule_id=self.btu_task_schedule_id,
-												 frappe_site_name=self.frappe_site_name,
-				 								 function=self.function_path)
+		component_wrapper = TaskComponentWrapper(
+			btu_task_id=self.btu_task_id,
+			btu_component_id=self.btu_component_id,
+			btu_task_schedule_id=self.btu_task_schedule_id,
+			frappe_site_name=self.frappe_site_name,
+			function=self.function_path,
+		)
 
 		# This supports the idea of passing special keyword arguments to a Task:
 		if self.kwarg_dict:
@@ -81,12 +93,11 @@ class TaskComponent():
 			method=component_wrapper.function_payload,
 			queue=self.queue_name,
 			timeout=self.max_runtime_seconds,
-			is_async=True
+			is_async=True,
 		)
 
 
-class TaskComponentWrapper():
-
+class TaskComponentWrapper:
 	def __init__(self, btu_task_id, btu_component_id, btu_task_schedule_id, frappe_site_name, function):
 		"""
 		Initialize the class instance.
@@ -127,7 +138,9 @@ class TaskComponentWrapper():
 		logger.info("Calling function '%s'", get_function_name(self.function_path))
 		logger.debug("Keyword arguments: %s", self.kwarg_dict)
 
-		start_datetime = make_datetime_naive(get_system_datetime_now()) # Recording this in the System Time Zone
+		start_datetime = make_datetime_naive(
+			get_system_datetime_now()
+		)  # Recording this in the System Time Zone
 		self.create_new_log(start_datetime)  # Create a new BTU Task Log, with a status of "In Progress"
 		execution_start = time.time()
 
@@ -139,7 +152,9 @@ class TaskComponentWrapper():
 			buffer = io.StringIO()
 			with redirect_stdout(buffer):
 				# intentional: redirect_stdout captures this into stdout_buffer_for_log → BTU Task Log stdout field.
-				print(f"--------\nBTU Task Component {self.btu_task_id}-{self.btu_component_id} starting at: {datetime_string}")
+				print(
+					f"--------\nBTU Task Component {self.btu_task_id}-{self.btu_component_id} starting at: {datetime_string}"
+				)
 				if self.kwarg_dict:
 					ret = function_to_call(**self.kwarg_dict)
 				else:
@@ -155,12 +170,14 @@ class TaskComponentWrapper():
 			function_result = Result(False, str(ex), execution_time=execution_time)
 
 		logger.info("Function result: %s", function_result)
-		new_log_id = write_log_for_task(task_id=self.btu_task_id,
-							            result=function_result,
-										log_name=self.task_log_name,
-							            stdout=stdout_buffer_for_log or None,
-							            date_time_started=start_datetime,
-										schedule_id=self.btu_task_schedule_id)
+		new_log_id = write_log_for_task(
+			task_id=self.btu_task_id,
+			result=function_result,
+			log_name=self.task_log_name,
+			stdout=stdout_buffer_for_log or None,
+			date_time_started=start_datetime,
+			schedule_id=self.btu_task_schedule_id,
+		)
 		logger.info("Updated BTU Task Log: '%s'", new_log_id)
 		logger.info("End function_payload: task=%s component=%s", self.btu_task_id, self.btu_component_id)
 
@@ -179,8 +196,10 @@ class TaskComponentWrapper():
 		new_log.task_component = self.btu_component_id
 		new_log.schedule = self.btu_task_schedule_id
 		new_log.date_time_started = date_time_started
-		new_log.success_fail = 'In-Progress'
-		new_log.save(ignore_permissions=True)  # Not even System Administrators are supposed to create and save these.
+		new_log.success_fail = "In-Progress"
+		new_log.save(
+			ignore_permissions=True
+		)  # Not even System Administrators are supposed to create and save these.
 		frappe.db.commit()
 		frappe.logger("btu").info("Created BTU Task Log (component): '%s'", new_log.name)
 		self.task_log_name = new_log.name

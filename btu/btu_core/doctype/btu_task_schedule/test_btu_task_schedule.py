@@ -43,7 +43,6 @@ def _doc(**kwargs):
 
 
 class TestScheduleToCronString(unittest.TestCase):
-
 	# --- Basic frequency conversions ---
 
 	def test_daily_returns_correct_cron(self):
@@ -55,30 +54,36 @@ class TestScheduleToCronString(unittest.TestCase):
 		self.assertEqual(result, "30 * * * *")
 
 	def test_weekly_monday_9am(self):
-		result = schedule_to_cron_string(_doc(
-			run_frequency="Weekly",
-			day_of_week="Mon",
-			hour="9",
-			minute=0,
-		))
+		result = schedule_to_cron_string(
+			_doc(
+				run_frequency="Weekly",
+				day_of_week="Mon",
+				hour="9",
+				minute=0,
+			)
+		)
 		self.assertEqual(result, "0 9 * * 1")
 
 	def test_weekly_friday_midnight(self):
-		result = schedule_to_cron_string(_doc(
-			run_frequency="Weekly",
-			day_of_week="Fri",
-			hour="0",
-			minute=0,
-		))
+		result = schedule_to_cron_string(
+			_doc(
+				run_frequency="Weekly",
+				day_of_week="Fri",
+				hour="0",
+				minute=0,
+			)
+		)
 		self.assertEqual(result, "0 0 * * 5")
 
 	def test_monthly_15th_at_noon(self):
-		result = schedule_to_cron_string(_doc(
-			run_frequency="Monthly",
-			day_of_month=15,
-			hour="12",
-			minute=0,
-		))
+		result = schedule_to_cron_string(
+			_doc(
+				run_frequency="Monthly",
+				day_of_month=15,
+				hour="12",
+				minute=0,
+			)
+		)
 		self.assertEqual(result, "0 12 15 * *")
 
 	def test_cron_style_passes_through_unchanged(self):
@@ -95,9 +100,12 @@ class TestScheduleToCronString(unittest.TestCase):
 		"""Hour 18 must appear as '18' in the output, never as '22' or '23'."""
 		result = schedule_to_cron_string(_doc(run_frequency="Daily", hour="18", minute=0))
 		parts = result.split()
-		self.assertEqual(parts[1], "18",
+		self.assertEqual(
+			parts[1],
+			"18",
 			msg=f"Expected hour '18' in cron '{result}'; got '{parts[1]}'. "
-			    "UTC conversion at save time is a DST regression.")
+			"UTC conversion at save time is a DST regression.",
+		)
 
 	def test_hour_6_is_not_utc_converted(self):
 		result = schedule_to_cron_string(_doc(run_frequency="Daily", hour="6", minute=0))
@@ -131,9 +139,7 @@ class TestScheduleToCronString(unittest.TestCase):
 		self.assertEqual(parts[1], "*")  # hour
 
 	def test_monthly_has_wildcard_month_and_dow(self):
-		result = schedule_to_cron_string(_doc(
-			run_frequency="Monthly", day_of_month=1, hour="0", minute=0
-		))
+		result = schedule_to_cron_string(_doc(run_frequency="Monthly", day_of_month=1, hour="0", minute=0))
 		parts = result.split()
 		self.assertEqual(parts[3], "*")  # month
 		self.assertEqual(parts[4], "*")  # day-of-week
@@ -143,5 +149,8 @@ class TestScheduleToCronString(unittest.TestCase):
 	def test_result_is_five_fields(self):
 		for freq in ("Daily", "Hourly"):
 			result = schedule_to_cron_string(_doc(run_frequency=freq, hour="12", minute=0))
-			self.assertEqual(len(result.split()), 5,
-				msg=f"Cron string '{result}' for {freq} schedule should have exactly 5 fields")
+			self.assertEqual(
+				len(result.split()),
+				5,
+				msg=f"Cron string '{result}' for {freq} schedule should have exactly 5 fields",
+			)

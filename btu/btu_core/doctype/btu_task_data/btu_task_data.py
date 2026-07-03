@@ -10,4 +10,6 @@ class BTUTaskData(Document):
 
 	@frappe.whitelist()
 	def button_readme_clicked(self):
-		frappe.msgprint("BTU Task Data has a DocField named 'text_data'.  But it could be gigantic.<br>To prevent web browser issues, it is always hidden.")
+		frappe.msgprint(
+			"BTU Task Data has a DocField named 'text_data'.  But it could be gigantic.<br>To prevent web browser issues, it is always hidden."
+		)

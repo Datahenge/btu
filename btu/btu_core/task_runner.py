@@ -2,8 +2,6 @@
 btu.btu_core.task_runner.py
 """
 
-from contextlib import redirect_stdout
-from enum import Enum
 import importlib
 import io
 import logging
@@ -11,6 +9,8 @@ import os
 import sys
 import time
 import traceback
+from contextlib import redirect_stdout
+from enum import Enum
 
 # Frappe
 import frappe
@@ -40,8 +40,10 @@ def _configure_btu_logger() -> logging.Logger:
 	logger.setLevel(level)
 	return logger
 
-def run_task_by_id(task_id: str, site_name: str, schedule_id: str = None,
-                   extra_arguments: dict = None, rq_job_id: str = None):
+
+def run_task_by_id(
+	task_id: str, site_name: str, schedule_id: str = None, extra_arguments: dict = None, rq_job_id: str = None
+):
 	"""
 	Module-level RQ entry point for BTU task execution.
 
@@ -65,7 +67,11 @@ def run_task_by_id(task_id: str, site_name: str, schedule_id: str = None,
 	current_job = get_current_job()
 	if current_job:
 		if rq_job_id and current_job.id != rq_job_id:
-			logger.warning("BTU: Expected RQ Job ID '%s' does not match actual '%s'. Using actual.", rq_job_id, current_job.id)
+			logger.warning(
+				"BTU: Expected RQ Job ID '%s' does not match actual '%s'. Using actual.",
+				rq_job_id,
+				current_job.id,
+			)
 		rq_job_id = current_job.id  # actual always wins
 
 	btu_task = frappe.get_doc("BTU Task", task_id)
@@ -93,7 +99,9 @@ def on_btu_task_failure(job, connection, exc_type, exc_value, traceback_obj):
 	site_name = task_kwargs.get("site_name") or job.kwargs.get("site")
 
 	if not site_name:
-		frappe.logger("btu").warning("BTU on_failure callback: cannot determine site_name for job %s; skipping log update.", job.id)
+		frappe.logger("btu").warning(
+			"BTU on_failure callback: cannot determine site_name for job %s; skipping log update.", job.id
+		)
 		return
 
 	try:
@@ -101,9 +109,7 @@ def on_btu_task_failure(job, connection, exc_type, exc_value, traceback_obj):
 		frappe.connect()
 
 		log_name = frappe.db.get_value(
-			"BTU Task Log",
-			{"rq_job_id": job.id, "success_fail": "In-Progress"},
-			"name"
+			"BTU Task Log", {"rq_job_id": job.id, "success_fail": "In-Progress"}, "name"
 		)
 		if not log_name:
 			return
@@ -127,20 +133,21 @@ class StandardOutput(Enum):
 	DB_LOG = 2
 	# FILE was removed: writing to disk is not container-safe and was never used.
 
+
 # Further Reading:
 # https://www.geeksforgeeks.org/decorators-with-parameters-in-python/
 # http://gael-varoquaux.info/programming/decoration-in-python-done-right-decorating-and-pickling.html
 
-class TaskRunner():
 
+class TaskRunner:
 	@staticmethod
 	def split_function_path(function_path):
 		"""
 		Takes a complete function path like this:    'btu.manual_tests.ping_with_wait'
 		And splits into 'module_path' and 'function_name':    (btu.manual_tests, ping_with_wait)
 		"""
-		module_path = '.'.join(function_path.split('.')[:-1])
-		function_name = function_path.split('.')[-1]
+		module_path = ".".join(function_path.split(".")[:-1])
+		function_name = function_path.split(".")[-1]
 		return (module_path, function_name)
 
 	def __init__(self, btu_task, site_name, schedule_id=None, rq_job_id=None):
@@ -149,15 +156,19 @@ class TaskRunner():
 			btu_task : Either a Document or string that represents the primary key of a BTU Task.
 			site_name : Name of the calling Site.
 		"""
-		from btu.btu_core.doctype.btu_task.btu_task import BTUTask as BTUTaskType  # late import required, due to circular reference risks.
+		from btu.btu_core.doctype.btu_task.btu_task import (
+			BTUTask as BTUTaskType,  # late import required, due to circular reference risks.
+		)
 
 		# Validate the 'btu_task' argument:
 		if isinstance(btu_task, BTUTaskType):
 			self.btu_task = btu_task
 		elif isinstance(btu_task, str):
-			self.btu_task = frappe.get_doc('BTU Task', btu_task)
+			self.btu_task = frappe.get_doc("BTU Task", btu_task)
 		else:
-			raise ValueError("Argument 'btu_task' is not a valid BTU Task Document or string name of a Document.")
+			raise ValueError(
+				"Argument 'btu_task' is not a valid BTU Task Document or string name of a Document."
+			)
 
 		# Determine the current, active Site:
 		if not site_name:
@@ -176,9 +187,11 @@ class TaskRunner():
 		self.kwarg_dict = self.btu_task.built_in_arguments() or {}
 		if self.schedule_id:
 			# Override any keys with those specified by the Task Schedule's arguments:
-			schedule_arguments = frappe.get_doc("BTU Task Schedule", self.schedule_id).built_in_arguments() or {}
-			if sys.version_info >= (3,9,0):
-				self.kwarg_dict = self.kwarg_dict | schedule_arguments # merge the 2 dictionaries.
+			schedule_arguments = (
+				frappe.get_doc("BTU Task Schedule", self.schedule_id).built_in_arguments() or {}
+			)
+			if sys.version_info >= (3, 9, 0):
+				self.kwarg_dict = self.kwarg_dict | schedule_arguments  # merge the 2 dictionaries.
 			else:
 				self.kwarg_dict = {**self.kwarg_dict, **schedule_arguments}
 
@@ -208,6 +221,7 @@ class TaskRunner():
 		Returns True if the 'function_string' is actually the path to a BTU-Aware class.
 		"""
 		from btu.btu_core.doctype.btu_task.btu_task import BTU_AWARE_FUNCTION
+
 		result = False
 		if isinstance(callable_function, type):
 			# To find out if this is a subclass of BTU_AWARE_FUNCTION, we have to instantiate it.
@@ -222,7 +236,7 @@ class TaskRunner():
 
 	def _initialize_site_and_database(self):
 		# TODO: This is not longer working in Frappe v15.  Presence of boot doesn't seem to indicate anything??
-		if not hasattr(frappe, 'boot'):
+		if not hasattr(frappe, "boot"):
 			frappe.logger("btu").debug("function_wrapper(): running outside web server, initializing Frappe.")
 			frappe.init(site=self.site_name)
 			frappe.connect()
@@ -239,7 +253,9 @@ class TaskRunner():
 		logger = frappe.logger("btu")
 		logger.info("Begin function_wrapper: task=%s rq_job_id=%s", self.btu_task.name, self.rq_job_id)
 		self._initialize_site_and_database()
-		start_datetime = make_datetime_naive(get_system_datetime_now()) # Recording this in the System Time Zone
+		start_datetime = make_datetime_naive(
+			get_system_datetime_now()
+		)  # Recording this in the System Time Zone
 		self.create_new_log(start_datetime)  # Create a new BTU Task Log, with a status of "In Progress"
 
 		function_threw_exception = False
@@ -250,7 +266,9 @@ class TaskRunner():
 		try:
 			stdout_buffer_for_log = None
 
-			module_object = importlib.import_module(self.module_path())  # Need to import the function's module into scope.
+			module_object = importlib.import_module(
+				self.module_path()
+			)  # Need to import the function's module into scope.
 			function_to_call = getattr(module_object, self.function_name())
 			logger.info("Calling function '%s' in module '%s'.", self.function_name(), self.module_path())
 			logger.debug("Keyword arguments: %s", self.kwarg_dict)
@@ -260,10 +278,14 @@ class TaskRunner():
 				ret = self.option_standard_output(datetime_string, function_to_call)
 			# Option 2: Standard output intercepted, and saved to a SQL table "tabBTU Task Log"
 			elif self.standard_output == StandardOutput.DB_LOG:
-				function_threw_exception, ret, stdout_buffer_for_log = self.option_log_to_sql(datetime_string, function_to_call)
+				function_threw_exception, ret, stdout_buffer_for_log = self.option_log_to_sql(
+					datetime_string, function_to_call
+				)
 			else:
 				# StandardOutput.FILE was explicitly removed (not container-safe, never used).
-				raise ValueError(f"Unsupported StandardOutput mode '{self.standard_output}'. Only STDOUT and DB_LOG are valid.")
+				raise ValueError(
+					f"Unsupported StandardOutput mode '{self.standard_output}'. Only STDOUT and DB_LOG are valid."
+				)
 
 			execution_time = round(time.time() - execution_start, 3)
 			if function_threw_exception:
@@ -277,26 +299,36 @@ class TaskRunner():
 			function_result = Result(False, str(ex), execution_time=execution_time)
 
 		logger.info("Function result: %s", function_result)
-		new_log_id = write_log_for_task(task_id=self.btu_task.name,
-							            result=function_result,
-										log_name=self.task_log_name,
-							            stdout=stdout_buffer_for_log or None,
-							            date_time_started=start_datetime,
-										schedule_id=self.schedule_id)
+		new_log_id = write_log_for_task(
+			task_id=self.btu_task.name,
+			result=function_result,
+			log_name=self.task_log_name,
+			stdout=stdout_buffer_for_log or None,
+			date_time_started=start_datetime,
+			schedule_id=self.schedule_id,
+		)
 		logger.info("Updated BTU Task Log: '%s'", new_log_id)
 		logger.info("End function_wrapper: task=%s", self.btu_task.name)
 
 	def option_standard_output(self, datetime_string, function_to_call):
-		print(f"--------\nBTU Task {self.btu_task.name} starting at: {datetime_string}")  # intentional: STDOUT mode streams directly to process stdout (e.g. log file via supervisor)
+		print(
+			f"--------\nBTU Task {self.btu_task.name} starting at: {datetime_string}"
+		)  # intentional: STDOUT mode streams directly to process stdout (e.g. log file via supervisor)
 		if self.kwarg_dict:
 			if self.is_this_btu_aware_function(function_to_call):
-				ret = function_to_call(self.btu_task.name).run(**self.kwarg_dict)    # create an instance of the BTU-aware class, and call its run() method.
+				ret = function_to_call(self.btu_task.name).run(
+					**self.kwarg_dict
+				)  # create an instance of the BTU-aware class, and call its run() method.
 			else:
-				ret = function_to_call(**self.kwarg_dict)  # ---- call the underlying function + arguments ----
+				ret = function_to_call(
+					**self.kwarg_dict
+				)  # ---- call the underlying function + arguments ----
 		else:
 			# No keyword arguments for this Task:
 			if self.is_this_btu_aware_function(function_to_call):
-				ret = function_to_call(self.btu_task.name).run()    # create an instance of the BTU-aware class, and call its run() method.
+				ret = function_to_call(
+					self.btu_task.name
+				).run()  # create an instance of the BTU-aware class, and call its run() method.
 			else:
 				ret = function_to_call()  # ----call the underlying function----
 		return ret
@@ -317,13 +349,19 @@ class TaskRunner():
 				# Yes, has keyword arguments:
 				if self.kwarg_dict:
 					if self.is_this_btu_aware_function(function_to_call):
-						function_response = function_to_call(self.btu_task.name).run(**self.kwarg_dict)    # create an instance of the BTU-aware class, and call its run() method.
+						function_response = function_to_call(self.btu_task.name).run(
+							**self.kwarg_dict
+						)  # create an instance of the BTU-aware class, and call its run() method.
 					else:
-						function_response = function_to_call(**self.kwarg_dict)  # ---- call the underlying function + arguments ----
+						function_response = function_to_call(
+							**self.kwarg_dict
+						)  # ---- call the underlying function + arguments ----
 				# No, does not have keyword arguments for this Task:
 				else:
 					if self.is_this_btu_aware_function(function_to_call):
-						function_response = function_to_call(self.btu_task.name).run()    # create an instance of the BTU-aware class, and call its run() method.
+						function_response = function_to_call(
+							self.btu_task.name
+						).run()  # create an instance of the BTU-aware class, and call its run() method.
 					else:
 						function_response = function_to_call()  # ----call the underlying function----
 			except Exception as ex:
@@ -331,7 +369,7 @@ class TaskRunner():
 				print(f"ERROR: Exception during function call.  Type = {type(ex)}, Value = {ex}")
 				print(traceback.format_exc())
 			finally:
-				stdout_buffer_for_log = buffer.getvalue()  	 # fetch any Stdout from the buffer.
+				stdout_buffer_for_log = buffer.getvalue()  # fetch any Stdout from the buffer.
 
 		return function_threw_exception, function_response, stdout_buffer_for_log
 
@@ -347,11 +385,15 @@ class TaskRunner():
 		new_log.task = self.btu_task.name
 		new_log.task_desc_short = self.btu_task.desc_short
 		new_log.schedule = self.schedule_id
-		new_log.task_component = 'Main'
+		new_log.task_component = "Main"
 		new_log.date_time_started = date_time_started
-		new_log.success_fail = 'In-Progress'
+		new_log.success_fail = "In-Progress"
 		new_log.rq_job_id = self.rq_job_id  # real RQ job ID, or None if running outside a worker
-		new_log.save(ignore_permissions=True)  # Not even System Administrators are supposed to create and save these.
+		new_log.save(
+			ignore_permissions=True
+		)  # Not even System Administrators are supposed to create and save these.
 		frappe.db.commit()
 		frappe.logger("btu").info("Created BTU Task Log: '%s'", new_log.name)
-		self.task_log_name = new_log.name  # Save the BTU Task Log 'name' to this class, so we can reference it later.
+		self.task_log_name = (
+			new_log.name
+		)  # Save the BTU Task Log 'name' to this class, so we can reference it later.

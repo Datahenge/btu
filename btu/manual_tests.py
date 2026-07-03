@@ -7,7 +7,9 @@ Call these functions from 'Bench Console' or 'Bench Execute'; then validate resu
 """
 
 import frappe
+
 from btu.logging import logger
+
 
 @frappe.whitelist()
 def ping_with_wait(seconds_to_wait):
@@ -15,6 +17,7 @@ def ping_with_wait(seconds_to_wait):
 	Wait N seconds, then reply with a message.
 	"""
 	import time
+
 	if not seconds_to_wait:
 		raise ValueError("Function argument 'seconds_to_wait' is mandatory and has no default.")
 	seconds_to_wait = int(seconds_to_wait)
@@ -29,23 +32,26 @@ def ping_with_wait(seconds_to_wait):
 @frappe.whitelist()
 def send_hello_email_to_user(debug=False):
 	"""
-		NOTE: When via Bench Execute, this will email the Administrator's email address.
-	    Example:  'bench execute btu.manual_tests.send_hello_email_to_user'
+	    NOTE: When via Bench Execute, this will email the Administrator's email address.
+	Example:  'bench execute btu.manual_tests.send_hello_email_to_user'
 	"""
-	import inspect
 	import datetime
+	import inspect
+
 	from btu.btu_core.btu_email import Emailer
 
 	caller_name = inspect.stack()[2][3]
-	if caller_name == 'execute_cmd':
+	if caller_name == "execute_cmd":
 		caller_name = "JavaScript on a web page."
-	if caller_name == '<lambda>':
+	if caller_name == "<lambda>":
 		caller_name = "JavaScript on a web page."
 
 	# Load the session User's document, to acquire their email address.
 	user_doc = frappe.get_doc("User", frappe.session.user)
 	if not user_doc.email:
-		frappe.throw(f"Current user '{user_doc.name}' does not have an Email Address associated with their account.")
+		frappe.throw(
+			f"Current user '{user_doc.name}' does not have an Email Address associated with their account."
+		)
 
 	datetime_now_string = datetime.datetime.now().strftime("%A, %B %d %Y, %-I:%M %p")
 
@@ -62,11 +68,7 @@ def send_hello_email_to_user(debug=False):
 
 	subject = f"From BTU: Hello {user_doc.full_name}"
 
-	Emailer(subject=subject,
-			body=message_body,
-			sender=None,
-			emailto_list=user_doc.email
-	).send()
+	Emailer(subject=subject, body=message_body, sender=None, emailto_list=user_doc.email).send()
 
 	return "Exiting function 'send_hello_email_to_user()'.  If successful, an email will arrive soon."
 
@@ -81,12 +83,9 @@ def test_rq_workers1():
 	From Shell:		bench execute btu.manual_tests.test_rq_workers1
 	Result is printed to terminal.
 	"""
-	result = frappe.enqueue(
-			method="btu.manual_tests.ping_now",
-			queue="default",
-			job_name="test_rq_workers1"
-	)
+	result = frappe.enqueue(method="btu.manual_tests.ping_now", queue="default", job_name="test_rq_workers1")
 	print(result)
+
 
 @frappe.whitelist()
 def test_rq_workers2():
@@ -96,8 +95,8 @@ def test_rq_workers2():
 		From shell:	bench execute btu.manual_tests.test_frappe_enqueue
 	"""
 	frappe.enqueue(
-			method="btu.manual_tests.send_hello_email_to_user",
-			queue='short',
+		method="btu.manual_tests.send_hello_email_to_user",
+		queue="short",
 	)
 	print("Submitted a function 'send_hello_email_to_user()' to the Redis Queue.")
 
@@ -107,16 +106,16 @@ def _find_or_create_ping_task():
 	Finds or creates a 'ping_with_wait' BTU Task document.
 	Returns: Document class.
 	"""
-	filters = { 'function_string': 'btu.manual_tests.ping_with_wait'}
-	task_names = frappe.get_list('BTU Task', filters=filters, pluck='name')
+	filters = {"function_string": "btu.manual_tests.ping_with_wait"}
+	task_names = frappe.get_list("BTU Task", filters=filters, pluck="name")
 	if task_names:
-		task_doc = frappe.get_doc('BTU Task', task_names[0])
+		task_doc = frappe.get_doc("BTU Task", task_names[0])
 	else:
 		# Could not find the 'ping_with_wait' Task; create it:
-		task_doc = frappe.new_doc('BTU Task')
-		task_doc.desc_short = 'Ping after N seconds'
+		task_doc = frappe.new_doc("BTU Task")
+		task_doc.desc_short = "Ping after N seconds"
 		task_doc.desc_long = 'Wait N seconds, then return a "pong" to the caller.'
-		task_doc.function_string = 'btu.manual_tests.ping_with_wait'
+		task_doc.function_string = "btu.manual_tests.ping_with_wait"
 		task_doc.save()
 		task_doc.submit()
 		frappe.db.commit()
@@ -130,8 +129,10 @@ def test_taskrunner_1():
 	"""
 	doc_task = _find_or_create_ping_task()
 	print(f"Immediately queuing Task '{doc_task.name}' in Redis.")
-	print("However, because we're passing invalid arguments, the Task should fail, and create a Task Log indicating this.")
-	arguments = { 'foo': 'Hello', 'bar': 'Mars'}
+	print(
+		"However, because we're passing invalid arguments, the Task should fail, and create a Task Log indicating this."
+	)
+	arguments = {"foo": "Hello", "bar": "Mars"}
 
 	doc_task.push_task_into_queue(extra_arguments=arguments)
 
@@ -142,7 +143,9 @@ def test_taskrunner_2():
 	"""
 	doc_task = _find_or_create_ping_task()
 	print(f"Immediately queuing Task '{doc_task.name}' in Redis.")
-	print("However, it's missing a mandatory argument.  So the Task should fail, and create a Task Log indicating this.")
+	print(
+		"However, it's missing a mandatory argument.  So the Task should fail, and create a Task Log indicating this."
+	)
 	doc_task.push_task_into_queue(extra_arguments=None)
 
 
@@ -152,7 +155,7 @@ def test_taskrunner_3():
 	"""
 	doc_task = _find_or_create_ping_task()
 	print(f"Immediately queuing Task '{doc_task.name}' in Redis.")
-	doc_task.push_task_into_queue(extra_arguments={'seconds_to_wait': 5})
+	doc_task.push_task_into_queue(extra_arguments={"seconds_to_wait": 5})
 
 
 def bytes_as_list_of_hex(some_bytes):
@@ -163,7 +166,7 @@ def bytes_as_list_of_hex(some_bytes):
 	bytes_as_hex = some_bytes.hex()
 	array = []
 	for index in range(0, len(bytes_as_hex), 2):
-		array.append('0x' + bytes_as_hex[index] + bytes_as_hex[index + 1])
+		array.append("0x" + bytes_as_hex[index] + bytes_as_hex[index + 1])
 	return array
 
 
@@ -176,16 +179,13 @@ def test_rq_pickling():
 	"""
 	# pylint: disable=protected-access
 	from rq.job import Job
+
 	from btu.btu_api.endpoints import test_function_ping_now_bytes
 
 	queue_conn = frappe.utils.background_jobs.get_redis_conn()
 
 	# Step 1: Create a new Job.
-	new_job = frappe.enqueue(
-			method="btu.manual_tests.ping_now",
-			queue="default",
-			job_name="Job Name Foo"
-	)
+	new_job = frappe.enqueue(method="btu.manual_tests.ping_now", queue="default", job_name="Job Name Foo")
 
 	print(f"Created new job with ID: {new_job._id}")
 
@@ -211,13 +211,15 @@ def test_with_try_except_logging():
 	Very basic function for testing BTU returning None
 	"""
 	import warnings
+
 	warnings.filterwarnings("ignore", category=DeprecationWarning)
 	from time import sleep
+
 	try:
 		sleep(1.5)
 		print("Hello World")
 		print("Hello Mars")
 		raise RuntimeError()
 	except Exception as ex:
-		logger.error(f"test_with_try_except_logging() : Unhandled exception {repr(ex)}")
+		logger.error(f"test_with_try_except_logging() : Unhandled exception {ex!r}")
 		raise ex

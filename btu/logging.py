@@ -1,4 +1,4 @@
-""" ftp/logger/__init__.py """
+"""ftp/logger/__init__.py"""
 
 # https://docs.python.org/3/howto/logging-cookbook.html
 
@@ -6,20 +6,21 @@
 # EXAMPLE
 #
 # 	from ftp.app_logging import logger
-#	logger.info("This is an info message")
+# logger.info("This is an info message")
 #
 # ########
 
-from inspect import getfullargspec
 import logging
 import os
 import pathlib
+from inspect import getfullargspec
 
 from frappe.utils import get_bench_path
 
 
-class BraceMessage():
-	""" Custom """
+class BraceMessage:
+	"""Custom"""
+
 	def __init__(self, fmt, args, kwargs):
 		self.fmt = fmt
 		self.args = args
@@ -30,7 +31,8 @@ class BraceMessage():
 
 
 class StyleAdapter(logging.LoggerAdapter):
-	""" Custom """
+	"""Custom"""
+
 	# pylint: disable=super-init-not-called
 	def __init__(self, some_logger):
 		self.logger = some_logger
@@ -39,13 +41,11 @@ class StyleAdapter(logging.LoggerAdapter):
 		if self.isEnabledFor(level):
 			msg, log_kwargs = self.process(msg, kwargs)
 			# pylint: disable=protected-access
-			self.logger._log(level, BraceMessage(msg, args, kwargs), (),
-							 **log_kwargs)
+			self.logger._log(level, BraceMessage(msg, args, kwargs), (), **log_kwargs)
 
 	def process(self, msg, kwargs):
 		# pylint: disable=protected-access
-		return msg, {key: kwargs[key]
-					 for key in getfullargspec(self.logger._log).args[1:] if key in kwargs}
+		return msg, {key: kwargs[key] for key in getfullargspec(self.logger._log).args[1:] if key in kwargs}
 
 
 class AppLogger(logging.Logger):
@@ -63,15 +63,14 @@ class AppLogger(logging.Logger):
 		super().info(msg, *args, extra=extra_info, **kwargs)
 
 
-class AppLoggerBuilder():
-
+class AppLoggerBuilder:
 	LOGFILE_DIRPATH = pathlib.Path(get_bench_path()) / "logs"
-	LOGFILE_NAME = 'ftp.log'
+	LOGFILE_NAME = "ftp.log"
 	FALLBACK_LOG_LEVEL = logging.INFO
 
 	@staticmethod
 	def get_default_formatter():
-		formatter = logging.Formatter('%(asctime)s | %(name)s | %(levelname)s | %(message)s')
+		formatter = logging.Formatter("%(asctime)s | %(name)s | %(levelname)s | %(message)s")
 		# formatter = logging.Formatter('%(asctime)s | %(levelname)s | %(message)s')
 		return formatter
 
@@ -80,12 +79,12 @@ class AppLoggerBuilder():
 		Add a file handler to the logger.
 		"""
 		if not AppLoggerBuilder.LOGFILE_DIRPATH.exists():
-			raise IOError(f"Logging directory '{AppLoggerBuilder.LOGFILE_DIRPATH}' does not exist")
+			raise OSError(f"Logging directory '{AppLoggerBuilder.LOGFILE_DIRPATH}' does not exist")
 
 		logfile_path = AppLoggerBuilder.LOGFILE_DIRPATH / AppLoggerBuilder.LOGFILE_NAME
-		file_handler = logging.FileHandler(filename=pathlib.Path(logfile_path).resolve(),
-									       mode='a',
-									       encoding='utf-8')
+		file_handler = logging.FileHandler(
+			filename=pathlib.Path(logfile_path).resolve(), mode="a", encoding="utf-8"
+		)
 		file_handler.setFormatter(AppLoggerBuilder.get_default_formatter())
 		file_handler.setLevel(logging.DEBUG)  # Log everything includding DEBUG messages
 		self.logger.addHandler(file_handler)

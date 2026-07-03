@@ -3,5 +3,6 @@
 
 import unittest
 
+
 class TestBTUConfiguration(unittest.TestCase):
 	pass
