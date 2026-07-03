@@ -1,0 +1,47 @@
+{
+	"folders": [
+		{
+			"name": "BTU",
+			"path": "."
+		},
+		{
+			"name": "Frappe",
+			"path": "../frappe"
+		},
+		{
+			"name": "BTU Scheduler",
+			"path": "/home/sysop/projects/python/btu_py"
+		}
+	],
+	"settings": {
+		"python.defaultInterpreterPath": "../../env/bin/python",
+		"python.analysis.diagnosticMode": "workspace",
+		"python.analysis.extraPaths": [
+			"../frappe"
+		],
+		"editor.detectIndentation": false,
+		"editor.insertSpaces": false,
+		"[python]": {
+			"editor.defaultFormatter": "charliermarsh.ruff",
+			"editor.formatOnSave": true,
+			"editor.codeActionsOnSave": {
+				"source.fixAll.ruff": "explicit",
+				"source.organizeImports.ruff": "explicit"
+			}
+		},
+		"ruff.enable": true,
+		"ruff.importStrategy": "useBundled",
+		"ruff.configuration": "${workspaceFolder:BTU}/pyproject.toml",
+		"files.exclude": {
+			"**/*.egg-info": true,
+			"**/__pycache__": true,
+			".ruff_cache": true
+		}
+	},
+	"extensions": {
+		"recommendations": [
+			"charliermarsh.ruff",
+			"ms-python.python"
+		]
+	}
+}

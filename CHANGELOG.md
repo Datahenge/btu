@@ -34,7 +34,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Added
 
 - **Per-schedule time zones** — Each BTU Task Schedule can specify its own IANA time zone. Cron times are entered in local time; UTC conversion happens at scheduling time. Defaults to the site time zone from System Settings.
-- **Scheduler Redis RPC** — Control commands between the Frappe app and the BTU Scheduler daemon (ping, reload, cancel) now use Redis instead of Unix domain sockets. See [docs/scheduler_redis_rpc.md](docs/scheduler_redis_rpc.md).
+- **Scheduler Redis RPC** — Control commands between the Frappe app and the BTU Scheduler daemon (ping, reload, cancel) now use Redis instead of Unix domain sockets. See [docs/reference/redis-rpc.md](docs/reference/redis-rpc.md).
 - **Documentation** — Technical design overview, Architecture Decision Records (ADRs), expanded Auto Report guide, and contributor layout docs.
 - **Repository layout** — Shared utilities (`btu/utils/`), sample tasks (`btu/samples/`), and diagnostics (`btu/diagnostics/`). Deprecated top-level shims remain for compatibility.
 - **Contributor tooling** — `AGENTS.md`, VS Code workspace, and Ruff lint/format configuration.
@@ -45,7 +45,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **RQ task entry point** — Workers call `run_task_by_id` with primitive arguments instead of pickling bound methods or Frappe Document objects.
 - **`TaskComponent` API** — The `function` argument must be a fully-qualified dotted path string (e.g. `myapp.module.my_function`). Function objects are no longer accepted.
 - **Logging** — Replaced ad-hoc `print()` and `dprint()` calls with standard Python logging via the `btu` logger.
-- **Non-production scripts** — Moved out of the main package to documented Gists (see [docs/dev/gists.md](docs/dev/gists.md)).
+- **Non-production scripts** — Moved out of the main package to documented Gists (see [docs/internals/gists.md](docs/internals/gists.md)).
 
 ### Fixed
 

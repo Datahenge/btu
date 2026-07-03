@@ -8,17 +8,17 @@
 |-------|------|-----|
 | 1 | [AGENTS.md](AGENTS.md) | This file — project map, conventions, boundaries |
 | 2 | [README.md](README.md) | Product overview, links to official docs |
-| 3 | [docs/index.md](docs/index.md) | Local documentation index |
-| 4 | Topic-specific docs under [docs/](docs/) | Installation, configuration, CLI/web guides, FAQ |
-| 5 | [docs/scheduler_redis_rpc.md](docs/scheduler_redis_rpc.md) | Scheduler Redis RPC protocol (when touching scheduler integration) |
-| 6 | [docs/dev/index.md](docs/dev/index.md) | Contributor layout and archived scripts index |
-| 7 | [docs/technical_design.md](docs/technical_design.md) | Why BTU is two components; product constraints |
+| 3 | [docs/index.md](docs/index.md) | Documentation home (MkDocs source) |
+| 4 | [mkdocs.yml](mkdocs.yml) | Site nav and build config |
+| 5 | Topic docs under [docs/](docs/) | get-started, concepts, guides, operations, … |
+| 6 | [docs/reference/redis-rpc.md](docs/reference/redis-rpc.md) | Scheduler Redis RPC (when touching scheduler integration) |
+| 7 | [docs/internals/](docs/internals/) | ADRs, technical design, contributor docs |
 
-Official user documentation: <https://datahenge.github.io/btu/>
+Official user documentation: <https://btu.datahenge.com/>
 
 ## What this is
 
-**Background Tasks Unleashed (BTU)** is a [Frappe Framework](https://frappeframework.com) app for scheduling and running Python background tasks. It replaces Frappe's built-in Scheduled Job Types with cron-based schedules, full stdout/stderr logging, email notifications, and an optional external scheduler daemon.
+**Background Tasks Unleashed (BTU)** is a [Frappe Framework](https://frappeframework.com) app for scheduling and running Python background tasks. It replaces Frappe's built-in Scheduled Job Types with cron-based schedules, full stdout/stderr logging, email notifications, and an external scheduler daemon.
 
 - **Branch:** (see current git branch)
 - **Python Version:** (see [pyproject.toml](pyproject.toml))
@@ -27,14 +27,14 @@ Official user documentation: <https://datahenge.github.io/btu/>
 
 ## Related projects (separate repos)
 
-Do not confuse this repo with these companions:
+BTU is **one product, two required components**. User docs are unified at btu.datahenge.com; code stays in separate repos.
 
 | Project | Purpose |
 |---------|---------|
-| [btu_scheduler_daemon](https://github.com/Datahenge/btu_scheduler_daemon) | Rust scheduler daemon (legacy) |
-| [btu_scheduler_py](https://github.com/Datahenge/btu_scheduler_py) | Python scheduler daemon (2025+) |
+| [btu_scheduler_py](https://github.com/Datahenge/btu_scheduler_py) | **Canonical** Python scheduler daemon |
+| [btu_scheduler_daemon](https://github.com/Datahenge/btu_scheduler_daemon) | Rust scheduler — **retired** |
 
-Scheduler ↔ Frappe communication uses a Redis RPC protocol documented in [docs/scheduler_redis_rpc.md](docs/scheduler_redis_rpc.md).
+Scheduler ↔ Frappe communication uses Redis RPC documented in [docs/reference/redis-rpc.md](docs/reference/redis-rpc.md).
 
 ## Repository layout
 
@@ -44,34 +44,17 @@ btu/                          # Python package root (Frappe app)
 ├── __init__.py               # Version; re-exports btu.utils and rq_admin shims
 ├── logging.py                # BTU logger configuration
 ├── utils/                    # Shared helpers (Result, dates, cron, messaging)
-│   ├── result.py
-│   ├── datetime.py
-│   ├── cron.py
-│   ├── messaging.py
-│   └── misc.py
 ├── samples/                  # Example BTU Task target functions
 ├── diagnostics/              # bench execute smoke tests (not production tasks)
-├── tests/                    # Cross-module unit tests (utils, auto_report, …)
-├── examples.py               # Deprecated shim → btu.samples
-├── manual_tests.py           # Deprecated shim → btu.diagnostics
-├── auto_report.py            # Deprecated shim → btu.btu_core.auto_report
+├── tests/                    # Cross-module unit tests
 ├── btu_core/                 # Core DocTypes and task execution
-│   ├── task_runner.py        # RQ entry point; runs BTU Tasks in workers
-│   ├── run_later.py          # Deferred execution helpers
-│   ├── housekeeping.py       # BTU-specific maintenance (e.g. transient log cleanup)
-│   ├── rq_admin.py           # Failed RQ job tools (BTU Configuration UI)
-│   ├── auto_report.py        # Scheduled report build and delivery
-│   ├── btu_email.py          # Email helpers for configuration and notifications
-│   ├── wrapped_function.py   # Function wrapping for logging
-│   ├── doctype/              # BTU Task, BTU Task Schedule, BTU Task Log, etc.
-│   └── report/               # Frappe Script Reports (statistics, summaries)
 ├── btu_api/                  # Scheduler daemon API (Redis RPC, endpoints)
 ├── patches/                  # Migration patches
-├── fixtures/                 # Exported Workspaces (see hooks.py)
-├── templates/                # Frappe web templates
+├── fixtures/                 # Exported Workspaces
 └── config/                   # Desktop module config
 
-docs/                         # Markdown documentation (published to GitHub Pages)
+docs/                         # MkDocs source → https://btu.datahenge.com/
+mkdocs.yml                    # Documentation site configuration
 ```
 
 Frappe modules (see [btu/modules.txt](btu/modules.txt)): `btu_core`, `btu_api`.
@@ -82,7 +65,7 @@ Frappe modules (see [btu/modules.txt](btu/modules.txt)): `btu_core`, `btu_api`.
 2. **BTU Task Schedule** — binds a Task to a cron expression (with timezone support).
 3. **BTU Task Log** — records execution output, status, and timing.
 4. **RQ (Redis Queue)** — Frappe workers execute tasks via `run_task_by_id` in `task_runner.py`.
-5. **Scheduler daemon** (required for recurring schedules) — polls schedules and enqueues work; controlled via Redis RPC. See [docs/technical_design.md](docs/technical_design.md).
+5. **Scheduler daemon** (required for recurring schedules) — [btu_scheduler_py](https://github.com/Datahenge/btu_scheduler_py); controlled via Redis RPC. See [docs/internals/technical-design.md](docs/internals/technical-design.md).
 
 Key hook in [btu/hooks.py](btu/hooks.py):
 
@@ -103,28 +86,26 @@ Key hook in [btu/hooks.py](btu/hooks.py):
 
 ## Editor setup
 
-Open [btu.code-workspace](btu.code-workspace) in VS Code / Cursor. It assumes this repo lives at `<bench>/apps/btu` with Frappe at `<bench>/apps/frappe`, and uses the bench virtualenv at `<bench>/env/bin/python`.
+Open [btu.code-workspace](btu.code-workspace) in VS Code / Cursor — **BTU + Frappe** (bench layout: `apps/btu`, `apps/frappe`, `env/bin/python`).
 
-Ruff lint/format settings extend [../frappe/pyproject.toml](../frappe/pyproject.toml). Optional CLI install: `../../env/bin/pip install -e ".[dev]"` from this directory.
+Optional cross-repo workspace: copy [btu-full.code-workspace.example](btu-full.code-workspace.example) to gitignored `btu-full.code-workspace` and set the scheduler folder path.
+
+Docs: `pip install -e ".[docs]"` then `mkdocs serve`. See [docs/internals/contributing-docs.md](docs/internals/contributing-docs.md).
+
+Ruff lint/format settings extend [../frappe/pyproject.toml](../frappe/pyproject.toml).
 
 ## Bench commands (typical)
 
-This app is installed in a Frappe bench site. Common operations:
-
 ```bash
-# From the bench directory (not this app directory):
 bench --site <site> migrate
 bench --site <site> run-tests --app btu
-bench --site <site> console   # interactive Python shell with frappe loaded
-bench restart                 # after hooks.py or worker-related changes
+bench --site <site> console
+bench restart
 ```
-
-Linux build prerequisites for scheduler daemon: `pkg-config libsystemd-dev`.
 
 ## Boundaries — do not change without explicit request
 
 - Version numbers in [btu/__init__.py](btu/__init__.py) and git tags
-- Published GitHub Pages docs in `docs/` (unless the task is documentation)
 - LICENSE or copyright headers
 - Unrelated DocType JSON field changes (schema migrations need care)
 

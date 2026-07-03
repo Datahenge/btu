@@ -16,7 +16,6 @@ import cron_descriptor
 
 # Frappe
 import frappe
-import pytz
 from frappe import _
 from frappe.model.document import Document
 

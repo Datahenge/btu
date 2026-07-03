@@ -4,7 +4,7 @@
  "creation": "2021-11-03 20:53:46.334323",
  "description": "Configuration data for BTU App.",
  "doctype": "DocType",
- "documentation": "https://datahenge.github.io/btu/",
+ "documentation": "https://btu.datahenge.com/",
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [

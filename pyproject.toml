@@ -27,6 +27,9 @@ version = {attr = "btu.__version__"}
 dev = [
 	"ruff>=0.8",
 ]
+docs = [
+	"mkdocs-material~=9.7",
+]
 
 # Inherits Frappe's lint/format rules (tabs, line-length 110, etc.).
 # Requires this repo to live at <bench>/apps/btu with Frappe at <bench>/apps/frappe.

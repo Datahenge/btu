@@ -77,7 +77,7 @@ def run_task_by_id(
 
 def on_btu_task_failure(
 	job: Job,
-	connection: redis.client.Redis,
+	_connection: redis.client.Redis,
 	exc_type: type[BaseException] | None,
 	exc_value: BaseException | None,
 	traceback_obj: TracebackType | None,
@@ -192,9 +192,9 @@ class TaskRunner:
 		return TaskRunner.split_function_path(self.btu_task.function_string)[0]
 
 	def add_keyword_arguments(self, **kwargs: object) -> None:
-		"""Replace stored keyword arguments with ``kwargs`` (or clear if empty)."""
+		"""Merge ``kwargs`` into stored keyword arguments (or clear if empty)."""
 		if kwargs:
-			self.kwarg_dict = kwargs
+			self.kwarg_dict = (self.kwarg_dict or {}) | kwargs
 		else:
 			self.kwarg_dict = None
 		frappe.logger("btu").debug("TaskRunner keyword arguments: %s", self.kwarg_dict)
@@ -216,14 +216,13 @@ class TaskRunner:
 		return result
 
 	def _initialize_site_and_database(self) -> None:
-		# TODO: This is not longer working in Frappe v15.  Presence of boot doesn't seem to indicate anything??
-		if not hasattr(frappe, "boot"):
+		if not getattr(frappe.local, "initialised", None):
 			frappe.logger("btu").debug("function_wrapper(): running outside web server, initializing Frappe.")
 			frappe.init(site=self.site_name)
 			frappe.connect()
 			frappe.logger("btu").debug("Frappe initialization complete.")
 		else:
-			frappe.logger("btu").debug("function_wrapper(): running directly on web server.")
+			frappe.logger("btu").debug("function_wrapper(): Frappe already initialised.")
 
 	def function_wrapper(self) -> None:  # pylint: disable=too-many-locals, too-many-statements, too-many-branches
 		"""Import, invoke, and log the task function; update the BTU Task Log with the result."""

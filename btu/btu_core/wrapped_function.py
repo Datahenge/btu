@@ -7,10 +7,6 @@ import frappe
 from btu.btu_core.doctype.btu_task.btu_task import create_and_run_one_shot
 
 
-class WrappedFunction:
-	"""Placeholder for future run-later wrapper utilities."""
-
-
 def enqueued_run_later_instance(run_later_key: str) -> None:
 	"""Execute a BTU Run Later record (normally invoked from an RQ worker)."""
 	# NOTE: This function will normally be running via RQ Workers.
@@ -33,10 +29,12 @@ def enqueued_run_later_instance(run_later_key: str) -> None:
 				"Creating and running a One-Shot task in the current thread of execution."
 			)
 			# Run a One-Shot task, but don't enqueue...we're already in one.
+			raw_arguments = doc_run_later.btu_task_arguments
+			arguments = json.loads(raw_arguments) if raw_arguments else {}
 			create_and_run_one_shot(
 				short_description=doc_run_later.new_task_name,
 				function_path=doc_run_later.new_task_function_path,
-				arguments=json.loads(doc_run_later.btu_task_arguments),
+				arguments=arguments,
 				queue_name=None,
 			)
 

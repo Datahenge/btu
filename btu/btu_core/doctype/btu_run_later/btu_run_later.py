@@ -3,7 +3,6 @@
 # Copyright (c) 2021-2026, Datahenge LLC and contributors
 # For license information, please see license.txt
 
-import frappe
 from frappe.model.document import Document
 
 from btu import get_system_datetime_now

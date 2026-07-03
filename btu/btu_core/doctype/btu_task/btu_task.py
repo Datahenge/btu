@@ -22,7 +22,11 @@ from frappe.model.document import Document
 from btu import Result, dict_to_dateless_dict, get_system_datetime_now, make_datetime_naive
 from btu.btu_core.doctype.btu_task_log.btu_task_log import write_log_for_task
 from btu.btu_core.form_options import validate_rq_queue_name
-from btu.btu_core.task_defaults import apply_task_defaults_from_configuration
+from btu.btu_core.task_defaults import (
+	TASK_DEFAULT_FIELDS,
+	apply_task_defaults_from_configuration,
+	get_task_defaults_from_configuration,
+)
 
 NoneType = type(None)
 
@@ -121,7 +125,7 @@ class BTUTask(Document):
 		apply_task_defaults_from_configuration(
 			self,
 			doc_config,
-			fields=("queue_name", "max_task_duration"),
+			fields=TASK_DEFAULT_FIELDS,
 		)
 		self._copy_default_email_recipients(doc_config)
 
@@ -366,7 +370,7 @@ def create_and_run_one_shot(
 	doc_task.arguments = json.dumps(arguments, indent=4) if arguments else None
 	doc_task.run_only_as_worker = bool(queue_name)
 	doc_task.queue_name = queue_name
-	doc_task.max_task_duration = 3600
+	doc_task.max_task_duration = get_task_defaults_from_configuration()["max_task_duration"]
 	doc_task.flags.ignore_permissions = 1
 	doc_task.save()
 	doc_task.submit()

@@ -41,7 +41,7 @@ class Sanchez:
 		elif isinstance(func, string_types):
 			self.function_name = as_text(func)
 		elif not inspect.isclass(func) and callable(func):  # a callable class instance
-			self._instance = func
+			self.instance = func
 			self.function_name = "__call__"
 		else:
 			raise TypeError(f"Expected a callable or a string, but got: {func}")
@@ -116,7 +116,7 @@ def execute_job(
 		frappe.log_error(title=method_name)
 		raise
 
-	except:
+	except Exception:
 		frappe.db.rollback()
 		frappe.log_error(title=method_name)
 		frappe.db.commit()

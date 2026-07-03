@@ -1,0 +1,37 @@
+# Writing task functions
+
+## Function path
+
+BTU Task **Function** must be a string:
+
+```
+myapp.my_module.my_function
+```
+
+Function objects are not accepted (15.1+).
+
+## Signature
+
+Tasks receive kwargs from **Function Arguments**. No special base class required.
+
+## Return values
+
+Return normally on success. Raise on failure — BTU captures traceback in Task Log.
+
+Optional: return `btu.Result` for structured messages in custom wrappers.
+
+## Logging
+
+Use Python `logging` or `frappe.logger("btu")`. Stdout/stderr are captured into Task Log.
+
+## Samples
+
+| Path | Purpose |
+|------|---------|
+| `btu.samples.simple.hello_world` | Minimal example |
+| `btu.samples.errors.raise_error` | Failure testing |
+| `btu.diagnostics.smoke.ping_with_wait` | Worker smoke test |
+
+## Packaging
+
+Custom functions must live in an app installed on the bench where workers run.

@@ -10,16 +10,15 @@
 
 # Standard Library
 import json
-from email.mime.text import MIMEText
 from enum import Enum
 from typing import TYPE_CHECKING, Any
 
 # Frappe Library
 import frappe
-from frappe import _
 
 # Third Party
 import mailchimp_transactional as MailchimpTransactional  # This is the official Python SDK for Mandrill
+from frappe import _
 from frappe.model.document import Document
 
 # BTU
@@ -207,7 +206,7 @@ class Emailer:
 				html_body = self.body.replace("\n", "<br>")
 				new_message["html"] = html_body
 			else:
-				new_message["text"] = MIMEText(self.body, "plain")
+				new_message["text"] = self.body
 
 			response = new_mandrill_client().messages.send({"message": new_message})
 
@@ -223,6 +222,22 @@ class Emailer:
 			print_both(f"Error while sending email via Mandrill: {error_string}")
 			frappe.logger("btu").debug("Message sent to Mandrill:\n%s", json.dumps(new_message, indent=4))
 			frappe.msgprint(f"Error while sending email via Mandrill: {error_string}")
+
+	def _apply_subject_prefix(self, subject: str) -> str:
+		"""Apply an environment prefix to the email subject when configured."""
+		return (
+			f"({self.doc_btu_config.environment_name}) {subject}"
+			if self.doc_btu_config.environment_name
+			else subject
+		)
+
+	def _apply_body_prefix(self, body: str) -> str:
+		"""Apply an environment prefix to the email body when configured."""
+		if not body:
+			body = ""
+		if self.doc_btu_config.environment_name:
+			body = f"(sent from the ERPNext {self.doc_btu_config.environment_name} environment)\n\n" + body
+		return body
 
 
 def _build_recipients_from_task_log(doc_task_log: "BTUTaskLog") -> dict[str, dict[str, int]]:

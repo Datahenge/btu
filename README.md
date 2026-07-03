@@ -1,45 +1,46 @@
 ## Background Tasks Unleashed (BTU) v15
 
-For details, please read the project's **[Official Documentation](https://datahenge.github.io/btu/)**.
+**[Official documentation](https://btu.datahenge.com/)** — Frappe app + Python scheduler, one product.
 
-If you're looking for its companion application, the Rust-based **BTU Scheduler**, that project is maintained <a href="https://github.com/Datahenge/btu_scheduler_daemon" target='_blank'>on a separate GitHub site</a>.
-
-🆕 **NEW in 2025** - Python version of the BTU Scheduler, [btu_scheduler_py](https://github.com/Datahenge/btu_scheduler_py)
+Companion scheduler: **[btu_scheduler_py](https://github.com/Datahenge/btu_scheduler_py)** (required for recurring schedules). The legacy Rust scheduler is [retired](https://btu.datahenge.com/internals/legacy-rust-scheduler/).
 
 ### What is this?
+
 Background Tasks Unleashed is:
 
-* a [Frappe Framework](https://github.com/frappe) application for Task Scheduling and Automation.
-
-* a tool for running tasks or processes *automatically*, on a repeating schedule, in the background of your Frappe web application.
-
-* a robust alternative to the out-of-the-box **`Scheduled Job Types`** feature in Frappe v13+
-
-<img style="text-align: center;" src="https://datahenge.github.io/btu/images/btu_screenshot_workspace_1.png" alt="BTU Workspace" title="image Title" width="800"/>
+* a [Frappe Framework](https://frappeframework.com) application for task scheduling and automation
+* a tool for running Python processes automatically on a repeating schedule in the background
+* a robust alternative to Frappe's built-in **Scheduled Job Types** for business-configured work
 
 ### Capabilities
-Using only your web browser, take full control of the BTU application.  No need to SSH and modify `hooks.py`.
 
-* **Tasks** organize your reusable jobs, enabling you to run any Python function (standard or custom) and pass your own arguments.
-* **Schedules** will run Tasks in the background, at any cadence required (FYI, we can do cron...*with timezones!*)
-* **Logs** give you visibility into your Task history.  Not just success or fail, but the *complete standard output and errors*.
+Using the Desk (no SSH, no `hooks.py` edits):
 
-You can also:
+* **Tasks** — run any Python function with your own arguments
+* **Schedules** — cron with per-schedule time zones
+* **Logs** — complete stdout/stderr history
+* **Run Later** — deferred one-shot work with visibility
 
-* Run any Task on-demand.
-* When a scheduled Task completes, automatically receive an email notification (including CC and BCC)
-* Use an included CLI application to interact with the BTU from a shell terminal, instead of your web browser.
-
-----
 ### Installation
-A complete [Installation Guide](https://datahenge.github.io/btu/installation.html) is available on BTU's GitHub Pages site.
 
-### Linux Prerequisites
+See the unified guide: **[Installation](https://btu.datahenge.com/get-started/installation/)**
+
 ```bash
-apt install pkg-config libsystemd-dev
+bench get-app --branch version-15 https://github.com/Datahenge/btu
+bench --site YOUR_SITE install-app btu
 ```
 
-### Copyright and License
-* Background Tasks Unleashed (BTU) is licensed MIT. (*See LICENSE.md file*)
-* Copyright 2021-2026, Datahenge LLC
-* Maintainer: Brian Pond <brian@datahenge.com>
+Plus [BTU Scheduler](https://github.com/Datahenge/btu_scheduler_py) and RQ workers — details on the docs site.
+
+### Quick links
+
+| Topic | Link |
+|-------|------|
+| Why two components? | [Why BTU](https://btu.datahenge.com/get-started/why-btu/) |
+| Run Later poller | [Recipe](https://btu.datahenge.com/recipes/set-up-run-later-poller/) |
+| Scheduler config | [Operations](https://btu.datahenge.com/operations/scheduler-config/) |
+| Changelog | [Changelog](https://btu.datahenge.com/get-started/changelog/) |
+
+### License
+
+MIT — Datahenge LLC

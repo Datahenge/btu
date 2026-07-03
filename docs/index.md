@@ -1,28 +1,34 @@
-## Background Tasks Unleashed (BTU)
-Background Tasks Unleashed is:
+# Background Tasks Unleashed
 
-* a <a href="https://frappeframework.com" target="_blank">Frappe Framework</a> application for Task Scheduling and Automation.
-* a tool for running tasks or processes automatically, on a repeating schedule, in the background of your Frappe web application.
-* a robust alternative to the out-of-the-box Scheduled Job Types feature in Frappe v13+
-* an pair of open source projects on GitHub
-  * **BTU**: [https://github.com/Datahenge/btu](https://github.com/Datahenge/btu)
-  * **BTU Scheduler** : [https://github.com/Datahenge/btu_scheduler_daemon](https://github.com/Datahenge/btu_scheduler_daemon)
+**BTU** is a pair of open-source tools for scheduling and running Python background work in [Frappe Framework](https://frappeframework.com) sites:
 
-### Table of Contents
-* [Installation](https://datahenge.github.io/btu/installation.html)
-* [Scheduler Configuration](https://datahenge.github.io/btu/configuration.html)
+1. **BTU Frappe app** ([Datahenge/btu](https://github.com/Datahenge/btu)) — Desk UI, Tasks, Schedules, Logs, Run Later, Configuration.
+2. **BTU Scheduler** ([Datahenge/btu_scheduler_py](https://github.com/Datahenge/btu_scheduler_py)) — cron engine that reads schedules and fires tasks at run time.
 
-### User Guides
-  * [Web Interface](https://datahenge.github.io/btu/guide_web.html)
-  * [Command Line Interface](https://datahenge.github.io/btu/guide_cli.html)
-  * [Automatic Report Delivery](https://datahenge.github.io/btu/guide_auto_report.html)
+Neither component works alone. Both are required for recurring schedules.
 
-### Frequently Asked Questions (FAQ)
-Answers to frequently asked questions [can be found here.](https://datahenge.github.io/btu/faq.html)
+## Why use BTU?
 
-### Technical Design
-[Technical design](technical_design.md) describes why BTU is split across a Frappe app and a scheduler daemon, and the product constraints behind Run Later and Redis RPC. Maintainer ADRs: [docs/dev/adr/](dev/adr/README.md).
+- **Desk-first** — create and manage schedules without editing `hooks.py` or redeploying code.
+- **Cron with time zones** — per-schedule IANA time zones; enter local times, BTU handles UTC.
+- **Full logging** — stdout and stderr captured in BTU Task Log, not just success/fail.
+- **Email notifications** — optional alerts on completion or failure via Frappe Email Account.
+- **Run Later** — defer one-shot work with Desk visibility (not invisible RQ `enqueue_at`).
 
-### Developer
-* [Repository layout](dev/repository_layout.md)
-* [Archived utility scripts (Gists)](dev/gists.md)
+## Quick links
+
+| I want to… | Start here |
+|------------|------------|
+| Install BTU end-to-end | [Installation](get-started/installation.md) |
+| Understand the architecture | [Mental model](concepts/mental-model.md) |
+| Set up deferred work | [Run Later](concepts/run-later.md) → [Poller recipe](recipes/set-up-run-later-poller.md) |
+| Configure the scheduler daemon | [Scheduler configuration](operations/scheduler-config.md) |
+| Configure email | [Email integration](integrations/email.md) |
+
+## Requirements
+
+- Frappe v15 bench with Redis and RQ workers
+- PostgreSQL or MariaDB (scheduler reads the same site database)
+- BTU Scheduler daemon running continuously (`btu-py run-daemon`)
+
+ERPNext is **not** required.

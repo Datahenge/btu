@@ -14,10 +14,11 @@ import frappe
 import redis
 
 # Custom Apps
-from temporal_lib import datetime_to_iso_string, validate_datatype
+from temporal_lib.tlib_types import datetime_to_iso_string, validate_datatype
 
 from btu import get_system_datetime_now
 from btu.btu_core.doctype.btu_task.btu_task import create_and_run_one_shot
+from btu.btu_core.form_options import validate_rq_queue_name
 
 NoneType = type(None)
 
@@ -63,6 +64,7 @@ def enqueue_for_later(
 	"""Enqueue a one-shot task in Redis to run after ``not_before_time`` (option 1 of 2)."""
 	# TODO : validate path to function
 	validate_datatype("arguments", arguments, (dict, NoneType), False)
+	validate_rq_queue_name(target_queue)
 
 	if unique_identifier and exists_unique_identifier(unique_identifier):
 		frappe.logger("btu").info(
@@ -86,7 +88,7 @@ def enqueue_for_later(
 		"status": "pending",
 		"unique_identifier": unique_identifier or "",
 	}
-	new_redis_queue_connection().hmset(new_key, payload)
+	new_redis_queue_connection().hset(new_key, mapping={key: str(value) for key, value in payload.items()})
 	frappe.logger("btu").info("Added run_later key to Redis: %s", new_key)
 
 
@@ -98,7 +100,11 @@ def create_doc_run_later(
 	task_arguments: dict[str, Any] | str,
 	redis_queue_name: str = "short",
 ) -> str:
-	"""Create a BTU Run Later document for deferred execution; return its name."""
+	"""Create a BTU Run Later document for deferred execution; return its name.
+
+	Public API for integrations and ``bench execute`` callers (SQL/document path, option 2 of 2).
+	"""
+	validate_rq_queue_name(redis_queue_name)
 	doc_later = frappe.new_doc("BTU Run Later")
 	doc_later.comms_type = comms_type
 	doc_later.hold_until = hold_until_datetime
@@ -138,7 +144,13 @@ def _release_poll_lock() -> None:
 
 @frappe.whitelist()
 def poll_for_ready_work() -> None:
-	"""Poll Redis and SQL for run-later work ready to execute (run at least every minute)."""
+	"""Poll Redis and SQL for run-later work ready to execute (run at least every minute).
+
+	Not registered in ``hooks.py`` scheduler_events. Typical deployment: a BTU Task whose
+	function path is ``btu.btu_core.run_later.poll_for_ready_work``, plus a BTU Task
+	Schedule on that Task firing every 1-5 minutes. BTU then provides logging, retries,
+	and the usual task guarantees for the poller itself.
+	"""
 	# 1. Loop through everything that's Ready to be executed.
 	# 2. For each found, create a One-Shot BTU Task, and then immediately run via queue.
 
@@ -176,8 +188,18 @@ def _run_tasks_from_redis_database() -> None:
 		if data.get("status", "") != "pending":
 			continue  # nothing to do here, the task is not in a "pending" status.
 
-		if int(data.get("not_before_timestamp")) > timestamp_now:
-			continue  # not-yet time to enqueue this task.
+		not_before_timestamp = data.get("not_before_timestamp")
+		if not_before_timestamp is None:
+			frappe.logger("btu").warning("Malformed run_later key %s: missing not_before_timestamp", key)
+			continue
+		try:
+			if int(not_before_timestamp) > timestamp_now:
+				continue  # not-yet time to enqueue this task.
+		except (TypeError, ValueError):
+			frappe.logger("btu").warning(
+				"Malformed run_later key %s: invalid not_before_timestamp %r", key, not_before_timestamp
+			)
+			continue
 
 		arguments = data.get("arguments", {})
 		if arguments:
@@ -263,7 +285,6 @@ def identify_timeouts() -> None:
 			else:
 				doc_run_later.execution_status = "Pending Future"
 				doc_run_later.save()
-				frappe.db.commit()
 			frappe.db.commit()
 		except Exception as ex:
 			frappe.logger("btu").error("identify_timeouts() error for %s: %s", run_later_key, ex)
