@@ -4,6 +4,16 @@
 frappe.ui.form.on('BTU Task', {
 	onload(frm) {
 		frm.set_query('queue_name', 'btu.btu_core.form_options.get_rq_queue_names');
+		if (frm.is_new()) {
+			frappe.xcall('btu.btu_core.task_defaults.get_new_task_defaults').then((defaults) => {
+				if (!defaults) {
+					return;
+				}
+				for (const [fieldname, value] of Object.entries(defaults)) {
+					frm.set_value(fieldname, value);
+				}
+			});
+		}
 	},
 
 	refresh(frm) {

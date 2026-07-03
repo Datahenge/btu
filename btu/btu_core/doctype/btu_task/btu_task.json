@@ -59,6 +59,7 @@
   {
    "fieldname": "amended_from",
    "fieldtype": "Link",
+   "hidden": 1,
    "label": "Amended From",
    "no_copy": 1,
    "options": "BTU Task",
@@ -128,7 +129,7 @@
   },
   {
    "default": "0",
-   "description": "By default, all stdout is capture in the BTU Task Log.  When this box is marked, stdout will -also- get logged to stdout.",
+   "description": "Unmarked: Task's stdout exists exclusively in BTU Task Log<br>Marked: Task's stdout routed to -both- BTU Task Log and stdout",
    "fieldname": "repeat_log_in_stdout",
    "fieldtype": "Check",
    "label": "Repeat log in stdout"
@@ -139,8 +140,7 @@
    "fieldname": "queue_name",
    "fieldtype": "Autocomplete",
    "label": "Queue Name",
-   "reqd": 1,
-   "reqd_in_database": 1
+   "reqd": 1
   },
   {
    "default": "Persistent",
@@ -150,7 +150,6 @@
    "label": "Type",
    "options": "Persistent\nOne-Shot\nSubtask\nOther",
    "reqd": 1,
-   "reqd_in_database": 1,
    "search_index": 1,
    "set_only_once": 1
   },
@@ -198,9 +197,9 @@
    "link_fieldname": "task"
   }
  ],
- "modified": "2025-09-14 15:50:44.501821",
+ "modified": "2026-07-03 10:18:22.221837",
  "modified_by": "Administrator",
- "module": "BTU_Core",
+ "module": "btu_core",
  "name": "BTU Task",
  "naming_rule": "Expression (old style)",
  "owner": "Administrator",
@@ -220,6 +219,7 @@
    "write": 1
   }
  ],
+ "row_format": "Dynamic",
  "sort_field": "desc_short",
  "sort_order": "ASC",
  "states": [],

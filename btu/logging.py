@@ -64,8 +64,6 @@ class AppLogger(logging.Logger):
 class AppLoggerBuilder:
 	"""Build and configure the BTU application logger."""
 
-	LOGFILE_DIRPATH = pathlib.Path(get_bench_path()) / "logs"
-	LOGFILE_NAME = "ftp.log"
 	FALLBACK_LOG_LEVEL = logging.INFO
 
 	logger: logging.Logger

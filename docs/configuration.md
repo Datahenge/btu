@@ -21,10 +21,10 @@ time_zone_string="America/Los_Angeles"
 tracing_level="INFO"
 
 # Email Setup
-email_address_from = "my_email_account@datahenge.com"
+email_address_from = "foo@example.com"
 email_host_name = "smtp.my_mail_server.com"
 email_host_port = 587
-email_account_name = "my_email_account@datahenge.com"
+email_account_name = "foot@example.com"
 email_account_password  = "my_email_password"
 
 # Email Features

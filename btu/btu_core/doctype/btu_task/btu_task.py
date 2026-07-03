@@ -22,6 +22,7 @@ from frappe.model.document import Document
 from btu import Result, dict_to_dateless_dict, get_system_datetime_now, make_datetime_naive
 from btu.btu_core.doctype.btu_task_log.btu_task_log import write_log_for_task
 from btu.btu_core.form_options import validate_rq_queue_name
+from btu.btu_core.task_defaults import apply_task_defaults_from_configuration
 
 NoneType = type(None)
 
@@ -115,10 +116,19 @@ class BTUTask(Document):
 			)  # replace the unsupported curly backward double quote with the regular one.
 
 	def before_insert(self) -> None:
-		"""Copy default email recipients from BTU Configuration for new tasks."""
+		"""Apply site defaults from BTU Configuration for new tasks."""
+		doc_config = frappe.get_single("BTU Configuration")
+		apply_task_defaults_from_configuration(
+			self,
+			doc_config,
+			fields=("queue_name", "max_task_duration"),
+		)
+		self._copy_default_email_recipients(doc_config)
+
+	def _copy_default_email_recipients(self, doc_config: Document) -> None:
+		"""Copy default email recipients from BTU Configuration when the task has none."""
 		if self.email_recipients:
 			return
-		doc_config = frappe.get_single("BTU Configuration")
 		if not doc_config.email_recipients:
 			return
 		for each_recipient in doc_config.email_recipients:

@@ -9,12 +9,14 @@
  "engine": "InnoDB",
  "field_order": [
   "btu_scheduler_section",
+  "environment_column",
   "environment_name",
   "force_debug_mode",
   "cb2",
-  "tests",
   "btn_send_ping",
   "btn_send_hello_email",
+  "section_break_wwwp",
+  "btn_resubmit_all_task_schedules",
   "email_tab",
   "email_section",
   "send_email_via",
@@ -23,10 +25,12 @@
   "sb_default_recipients",
   "email_recipients",
   "misc_tab",
+  "sb_default_task_settings",
+  "queue_name",
+  "max_task_duration",
+  "repeat_log_in_stdout",
   "sb_advanced_logging",
   "create_in_progress_logs",
-  "section_break_wwwp",
-  "btn_resubmit_all_task_schedules",
   "mandrill_tab",
   "mandrill_email_section",
   "server_prefix",
@@ -70,18 +74,17 @@
   },
   {
    "fieldname": "btu_scheduler_section",
-   "fieldtype": "Section Break",
-   "label": "BTU Scheduler"
+   "fieldtype": "Section Break"
   },
   {
    "description": "Sends a 'ping' request to the BTU Scheduler background daemon.",
    "fieldname": "btn_send_ping",
    "fieldtype": "Button",
-   "label": "Send 'ping' to Schedule Bot",
+   "label": "Send 'ping' to Scheduler",
    "options": "button_send_ping"
   },
   {
-   "description": "Request the BTU daemon clear its schedule and rebuild using current Task Schedules.  Usually not necessary, but included here anyway, to forcibly refresh.",
+   "description": "Ask the BTU Scheduler daemon to rebuild its cache using current Task Schedules.  Rarely needed by included here to forcibly refresh.",
    "fieldname": "btn_resubmit_all_task_schedules",
    "fieldtype": "Button",
    "label": "Resubmit all Task Schedules",
@@ -89,12 +92,34 @@
   },
   {
    "fieldname": "cb2",
-   "fieldtype": "Column Break"
+   "fieldtype": "Column Break",
+   "label": "Tests"
   },
   {
-   "fieldname": "tests",
-   "fieldtype": "Heading",
-   "label": "Tests"
+   "fieldname": "sb_default_task_settings",
+   "fieldtype": "Section Break",
+   "label": "Default Task Settings"
+  },
+  {
+   "default": "default",
+   "description": "Default RQ queue for new BTU Tasks.",
+   "fieldname": "queue_name",
+   "fieldtype": "Autocomplete",
+   "label": "Queue Name"
+  },
+  {
+   "default": "600",
+   "description": "Default timeout (seconds) for new BTU Tasks before In-Progress logs are marked Failed.",
+   "fieldname": "max_task_duration",
+   "fieldtype": "Int",
+   "label": "Max Task Duration (secs)"
+  },
+  {
+   "default": "0",
+   "description": "When marked, new BTU Tasks will repeat stdout to the worker log as well as BTU Task Log.",
+   "fieldname": "repeat_log_in_stdout",
+   "fieldtype": "Check",
+   "label": "Repeat log in stdout"
   },
   {
    "default": "1",
@@ -151,7 +176,8 @@
   },
   {
    "fieldname": "section_break_wwwp",
-   "fieldtype": "Section Break"
+   "fieldtype": "Section Break",
+   "label": "Maintenance - Repairs"
   },
   {
    "fieldname": "mandrill_tab",
@@ -188,12 +214,17 @@
    "label": "Debug Mode",
    "options": "Defer To Code\nAlways\nNever",
    "reqd": 1
+  },
+  {
+   "fieldname": "environment_column",
+   "fieldtype": "Column Break",
+   "label": "Environment"
   }
  ],
  "hide_toolbar": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-07-03 09:53:36.436450",
+ "modified": "2026-07-03 10:47:27.602962",
  "modified_by": "Administrator",
  "module": "btu_core",
  "name": "BTU Configuration",

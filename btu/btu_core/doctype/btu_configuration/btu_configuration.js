@@ -6,6 +6,7 @@
 frappe.ui.form.on('BTU Configuration', {
 
 	refresh: function(frm) {
+		frm.set_query('queue_name', 'btu.btu_core.form_options.get_rq_queue_names');
 		frm.events.add_button_list_failed_jobs(frm);
 		frm.events.add_button_describe_job(frm);
 		frm.events.add_button_delete_failed_jobs(frm);

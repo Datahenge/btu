@@ -11,6 +11,7 @@ from mailchimp_transactional.api_client import ApiClientError
 from btu import print_both
 from btu.btu_api.scheduler import SchedulerAPI
 from btu.btu_core.btu_email import send_hello_email_to_current_user
+from btu.btu_core.form_options import validate_rq_queue_name
 
 
 class BTUConfiguration(Document):
@@ -20,6 +21,7 @@ class BTUConfiguration(Document):
 		"""Ensure email settings are complete for the selected delivery method."""
 		if self.send_email_via == "Email Account" and not self.default_email_account:
 			frappe.throw(_("Default Email Account is required when sending via Email Account."))
+		validate_rq_queue_name(self.queue_name)
 
 	@frappe.whitelist()
 	def button_send_hello_email(self) -> None:

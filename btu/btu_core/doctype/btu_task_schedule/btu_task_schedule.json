@@ -45,7 +45,7 @@
   },
   {
    "default": "default",
-   "description": "RQ worker queue from bench common_site_config (short, default, long, or custom workers).",
+   "description": "RQ worker queue, as configured in common_site_config.json",
    "fieldname": "queue_name",
    "fieldtype": "Autocomplete",
    "label": "Queue Name",
@@ -125,7 +125,7 @@
    "read_only": 1
   },
   {
-   "description": "IANA time zone name for this schedule (e.g. 'America/New_York'). Defaults to the site time zone from System Settings. The cron string is always stored in this local time — UTC conversion happens automatically at scheduling time.",
+   "description": "IANA time zone name for this schedule (e.g. 'America/New_York'). Defaults to the site time zone from System Settings. The cron string is always stored in this local time \u2014 UTC conversion happens automatically at scheduling time.",
    "fieldname": "cron_timezone",
    "fieldtype": "Autocomplete",
    "label": "Cron Time Zone"
@@ -202,9 +202,9 @@
    "link_fieldname": "schedule"
   }
  ],
- "modified": "2025-01-22 15:02:55.088811",
+ "modified": "2026-07-03 10:24:06.606388",
  "modified_by": "Administrator",
- "module": "BTU_Core",
+ "module": "btu_core",
  "name": "BTU Task Schedule",
  "naming_rule": "Expression (old style)",
  "owner": "Administrator",
@@ -230,6 +230,7 @@
    "role": "All"
   }
  ],
+ "row_format": "Dynamic",
  "sort_field": "task_description",
  "sort_order": "ASC",
  "states": [],

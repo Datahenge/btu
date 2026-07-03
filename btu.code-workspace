@@ -37,7 +37,9 @@
 			"**/*.egg-info": true,
 			"**/__pycache__": true,
 			".ruff_cache": true
-		}
+		},
+
+		"typescript.tsserver.experimental.enableProjectDiagnostics": false
 	},
 	"extensions": {
 		"recommendations": [
