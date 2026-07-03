@@ -1,4 +1,4 @@
-# Copyright (c) 2021-2025, Datahenge LLC and contributors
+# Copyright (c) 2021-2026, Datahenge LLC and contributors
 # For license information, please see license.txt
 """Desktop module configuration for the BTU app."""
 

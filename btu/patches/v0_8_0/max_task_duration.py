@@ -1,4 +1,4 @@
-# Background Tasks Unleashed, Copyright (c) 2022, Datahenge LLC
+# Copyright (c) 2021-2026, Datahenge LLC and contributors
 # License: MIT
 """Migrate BTU Task max_task_duration from string values to integers."""
 

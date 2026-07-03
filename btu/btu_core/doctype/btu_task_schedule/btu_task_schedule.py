@@ -2,7 +2,7 @@
 
 # Copyright (c) 2015, Codrotech Inc. and contributors
 #
-# Copyright (c) 2021-2025, Datahenge LLC and contributors
+# Copyright (c) 2021-2026, Datahenge LLC and contributors
 # For license information, please see license.txt
 
 import ast

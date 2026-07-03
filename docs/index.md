@@ -15,6 +15,7 @@ Background Tasks Unleashed is:
 ### User Guides
   * [Web Interface](https://datahenge.github.io/btu/guide_web.html)
   * [Command Line Interface](https://datahenge.github.io/btu/guide_cli.html)
+  * [Automatic Report Delivery](https://datahenge.github.io/btu/guide_auto_report.html)
 
 ### Frequently Asked Questions (FAQ)
 Answers to frequently asked questions [can be found here.](https://datahenge.github.io/btu/faq.html)

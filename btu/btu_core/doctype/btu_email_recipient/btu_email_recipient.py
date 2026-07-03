@@ -1,6 +1,6 @@
 """BTU Email Recipient child-table DocType controller."""
 
-# Copyright (c) 2022-2024, Datahenge LLC and contributors
+# Copyright (c) 2021-2026, Datahenge LLC and contributors
 # For license information, please see license.txt
 
 from frappe.model.document import Document

@@ -1,4 +1,4 @@
-# Copyright (c) 2025, Datahenge LLC and contributors
+# Copyright (c) 2021-2026, Datahenge LLC and contributors
 # For license information, please see license.txt
 
 """Query report: min, max, and average execution times per persistent BTU Task."""

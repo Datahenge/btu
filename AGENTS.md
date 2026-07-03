@@ -37,18 +37,20 @@ Scheduler ↔ Frappe communication uses a Redis RPC protocol documented in [docs
 ## Repository layout
 
 ```
-btu/                          # Python package root
+btu/                          # Python package root (Frappe app)
 ├── hooks.py                  # Frappe hooks (scheduler_events, fixtures, before_job)
 ├── __init__.py               # Version, Result class, shared utilities
+├── examples.py               # Sample BTU Task target functions
+├── auto_report.py            # Scheduled report build and delivery
 ├── btu_core/                 # Core DocTypes and task execution
 │   ├── task_runner.py        # RQ entry point; runs BTU Tasks in workers
 │   ├── run_later.py          # Deferred execution helpers
+│   ├── housekeeping.py       # BTU-specific maintenance (e.g. transient log cleanup)
 │   ├── wrapped_function.py   # Function wrapping for logging
 │   └── doctype/              # BTU Task, BTU Task Schedule, BTU Task Log, etc.
 ├── btu_api/                  # Scheduler daemon API (Redis RPC, endpoints)
 ├── patches/                  # Migration patches
-├── config/                   # Desktop module config
-└── examples.py               # Usage examples
+└── config/                   # Desktop module config
 
 docs/                         # Markdown documentation (published to GitHub Pages)
 ```

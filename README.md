@@ -41,5 +41,5 @@ apt install pkg-config libsystemd-dev
 
 ### Copyright and License
 * Background Tasks Unleashed (BTU) is licensed MIT. (*See LICENSE.md file*)
-* Copyright 2022, Datahenge LLC
+* Copyright 2021-2026, Datahenge LLC
 * Maintainer: Brian Pond <brian@datahenge.com>

@@ -356,20 +356,3 @@ def run_btu_report(*_args: object, **kwargs: object) -> None:
 		**kwargs
 	)  # dereference because BTUReport instance requires individual arguments; not a Dictionary.
 	instance.run()
-
-
-def test1() -> None:
-	"""Manual test: ``bench execute btu.auto_report.test1``."""
-	values = {
-		"report_key": "Daily Orders by Customer Group",
-		"report_parameters": {"delivery_date": "2025-05-29"},
-		"delivery_targets": [
-			{
-				"target_type": "Email",
-				"target_details": "brian@datahenge.com, recall@martianskies.com",
-				"report_format": "CSV",
-			}
-		],
-	}
-
-	run_btu_report(**values)
