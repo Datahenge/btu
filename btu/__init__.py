@@ -25,7 +25,7 @@ from rq.job import Job
 
 NoneType = type(None)
 
-__version__ = "15.1.0"
+__version__ = "15.1.1"
 
 
 class Result:
