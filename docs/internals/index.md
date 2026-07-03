@@ -9,4 +9,4 @@ Maintainer and contributor documentation.
 - [Contributing to docs](contributing-docs.md)
 - [Archived scripts (Gists)](gists.md)
 
-User-facing content lives in other tabs — start with [Get Started](../get-started/index.md).
+User-facing content lives in other tabs — start with [Welcome to BTU](../index.md).

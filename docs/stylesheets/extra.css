@@ -1,0 +1,96 @@
+/* BTU docs — transparent nav, content-area link accent */
+
+:root,
+[data-md-color-scheme="default"] {
+	--md-accent-fg-color: #4051b5;
+	--md-typeset-a-color: #4051b5;
+}
+
+[data-md-color-scheme="slate"] {
+	--md-accent-fg-color: #7986cb;
+	--md-typeset-a-color: #9fa8da;
+}
+
+/* Transparent header + tab bar; single rule above content */
+.md-header {
+	background-color: var(--md-default-bg-color);
+	box-shadow: none;
+	color: var(--md-default-fg-color);
+}
+
+.md-tabs {
+	background-color: var(--md-default-bg-color);
+	box-shadow: none;
+	border-bottom: 1px solid var(--md-default-fg-color--lightest);
+}
+
+.md-header__button,
+.md-header__title,
+.md-header__topic,
+.md-search__icon,
+.md-header-nav__button {
+	color: var(--md-default-fg-color);
+}
+
+.md-header__button:hover,
+.md-header-nav__button:hover {
+	color: var(--md-accent-fg-color);
+}
+
+.md-search__form {
+	background-color: var(--md-default-fg-color--lightest);
+}
+
+[data-md-color-scheme="slate"] .md-search__form {
+	background-color: var(--md-default-fg-color--lightest);
+}
+
+[data-md-color-scheme="slate"] .md-header__button.md-logo img,
+[data-md-color-scheme="slate"] .md-header__button.md-logo svg {
+	filter: brightness(0) invert(1);
+	opacity: 0.9;
+}
+
+.md-tabs__link {
+	font-size: 0.72rem;
+	color: var(--md-default-fg-color);
+	opacity: 0.75;
+}
+
+.md-tabs__link:hover {
+	opacity: 1;
+	color: var(--md-default-fg-color);
+}
+
+.md-tabs__link--active {
+	opacity: 1;
+	font-weight: 600;
+	color: var(--md-default-fg-color);
+	border-bottom: 2px solid var(--md-default-fg-color);
+}
+
+.md-nav__item .md-nav__link--active {
+	font-weight: 600;
+}
+
+.md-content h1:first-child {
+	font-weight: 700;
+	letter-spacing: -0.02em;
+}
+
+.md-content figure.btu-screenshot {
+	margin: 1.5em 0;
+}
+
+.md-content figure.btu-screenshot img {
+	border: 1px solid var(--md-default-fg-color--lightest);
+	border-radius: 4px;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.md-content figure.btu-screenshot figcaption {
+	margin-top: 0.5em;
+	font-size: 0.85em;
+	color: var(--md-default-fg-color--light);
+	text-align: center;
+}

@@ -1,6 +1,6 @@
-# Background Tasks Unleashed
+# Welcome to BTU
 
-**BTU** is a pair of open-source tools for scheduling and running Python background work in [Frappe Framework](https://frappeframework.com) sites:
+**Background Tasks Unleashed (BTU)** is a pair of open-source tools for scheduling and running Python background work in [Frappe Framework](https://frappeframework.com) sites:
 
 1. **BTU Frappe app** ([Datahenge/btu](https://github.com/Datahenge/btu)) — Desk UI, Tasks, Schedules, Logs, Run Later, Configuration.
 2. **BTU Scheduler** ([Datahenge/btu_scheduler_py](https://github.com/Datahenge/btu_scheduler_py)) — cron engine that reads schedules and fires tasks at run time.
@@ -15,7 +15,7 @@ Neither component works alone. Both are required for recurring schedules.
 - **Email notifications** — optional alerts on completion or failure via Frappe Email Account.
 - **Run Later** — defer one-shot work with Desk visibility (not invisible RQ `enqueue_at`).
 
-## Quick links
+## Quick start
 
 | I want to… | Start here |
 |------------|------------|

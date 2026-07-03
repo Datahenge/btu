@@ -1,4 +1,4 @@
-site_name: Background Tasks Unleashed
+site_name: BTU Docs
 site_url: https://btu.datahenge.com/
 site_description: Documentation for BTU — the Frappe app and Python scheduler for cron-based background tasks.
 repo_url: https://github.com/Datahenge/btu
@@ -7,23 +7,32 @@ edit_uri: edit/version-15/docs/
 
 theme:
   name: material
+  logo: assets/logo.svg
+  font:
+    text: Inter
+    code: Roboto Mono
   features:
     - navigation.tabs
     - navigation.sections
-    - navigation.expand
     - navigation.top
+    - navigation.tracking
     - search.suggest
     - search.highlight
     - content.code.copy
     - content.tabs.link
+    - toc.follow
   palette:
-    - scheme: default
-      primary: indigo
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: white
+      accent: indigo
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
-    - scheme: slate
-      primary: indigo
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: black
+      accent: indigo
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
@@ -42,6 +51,10 @@ markdown_extensions:
   - md_in_html
   - toc:
       permalink: true
+      title: On this page
+
+extra_css:
+  - stylesheets/extra.css
 
 extra:
   social:
@@ -49,9 +62,8 @@ extra:
       link: https://github.com/Datahenge/btu
 
 nav:
-  - Home: index.md
   - Get Started:
-      - get-started/index.md
+      - Welcome to BTU: index.md
       - Why BTU: get-started/why-btu.md
       - Installation: get-started/installation.md
       - Configuration overview: get-started/configuration-overview.md
@@ -59,7 +71,6 @@ nav:
       - Version policy: get-started/version-policy.md
       - Changelog: get-started/changelog.md
   - Concepts:
-      - concepts/index.md
       - Mental model: concepts/mental-model.md
       - Tasks: concepts/tasks.md
       - Schedules: concepts/schedules.md
@@ -70,47 +81,42 @@ nav:
       - Redis control plane: concepts/redis-control-plane.md
   - Guides:
       - Desk:
-          - guides/desk/index.md
+          - Overview: guides/desk/index.md
           - BTU Configuration: guides/desk/configuration.md
           - BTU Task: guides/desk/task.md
           - BTU Task Schedule: guides/desk/task-schedule.md
           - BTU Task Log: guides/desk/task-log.md
           - BTU Run Later: guides/desk/run-later.md
+      - Operations:
+          - Install scheduler: operations/install-scheduler.md
+          - Scheduler configuration: operations/scheduler-config.md
+          - Run the scheduler: operations/run-scheduler.md
+          - RQ workers: operations/rq-workers.md
+          - Scheduler buttons: operations/scheduler-buttons.md
+          - Failed jobs: operations/failed-jobs.md
+          - Timeouts and housekeeping: operations/timeouts-and-housekeeping.md
+      - Recipes:
+          - Set up Run Later poller: recipes/set-up-run-later-poller.md
+          - Recurring schedule with timezone: recipes/recurring-schedule-with-timezone.md
+          - Run a task on demand: recipes/run-task-on-demand.md
+          - Defer with Redis: recipes/defer-with-redis.md
+          - Defer with document: recipes/defer-with-document.md
+          - Email on failure: recipes/email-on-failure.md
+          - One-shot task: recipes/one-shot-task.md
       - Command line: guides/command-line.md
       - Writing task functions: guides/writing-task-functions.md
-  - Recipes:
-      - recipes/index.md
-      - Recurring schedule with timezone: recipes/recurring-schedule-with-timezone.md
-      - Run a task on demand: recipes/run-task-on-demand.md
-      - Defer with Redis: recipes/defer-with-redis.md
-      - Defer with document: recipes/defer-with-document.md
-      - Set up Run Later poller: recipes/set-up-run-later-poller.md
-      - Email on failure: recipes/email-on-failure.md
-      - One-shot task: recipes/one-shot-task.md
-  - Operations:
-      - operations/index.md
-      - Install scheduler: operations/install-scheduler.md
-      - Scheduler configuration: operations/scheduler-config.md
-      - Run the scheduler: operations/run-scheduler.md
-      - RQ workers: operations/rq-workers.md
-      - Scheduler buttons: operations/scheduler-buttons.md
-      - Failed jobs: operations/failed-jobs.md
-      - Timeouts and housekeeping: operations/timeouts-and-housekeeping.md
   - Reference:
       - BTU Configuration fields: reference/configuration-fields.md
       - Scheduler environment variables: reference/scheduler-env-vars.md
       - Schedule cron fields: reference/schedule-cron-fields.md
       - Redis RPC protocol: reference/redis-rpc.md
       - Public API: reference/public-api.md
+      - FAQ: troubleshooting/faq.md
+      - Common errors: troubleshooting/common-errors.md
   - Integrations:
       - Email: integrations/email.md
       - Auto Report: integrations/auto-report.md
-  - Troubleshooting:
-      - troubleshooting/index.md
-      - FAQ: troubleshooting/faq.md
-      - Common errors: troubleshooting/common-errors.md
   - Internals:
-      - internals/index.md
       - Technical design: internals/technical-design.md
       - ADRs:
           - Overview: internals/adr/README.md
@@ -122,4 +128,5 @@ nav:
       - Repository layout: internals/repository-layout.md
       - Legacy Rust scheduler: internals/legacy-rust-scheduler.md
       - Contributing to docs: internals/contributing-docs.md
+      - Screenshot conventions: internals/screenshots.md
       - Archived scripts: internals/gists.md
