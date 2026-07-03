@@ -1,9 +1,10 @@
-"""btu/btu_core/run_later.py"""
+"""Deferred BTU task execution via Redis keys or BTU Run Later documents."""
 
 # Standard Library
 import json
 from datetime import datetime as DateTimeType
 from datetime import timedelta
+from typing import Any
 from zoneinfo import ZoneInfo
 
 # Frappe Framework
@@ -13,7 +14,7 @@ import frappe
 import redis
 
 # Custom Apps
-from temporal import datetime_to_iso_string, validate_datatype
+from temporal_lib import datetime_to_iso_string, validate_datatype
 
 from btu import get_system_datetime_now
 from btu.btu_core.doctype.btu_task.btu_task import create_and_run_one_shot
@@ -22,17 +23,12 @@ NoneType = type(None)
 
 
 def new_redis_queue_connection() -> redis.client.Redis:
-	"""
-	Return a connection to the Redis Queue database.
-	NOTE: Frappe's connection doesn't decode responses, which is why I created this one instead.
-	"""
+	"""Return a decode-responses connection to the Redis Queue database."""
 	return redis.from_url(frappe.local.conf.redis_queue, decode_responses=True)
 
 
-def test_one():
-	"""
-	CLI:  bench execute btu.btu_core.run_later.test_one
-	"""
+def test_one() -> None:
+	"""Enqueue a sample run-later task (CLI: ``bench execute btu.btu_core.run_later.test_one``)."""
 	now = get_system_datetime_now() + timedelta(seconds=180)
 
 	enqueue_for_later(
@@ -46,10 +42,7 @@ def test_one():
 
 
 def exists_unique_identifier(unique_identifier: str) -> bool:
-	"""
-	CLI:
-		bench execute btu.btu_core.run_later.exists_unique_identifier --args "['foo']"
-	"""
+	"""Return True if a pending run-later Redis entry uses ``unique_identifier``."""
 	redis_conn = new_redis_queue_connection()
 	match_criteria = "btu_scheduler:run_later:*"
 	for each_key in redis_conn.scan_iter(match=match_criteria, count=100):
@@ -64,13 +57,10 @@ def enqueue_for_later(
 	not_before_time: DateTimeType,
 	target_queue: str,
 	path_to_function: str,
-	arguments: dict,
-	unique_identifier: str = None,
-):
-	"""
-	Option 1 of 2 for creating a BTU Run Later: write directly to Redis database.
-	"""
-
+	arguments: dict[str, Any],
+	unique_identifier: str | None = None,
+) -> None:
+	"""Enqueue a one-shot task in Redis to run after ``not_before_time`` (option 1 of 2)."""
 	# TODO : validate path to function
 	validate_datatype("arguments", arguments, (dict, NoneType), False)
 
@@ -105,12 +95,10 @@ def create_doc_run_later(
 	hold_until_datetime: DateTimeType,
 	task_name: str,
 	task_function_path: str,
-	task_arguments,
-	redis_queue_name="short",
-) -> "Document":
-	"""
-	Option 2 of 2 for creating a BTU Run Later: create a new Document 'BTU Run Later'
-	"""
+	task_arguments: dict[str, Any] | str,
+	redis_queue_name: str = "short",
+) -> str:
+	"""Create a BTU Run Later document for deferred execution; return its name."""
 	doc_later = frappe.new_doc("BTU Run Later")
 	doc_later.comms_type = comms_type
 	doc_later.hold_until = hold_until_datetime
@@ -129,17 +117,7 @@ def create_doc_run_later(
 
 
 def _acquire_poll_lock() -> bool:
-	"""
-	Acquire a session-scoped concurrency lock that survives frappe.db.commit().
-
-	MariaDB GET_LOCK() and PostgreSQL pg_try_advisory_lock() are both session-scoped,
-	not transaction-scoped. frappe.db.commit() releases row locks (SELECT FOR UPDATE)
-	but has no effect on these — which is exactly what we need for a polling function
-	that commits after each item it processes.
-
-	Returns True if the lock was acquired, False if another instance already holds it.
-	Auto-releases when the database session closes (process crash, connection drop, etc.).
-	"""
+	"""Acquire a session-scoped poll lock; return False if another instance holds it."""
 	if frappe.db.db_type == "postgres":
 		result = frappe.db.sql("SELECT pg_try_advisory_lock(hashtext('btu_poll_for_ready_work')::bigint)")[0][
 			0
@@ -150,8 +128,8 @@ def _acquire_poll_lock() -> bool:
 		return result == 1  # 1 = acquired, 0 = held by another session, NULL = error
 
 
-def _release_poll_lock():
-	"""Release the session-scoped concurrency lock acquired by _acquire_poll_lock()."""
+def _release_poll_lock() -> None:
+	"""Release the session-scoped concurrency lock acquired by ``_acquire_poll_lock``."""
 	if frappe.db.db_type == "postgres":
 		frappe.db.sql("SELECT pg_advisory_unlock(hashtext('btu_poll_for_ready_work')::bigint)")
 	else:
@@ -159,12 +137,8 @@ def _release_poll_lock():
 
 
 @frappe.whitelist()
-def poll_for_ready_work():
-	"""
-	This function should be run continously, at least every 1 minute.
-
-	CLI:  bench execute btu.btu_core.run_later.poll_for_ready_work
-	"""
+def poll_for_ready_work() -> None:
+	"""Poll Redis and SQL for run-later work ready to execute (run at least every minute)."""
 	# 1. Loop through everything that's Ready to be executed.
 	# 2. For each found, create a One-Shot BTU Task, and then immediately run via queue.
 
@@ -184,15 +158,8 @@ def poll_for_ready_work():
 	_release_poll_lock()
 
 
-def _run_tasks_from_redis_database():
-	"""
-	This is the simpler of the 2 possible 'run later' functions.
-	It lacks features like:
-	    * Advanced logging
-		* Retry upon failure.
-		* Relationships to other documents.
-		* Persistence if the Redis database is truncated.
-	"""
+def _run_tasks_from_redis_database() -> None:
+	"""Process pending run-later entries stored as Redis hashes."""
 	utc_now = get_system_datetime_now().astimezone(ZoneInfo("UTC"))
 	timestamp_now = int(utc_now.timestamp())
 
@@ -232,11 +199,8 @@ def _run_tasks_from_redis_database():
 	frappe.db.commit()
 
 
-def _run_tasks_from_sql_database(disable_enqueue=False):
-	"""
-	This is a more-advanced function with better logging, retry capability, and more.
-	"""
-
+def _run_tasks_from_sql_database(disable_enqueue: bool = False) -> None:
+	"""Enqueue or run BTU Run Later documents whose hold time has passed."""
 	datetime_now = get_system_datetime_now()
 	filters = {"hold_until": ["<=", datetime_now], "execution_status": "Pending Future"}
 	tasks_to_examine = frappe.get_list("BTU Run Later", filters, pluck="name")
@@ -282,11 +246,8 @@ def _run_tasks_from_sql_database(disable_enqueue=False):
 	frappe.logger("btu").debug("_run_tasks_from_sql_database() concluded.")
 
 
-def identify_timeouts():
-	"""
-	Find any 'BTU Run Later' that have been running for too long, and mark them Failed.
-	How long is too long?  Start Time = more than 1 hour ago.
-	"""
+def identify_timeouts() -> None:
+	"""Mark In-Progress BTU Run Later rows as failed or pending retry after one hour."""
 	one_hour_ago = get_system_datetime_now() - timedelta(hours=1)
 
 	filters = {"execution_status": "In-Progress", "last_attempt": ["<=", one_hour_ago]}

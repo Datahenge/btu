@@ -1,4 +1,4 @@
-"""btu/btu_core/btu_email.py"""
+"""SMTP and Mandrill email helpers for BTU."""
 
 # Copyright (c) 2021-2025, Datahenge LLC and contributors
 # For license information, please see license.txt
@@ -19,22 +19,25 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from enum import Enum
+from typing import TYPE_CHECKING, Any
 
 # Frappe Library
 import frappe
 
 # Third Party
 import mailchimp_transactional as MailchimpTransactional  # This is the official Python SDK for Mandrill
+from frappe.model.document import Document
 from frappe.utils.password import get_decrypted_password
 
 # BTU
 from btu import print_both
 
+if TYPE_CHECKING:
+	from btu.btu_core.doctype.btu_task_log.btu_task_log import BTUTaskLog
 
-def new_mandrill_client(doc_configuration=None):
-	"""
-	Create a new, authenticated Mandrill client.
-	"""
+
+def new_mandrill_client(doc_configuration: Document | None = None) -> MailchimpTransactional.Client:
+	"""Create a new, authenticated Mandrill client."""
 	if not doc_configuration:
 		doc_configuration = frappe.get_doc("BTU Configuration")  # singles DocType
 	api_key = doc_configuration.get_password(fieldname="mandrill_api_key")
@@ -42,22 +45,15 @@ def new_mandrill_client(doc_configuration=None):
 
 
 class MandrillResponse(Enum):
+	"""Overall status of a Mandrill API send response."""
+
 	SUCCESS = 1
 	REJECTED = 2
 	UNHANDLED_ERROR = 3
 
 
-def get_mandrill_response_status_overall(mandrill_response: list) -> MandrillResponse:
-	"""
-	Mandrill responses are a List of Dictionary:
-		[{
-			'email': 'foo@bar.com',
-	                'status': 'sent',
-	                '_id': 'e89b5467ac7c4805a8d415c972ba4007',
-	                'reject_reason': None,
-	                'queued_reason': None
-		}]
-	"""
+def get_mandrill_response_status_overall(mandrill_response: list[dict[str, Any]]) -> MandrillResponse:
+	"""Interpret Mandrill API send response status from a list of per-recipient dicts."""
 	# Look for bad 'status' or any kind of rejection reason.
 	try:
 		for each_dict in mandrill_response:
@@ -70,14 +66,18 @@ def get_mandrill_response_status_overall(mandrill_response: list) -> MandrillRes
 
 
 class Emailer:
-	"""
-	Create and send emails without using standard DocTypes 'Email Domain' or 'Email Account'
-	"""
+	"""Create and send emails without using standard DocTypes 'Email Domain' or 'Email Account'."""
 
-	def __init__(self, subject, body, sender=None, emailto_list=None, ccto_list=None, bccto_list=None):
-		"""
-		Helper class to construct and send email messages from BTU.
-		"""
+	def __init__(
+		self,
+		subject: str,
+		body: str,
+		sender: str | None = None,
+		emailto_list: str | list[str] | set[str] | None = None,
+		ccto_list: str | list[str] | set[str] | None = None,
+		bccto_list: str | list[str] | set[str] | None = None,
+	) -> None:
+		"""Construct an email message from BTU configuration and recipient lists."""
 		self.sender = sender
 		self.emailto_list = emailto_list
 		self.ccto_list = ccto_list
@@ -97,10 +97,8 @@ class Emailer:
 		self.parse_recipients()
 
 	@staticmethod
-	def _parse_recipients_into_list(recipients: object) -> list:
-		"""
-		Returns a list of recipients from an object of varying type.
-		"""
+	def _parse_recipients_into_list(recipients: object) -> list[str] | set[str]:
+		"""Return a recipient list from a string, list, set, or empty value."""
 		if not recipients:
 			return []
 		if isinstance(recipients, str):
@@ -111,10 +109,8 @@ class Emailer:
 		raise TypeError(f"Argument 'recipients' has an unhandled data type '{type(recipients)}'")
 
 	@staticmethod
-	def recipients_to_csv_string(recipients):
-		"""
-		Given a variable of unknown type, try to return a comma-separated set of recipients.
-		"""
+	def recipients_to_csv_string(recipients: str | list[str] | set[str] | None) -> str | None:
+		"""Return a comma-separated recipient string from a string, list, or set."""
 		if not recipients:
 			return None
 		if isinstance(recipients, (list, set)):
@@ -123,8 +119,8 @@ class Emailer:
 			return recipients
 		raise TypeError(f"Argument 'recipients' is a Python type {type(recipients)} with value {recipients}")
 
-	def parse_recipients(self):
-
+	def parse_recipients(self) -> None:
+		"""Normalize recipient fields into lists and CSV header strings."""
 		self.emailto_list = Emailer._parse_recipients_into_list(self.emailto_list)
 		self.ccto_list = Emailer._parse_recipients_into_list(self.ccto_list)
 		self.bccto_list = Emailer._parse_recipients_into_list(self.bccto_list)
@@ -134,10 +130,8 @@ class Emailer:
 		self.bcc_as_string = Emailer.recipients_to_csv_string(self.bccto_list)
 
 	@frappe.whitelist()
-	def send(self):
-		"""
-		Send an email using BTU.
-		"""
+	def send(self) -> None:
+		"""Send an email using BTU."""
 		if self.doc_btu_config.send_email_via == "SMTP":
 			self._send_via_smtp()
 
@@ -148,10 +142,8 @@ class Emailer:
 				f"Unexpected configuration value '{self.doc_btu_config.send_email_via}' in BTU Configuration."
 			)
 
-	def _send_via_smtp(self):
-		"""
-		Send the email using SMTP protocol and library.
-		"""
+	def _send_via_smtp(self) -> None:
+		"""Send the email using SMTP protocol and library."""
 		password = get_decrypted_password(
 			doctype="BTU Configuration", name="BTU Configuration", fieldname="email_auth_password"
 		)
@@ -198,8 +190,7 @@ class Emailer:
 				msg=message,
 			)
 
-	def _send_via_mandrill(self):
-
+	def _send_via_mandrill(self) -> None:
 		new_message = {
 			"from_email": self.doc_btu_config.mandrill_from_email_address,
 			"subject": self.subject,
@@ -246,10 +237,8 @@ class Emailer:
 			frappe.logger("btu").debug("Message sent to Mandrill:\n%s", json.dumps(new_message, indent=4))
 			frappe.msgprint(f"Error while sending email via Mandrill: {error_string}")
 
-	def _create_plaintext_message(self):
-		"""
-		A plain text message requires a different type of header object.
-		"""
+	def _create_plaintext_message(self) -> str:
+		"""Build a plain-text email message with RFC-style headers."""
 		header = f"From: {self.sender}\n"
 		header += f"To: {self.to_as_string}\n"
 		if self.cc_as_string:
@@ -259,20 +248,16 @@ class Emailer:
 		header += f"Subject: {self.subject}\n\n"
 		return header + self.body
 
-	def _apply_subject_prefix(self, subject):
-		"""
-		Given an email subject, apply a Environment prefix (if applicable)
-		"""
+	def _apply_subject_prefix(self, subject: str) -> str:
+		"""Apply an environment prefix to the email subject when configured."""
 		return (
 			f"({self.doc_btu_config.environment_name}) {subject}"
 			if self.doc_btu_config.environment_name
 			else subject
 		)
 
-	def _apply_body_prefix(self, body):
-		"""
-		Given an email body, apply an Environment prefix (if applicable)
-		"""
+	def _apply_body_prefix(self, body: str) -> str:
+		"""Apply an environment prefix to the email body when configured."""
 		if not body:
 			body = ""
 		if self.doc_btu_config.environment_name:
@@ -280,13 +265,8 @@ class Emailer:
 		return body
 
 
-def _build_recipients_from_task_log(doc_task_log) -> dict:
-	"""
-	Given any Task Log, build a dictionary of Email Recipients and conditions.
-
-	Example response:
-		{ 'brian@datahenge.com': {'email_on_start': 1, 'email_on_success': 1, 'email_on_error': 1, 'email_on_timeout': 1} }
-	"""
+def _build_recipients_from_task_log(doc_task_log: "BTUTaskLog") -> dict[str, dict[str, int]]:
+	"""Build email recipient options from a BTU Task Log and its related Task or Schedule."""
 	from btu.btu_core.doctype.btu_task_log.btu_task_log import (
 		BTUTaskLog as BTUTaskLogType,  # late import to avoid any circular reference problems.
 	)
@@ -296,7 +276,7 @@ def _build_recipients_from_task_log(doc_task_log) -> dict:
 			"Function requires argument 'doc_task_log', which should be an instance of 'BTU Task Log' document."
 		)
 
-	result = {}
+	result: dict[str, dict[str, int]] = {}
 	doc_task = frappe.get_doc("BTU Task", doc_task_log.task)
 	for each_recipient in doc_task.email_recipients:
 		result[each_recipient.email_address] = {
@@ -338,10 +318,8 @@ def _build_recipients_from_task_log(doc_task_log) -> dict:
 
 
 # Non-Class Methods
-def email_on_task_start(doc_task_log, send_via_queue=False):
-	"""
-	Sent immediately when a Task Log is first inserted into the database.
-	"""
+def email_on_task_start(doc_task_log: "BTUTaskLog", send_via_queue: bool = False) -> None:
+	"""Send email when a Task Log is first inserted into the database."""
 	from btu.btu_core.doctype.btu_task_log.btu_task_log import (
 		BTUTaskLog as BTUTaskLogType,  # late import to avoid any circular reference problems.
 	)
@@ -352,7 +330,7 @@ def email_on_task_start(doc_task_log, send_via_queue=False):
 		)
 
 	# Add emails associated with the Task:
-	recipients: dict = _build_recipients_from_task_log(doc_task_log)
+	recipients: dict[str, dict[str, int]] = _build_recipients_from_task_log(doc_task_log)
 	recipients = {
 		key: value for key, value in recipients.items() if value["email_on_start"]
 	}  # reduce to recipients who opted-in 'Email on Start'
@@ -377,10 +355,8 @@ def email_on_task_start(doc_task_log, send_via_queue=False):
 	frappe.logger("btu").debug("Sent email message to recipients: %s", recipients)
 
 
-def email_on_task_conclusion(doc_task_log, send_via_queue=False):
-	"""
-	Send an email about the Task Log's success or failure.
-	"""
+def email_on_task_conclusion(doc_task_log: "BTUTaskLog", send_via_queue: bool = False) -> None:
+	"""Send an email about the Task Log's success or failure."""
 	from btu.btu_core.doctype.btu_task_log.btu_task_log import (
 		BTUTaskLog as BTUTaskLogType,  # late import to avoid any circular reference problems.
 	)
@@ -390,7 +366,7 @@ def email_on_task_conclusion(doc_task_log, send_via_queue=False):
 			"Function requires argument 'doc_task_log', which should be an instance of BTU Task Log document."
 		)
 
-	email_recipients: dict = _build_recipients_from_task_log(doc_task_log)
+	email_recipients: dict[str, dict[str, int]] = _build_recipients_from_task_log(doc_task_log)
 	for each_recipient, options in email_recipients.items():
 		if doc_task_log.success_fail == "Success" and not options["email_on_success"]:
 			continue

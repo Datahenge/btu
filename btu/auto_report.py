@@ -1,7 +1,9 @@
-"""btu.auto_report.py"""
+"""Automatic report generation and delivery for BTU tasks."""
 
 # A better replacement for the broken ERPNext "Auto Report" feature.
 # Much of this code shamelessly borrowed from "frappe/frappe/email/doctype/auto_email_report/auto_email_report.py"
+
+from typing import Any
 
 import frappe
 from frappe import _
@@ -15,10 +17,14 @@ from frappe.utils import (
 )
 from frappe.utils.csvutils import to_csv
 from frappe.utils.xlsxutils import make_xlsx
-from schema import And, Optional, Or, Schema  # pylint: disable=unused-import
+from schema import And, Schema
+
+ReportColumns = list[Any]
+ReportRows = list[dict[str, Any]]
 
 
-def make_links(columns, data):
+def make_links(columns: ReportColumns, data: ReportRows) -> tuple[ReportColumns, ReportRows]:
+	"""Replace Link and Currency field values with formatted HTML links."""
 	for row in data:
 		doc_name = row.get("name")
 		for col in columns:
@@ -35,7 +41,8 @@ def make_links(columns, data):
 	return columns, data
 
 
-def update_field_types(columns):
+def update_field_types(columns: ReportColumns) -> ReportColumns:
+	"""Convert Link and Currency columns to plain Data columns for export."""
 	for col in columns:
 		if col.fieldtype in ("Link", "Dynamic Link", "Currency") and col.options != "Currency":
 			col.fieldtype = "Data"
@@ -43,8 +50,12 @@ def update_field_types(columns):
 	return columns
 
 
-def get_html_table(report_key, columns=None, data=None):
-
+def get_html_table(
+	report_key: str,
+	columns: ReportColumns | None = None,
+	data: ReportRows | None = None,
+) -> str:
+	"""Render the auto-email report HTML template for the given report data."""
 	date_time = global_date_format(now()) + " " + format_time(now())
 	report_doctype, report_type = frappe.db.get_value(
 		"Report", report_key, fieldname=["ref_doctype", "report_type"]
@@ -66,15 +77,14 @@ def get_html_table(report_key, columns=None, data=None):
 
 
 class DeliveryTarget:
-	"""
-	A single target for delivering report content.
-	"""
+	"""A single target for delivering report content."""
 
-	valid_target_types = ["Email", "File", "Slack"]
-	valid_report_formats = ["HTML", "XLSX", "CSV"]
+	valid_target_types = ("Email", "File", "Slack")
+	valid_report_formats = ("HTML", "XLSX", "CSV")
 
 	@staticmethod
-	def get_data_dictionary_schema():
+	def get_data_dictionary_schema() -> Schema:
+		"""Return the schema used to validate delivery-target dictionaries."""
 		schema = Schema(
 			{
 				"report_key": str,
@@ -87,8 +97,8 @@ class DeliveryTarget:
 		return schema
 
 	@staticmethod
-	def init_from_dictionary(data_dictionary: dict):
-
+	def init_from_dictionary(data_dictionary: dict[str, Any]) -> "DeliveryTarget":
+		"""Construct a DeliveryTarget from a validated dictionary."""
 		DeliveryTarget.get_data_dictionary_schema().validate(
 			data_dictionary
 		)  # validate the Dictionary matches required schema
@@ -102,10 +112,15 @@ class DeliveryTarget:
 		)
 		return instance
 
-	def __init__(self, report_key: str, report_content: dict, target_type, target_details, report_format):
-		"""
-		Initialize a new target for Report delivery.
-		"""
+	def __init__(
+		self,
+		report_key: str,
+		report_content: dict[str, Any],
+		target_type: str,
+		target_details: str,
+		report_format: str,
+	) -> None:
+		"""Initialize a new target for report delivery."""
 		self.report_key = report_key
 
 		if not isinstance(report_content, dict):
@@ -120,17 +135,17 @@ class DeliveryTarget:
 		self.validate_all()
 
 	@staticmethod
-	def get_spreadsheet_data(columns, data):
-
+	def get_spreadsheet_data(columns: ReportColumns, data: ReportRows) -> list[list[Any]] | None:
+		"""Convert report columns and rows into a 2-D list suitable for CSV/XLSX export."""
 		if (not columns) or (not data):
 			print("Warning: Function get_spreadsheet_data() does not have both columns and data.")
 			return None
 
-		out = [
+		out: list[list[Any]] = [
 			[_(df.label) for df in columns],
 		]
 		for row in data:
-			new_row = []
+			new_row: list[Any] = []
 			out.append(new_row)
 			for df in columns:
 				if df.fieldname not in row:
@@ -139,16 +154,14 @@ class DeliveryTarget:
 
 		return out
 
-	def validate_all(self):
-
+	def validate_all(self) -> None:
+		"""Run all delivery-target validation checks."""
 		self.validate_target_type()
 		self.validate_report_format()
 		self.validate_target_details()
 
-	def validate_target_type(self):
-		"""
-		Validate the class attribute 'target type'.
-		"""
+	def validate_target_type(self) -> None:
+		"""Validate the target type attribute."""
 		if self.target_type not in DeliveryTarget.valid_target_types:
 			frappe.throw(
 				_("{0} is not a valid Target Type (should one of the following {1})").format(
@@ -156,10 +169,8 @@ class DeliveryTarget:
 				)
 			)
 
-	def validate_report_format(self):
-		"""
-		Validate the class attribute 'report_format'
-		"""
+	def validate_report_format(self) -> None:
+		"""Validate the report format attribute."""
 		if self.report_format not in DeliveryTarget.valid_report_formats:
 			frappe.throw(
 				_("{0} is not a valid report format. Report format should one of the following {1}").format(
@@ -168,13 +179,13 @@ class DeliveryTarget:
 				)
 			)
 
-	def validate_target_details(self):
-
+	def validate_target_details(self) -> list[str]:
+		"""Validate and return parsed email recipients for Email targets."""
 		if self.target_type == "Email":
 			recipients = self.target_details.replace(
 				",", ";"
 			)  # allows for splitting by either comma or semicolon
-			valid = []
+			valid: list[str] = []
 			for each_email in recipients.split(";"):
 				if each_email:
 					validate_email_address(each_email, True)
@@ -184,17 +195,18 @@ class DeliveryTarget:
 
 		raise ValueError(f"DeliveryTarget : Unhandled target type = '{self.target_type}'")
 
-	def get_email_recipients(self):
+	def get_email_recipients(self) -> list[str]:
+		"""Return the validated list of email recipients."""
 		return self.validate_target_details()
 
-	def get_file_name(self):
-
+	def get_file_name(self) -> str:
+		"""Return a filesystem-safe attachment filename for this report."""
 		prefix = self.report_key.replace(" ", "-").replace("/", "-")
 		suffix = self.report_format.lower()
 		return f"{prefix}.{suffix}"
 
-	def generate_output(self):
-
+	def generate_output(self) -> str | bytes | None:
+		"""Build report output in the configured format, or None when there are no rows."""
 		report_columns = self.report_content["columns"]
 		report_rows = self.report_content["rows"]
 		if not report_rows:
@@ -217,7 +229,8 @@ class DeliveryTarget:
 		frappe.throw(_("Invalid Output Format"))
 		return None
 
-	def send(self):
+	def send(self) -> None:
+		"""Deliver the generated report to the configured target."""
 		# TODO: Send for different target destinations, not just frappe.sendmail
 
 		email_content = self.generate_output()
@@ -244,8 +257,15 @@ class DeliveryTarget:
 
 
 class BTUReport:
-	def __init__(self, report_key: str, report_parameters: dict = None, delivery_targets: list = None):
+	"""Build a Frappe report and deliver it to one or more targets."""
 
+	def __init__(
+		self,
+		report_key: str,
+		report_parameters: dict[str, Any] | None = None,
+		delivery_targets: list[dict[str, Any]] | None = None,
+	) -> None:
+		"""Initialize a BTU report runner with delivery targets."""
 		if (not report_key) or (not isinstance(report_key, str)):
 			raise TypeError("Missing mandatory string argument 'report_key'")
 
@@ -258,17 +278,15 @@ class BTUReport:
 			raise ValueError("BTU Report has no targets for report delivery.")
 
 		self.validate_mandatory_fields()
-		self.report_content: tuple = None, None
+		self.report_content: tuple[ReportColumns | None, ReportRows | None] = (None, None)
 
-	def validate_mandatory_fields(self):
-		"""
-		Verify that the report's Mandatory Filters are specified.
-		"""
+	def validate_mandatory_fields(self) -> None:
+		"""Verify that the report's mandatory filters are specified."""
 		filters = frappe.parse_json(self.report_parameters) if self.report_parameters else {}
 		# filter_meta = frappe.parse_json(self.filter_meta) if self.filter_meta else {}
-		filter_meta = {}
+		filter_meta: list[dict[str, Any]] = []
 
-		throw_list = []
+		throw_list: list[str] = []
 		for meta in filter_meta:
 			if meta.get("reqd") and not filters.get(meta["fieldname"]):
 				throw_list.append(meta["label"])
@@ -281,11 +299,8 @@ class BTUReport:
 				+ "</ul>",
 			)
 
-	def build_report(self) -> tuple:
-		"""
-		Returns file in for the report in given format
-		"""
-
+	def build_report(self) -> tuple[ReportColumns | None, ReportRows | None]:
+		"""Build report columns and row data, or return ``(None, None)`` when empty."""
 		filters = frappe.parse_json(self.report_parameters) if self.report_parameters else {}
 
 		columns, data = self.doc_report.get_data(
@@ -306,8 +321,8 @@ class BTUReport:
 
 		return columns, data
 
-	def transmit_report(self):
-
+	def transmit_report(self) -> None:
+		"""Send the built report to each configured delivery target."""
 		if not self.report_content:
 			print("Report has no rows.  Nothing to transmit.")
 			return
@@ -326,10 +341,8 @@ class BTUReport:
 			instance = DeliveryTarget.init_from_dictionary(each)
 			instance.send()
 
-	def run(self):
-		"""
-		Build the report (columns, data), then transmit to the target destinations.
-		"""
+	def run(self) -> None:
+		"""Build the report, then transmit it to all target destinations."""
 		print(f"BTU is attempting to run report '{self.report_key}' and automatically deliver...")
 		self.report_content = self.build_report()
 		self.transmit_report()
@@ -337,21 +350,16 @@ class BTUReport:
 
 
 @frappe.whitelist()
-def run_btu_report(*args, **kwargs):  # pylint: disable=unused-argument
-	"""
-	Access point for all BTU Tasks.
-	"""
+def run_btu_report(*_args: object, **kwargs: object) -> None:
+	"""Whitelisted entry point for BTU automatic report tasks."""
 	instance = BTUReport(
 		**kwargs
 	)  # dereference because BTUReport instance requires individual arguments; not a Dictionary.
 	instance.run()
 
 
-def test1():
-	"""
-	bench execute btu.auto_report.test1
-	"""
-
+def test1() -> None:
+	"""Manual test: ``bench execute btu.auto_report.test1``."""
 	values = {
 		"report_key": "Daily Orders by Customer Group",
 		"report_parameters": {"delivery_date": "2025-05-29"},

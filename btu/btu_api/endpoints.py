@@ -1,29 +1,18 @@
-"""endpoints.py"""
+"""Whitelisted HTTP endpoints for the BTU scheduler daemon and CLI."""
 
 # NOTE: This describes how to get rid of the outer 'message" key in Frappe HTTP responses:
 # https://discuss.erpnext.com/t/returning-plain-text-from-whitelisted-method/32621
 
-# Frappe Library
 import frappe
+from werkzeug.wrappers import Response
 
-# BTU Library
 from btu.btu_api import Sanchez, execute_job
 from btu.btu_core.doctype.btu_task.btu_task import _task_has_active_log
 
 
 @frappe.whitelist()
-def get_pickled_task(task_id, task_schedule_id=None):
-	"""
-	RPC HTTP Endpoint called by BTU Scheduler daemon and CLI.
-
-	Builds a pre-serialized RQ job payload (pickled bytes) for the daemon to write
-	directly to Redis. Only primitive strings are packed into the payload — no bound
-	methods, no Frappe Document objects — so pickling is always safe.
-
-	args:
-		task_id:          primary key of a BTU Task
-		task_schedule_id: primary key of a BTU Task Schedule (optional)
-	"""
+def get_pickled_task(task_id: str, task_schedule_id: str | None = None) -> bytes:
+	"""Return pickled RQ job bytes for ``task_id`` (optional ``task_schedule_id``)."""
 	doc_task = frappe.get_doc("BTU Task", task_id)
 
 	queue_args = {
@@ -50,20 +39,14 @@ def get_pickled_task(task_id, task_schedule_id=None):
 
 
 @frappe.whitelist()
-def test_ping():
-	"""
-	When called by an HTTP client, returns a JSON string { "message" : "pong" }
-	"""
+def test_ping() -> str:
+	"""Return ``pong`` for connectivity checks."""
 	return "pong"
 
 
 @frappe.whitelist()
-def test_hello_world_bytes():
-	"""
-	Return some raw bytes to the HTTP client.
-	"""
-	from werkzeug.wrappers import Response
-
+def test_hello_world_bytes() -> Response:
+	"""Return raw bytes to the HTTP client."""
 	hello_bytes: bytes = b"Hello World"
 	response = Response()
 	response.mimetype = "application/octet-stream"
@@ -73,10 +56,8 @@ def test_hello_world_bytes():
 
 
 @frappe.whitelist()
-def test_function_ping_now_bytes():
-	"""
-	Picking the 'ping_now' function and return as bytes.
-	"""
+def test_function_ping_now_bytes() -> bytes:
+	"""Return pickled RQ job bytes for the ``ping_now`` test function."""
 	from btu.manual_tests import ping_now
 
 	queue_args = {
@@ -96,10 +77,8 @@ def test_function_ping_now_bytes():
 
 
 @frappe.whitelist(methods=["POST", "PUT"])
-def enqueue_for_next_available_worker(task_schedule_key: str):
-	"""
-	Called by the BTU scheduler daemon when it's time to run a Task, based on its Schedule.
-	"""
+def enqueue_for_next_available_worker(task_schedule_key: str) -> dict[str, int | str]:
+	"""Enqueue a scheduled task when the BTU scheduler daemon fires its cron."""
 	# Added March of 2025 as part of BTU Scheduler - Python edition.
 	#
 	# Avoids headaches with having to:
@@ -114,7 +93,7 @@ def enqueue_for_next_available_worker(task_schedule_key: str):
 	# And then call *that* standalone applicatoni via Unix domain sockets, or system calls.
 	# It's just not worth the effort: the ERP Web Server should not be offline *anyway*
 
-	response = {"has_errors": 0, "error_message": ""}
+	response: dict[str, int | str] = {"has_errors": 0, "error_message": ""}
 
 	try:
 		import uuid

@@ -1,16 +1,11 @@
-"""btu_task_component.py"""
-
-# --------
-#
-# The purpose of this class is to "wrap" an ordinary function, and treat it as a Component of a larger BTU Task.
-#
-# --------
+"""Enqueue and run sub-functions as components of a larger BTU Task."""
 
 import importlib
 import io
 import re
 import time
 from contextlib import redirect_stdout
+from datetime import datetime
 
 import frappe
 
@@ -28,20 +23,20 @@ def get_function_name(function_path: str) -> str:
 
 
 class TaskComponent:
+	"""Describe a callable sub-step of a BTU Task and enqueue it via RQ."""
+
 	def __init__(
 		self,
-		btu_task_id,
-		btu_component_id,
-		btu_task_schedule_id,
-		frappe_site_name,
-		function,
-		queue="default",
-		timeout=None,
-		**kwargs,
-	):
-		"""
-		Initialize the class instance.
-		"""
+		btu_task_id: str,
+		btu_component_id: str,
+		btu_task_schedule_id: str | None,
+		frappe_site_name: str | None,
+		function: str,
+		queue: str = "default",
+		timeout: int | None = None,
+		**kwargs: object,
+	) -> None:
+		"""Initialize component metadata and optional keyword arguments for the callable."""
 		self.btu_task_id = btu_task_id
 		self.btu_component_id = btu_component_id
 		self.btu_task_schedule_id = btu_task_schedule_id or None
@@ -72,10 +67,8 @@ class TaskComponent:
 		else:
 			raise RuntimeError("TaskRunner requires an argument 'site_name'.")
 
-	def enqueue(self):
-		"""
-		Put this thingie into a queue.
-		"""
+	def enqueue(self) -> None:
+		"""Enqueue this component's ``function_payload`` on the configured RQ queue."""
 		component_wrapper = TaskComponentWrapper(
 			btu_task_id=self.btu_task_id,
 			btu_component_id=self.btu_component_id,
@@ -98,30 +91,35 @@ class TaskComponent:
 
 
 class TaskComponentWrapper:
-	def __init__(self, btu_task_id, btu_component_id, btu_task_schedule_id, frappe_site_name, function):
-		"""
-		Initialize the class instance.
-		"""
+	"""Pickle-safe RQ payload that runs a component function and writes BTU Task Logs."""
+
+	def __init__(
+		self,
+		btu_task_id: str,
+		btu_component_id: str,
+		btu_task_schedule_id: str | None,
+		frappe_site_name: str,
+		function: str,
+	) -> None:
+		"""Store primitive identifiers and the dotted path to the component callable."""
 		self.btu_task_id = btu_task_id
 		self.btu_component_id = btu_component_id
 		self.btu_task_schedule_id = btu_task_schedule_id
 		self.frappe_site_name = frappe_site_name
 		self.function_path = function  # dotted string path, e.g. 'myapp.module.function_name'
-		self.kwarg_dict = None
+		self.kwarg_dict: dict[str, object] | None = None
 		self.max_runtime_seconds = 3600
 
-	def add_keyword_arguments(self, **kwargs):
+	def add_keyword_arguments(self, **kwargs: object) -> None:
+		"""Replace stored keyword arguments with ``kwargs`` (or clear if empty)."""
 		if kwargs:
 			self.kwarg_dict = kwargs
 		else:
 			self.kwarg_dict = None
 		frappe.logger("btu").debug("TaskComponentWrapper keyword arguments: %s", self.kwarg_dict)
 
-	def function_payload(self):  # pylint: disable=too-many-locals, too-many-statements
-		"""
-		Wrapper around the component function. Initializes Frappe if needed, resolves
-		the function path, captures stdout, writes BTU Task Log entries.
-		"""
+	def function_payload(self) -> None:  # pylint: disable=too-many-locals, too-many-statements
+		"""Resolve the callable, capture stdout, and update the BTU Task Log."""
 		from btu import Result, get_system_datetime_now, make_datetime_naive
 		from btu.btu_core.doctype.btu_task_log.btu_task_log import write_log_for_task
 
@@ -144,9 +142,9 @@ class TaskComponentWrapper:
 		self.create_new_log(start_datetime)  # Create a new BTU Task Log, with a status of "In Progress"
 		execution_start = time.time()
 
-		function_result = None
+		function_result: Result | None = None
+		stdout_buffer_for_log: str | None = None
 		try:
-			stdout_buffer_for_log = None
 			datetime_string = get_system_datetime_now().strftime("%m/%d/%Y, %H:%M:%S %Z")
 
 			buffer = io.StringIO()
@@ -181,14 +179,8 @@ class TaskComponentWrapper:
 		logger.info("Updated BTU Task Log: '%s'", new_log_id)
 		logger.info("End function_payload: task=%s component=%s", self.btu_task_id, self.btu_component_id)
 
-	def create_new_log(self, date_time_started):
-		"""
-		Create a new BTU Task Log with a status of 'In-Progress'
-		Later, this log will be updated when the job succeeds or fails.
-
-		The continued existing of a Log with the status 'In Progress' is a good indicator to administrators that
-		the BTU Task failed inside the RQ, and will never return a result.
-		"""
+	def create_new_log(self, date_time_started: datetime) -> None:
+		"""Create an In-Progress BTU Task Log row for this component run."""
 		task_description = frappe.get_value("BTU Task", self.btu_task_id, "desc_short")
 		new_log = frappe.new_doc("BTU Task Log")  # Create a new Log.
 		new_log.task = self.btu_task_id

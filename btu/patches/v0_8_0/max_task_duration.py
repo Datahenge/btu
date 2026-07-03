@@ -1,12 +1,12 @@
 # Background Tasks Unleashed, Copyright (c) 2022, Datahenge LLC
 # License: MIT
+"""Migrate BTU Task max_task_duration from string values to integers."""
 
 import frappe
 
 
-def execute():
-
-	# 1. Max Task Duration is changing from a String to an Integer.
+def execute() -> None:
+	"""Convert legacy max_task_duration string values to integer seconds."""
 	if not frappe.db.table_exists("BTU Task"):
 		return
 

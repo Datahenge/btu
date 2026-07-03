@@ -1,22 +1,22 @@
-"""examples.py"""
+"""Example BTU-aware functions and maintenance utilities."""
 
 from datetime import timedelta
+from typing import NoReturn
 
 import frappe
 from frappe.model.sync import sync_for
 from frappe.modules.patch_handler import _patch_mode
 
-# --------------------
-# BTU-Aware Functions
-# --------------------
 from btu import get_system_datetime_now
 from btu.btu_core.btu_task_component import TaskComponent
 from btu.btu_core.doctype.btu_task.btu_task import BTU_AWARE_FUNCTION
 
 
 class btu_aware_example1(BTU_AWARE_FUNCTION):  # pylint: disable=invalid-name
-	def run(self, **kwargs):
+	"""Example BTU-aware class that spawns Task Components in a loop."""
 
+	def run(self, **kwargs: object) -> str:
+		"""Spawn Task Components in a loop and return a status string."""
 		print(f"I'm a BTU-aware function.  I know I was run by BTU Task = {self.btu_task_id}")
 		print(f"Class 'btu_aware_example1' was called with these kwargs: {kwargs}")
 
@@ -37,10 +37,8 @@ class btu_aware_example1(BTU_AWARE_FUNCTION):  # pylint: disable=invalid-name
 		return "I am the result of 'btu_aware_example1'"
 
 
-def ordinary_function(number_to_count):
-	"""
-	This is an ordinary function, with no knowledge of BTU.
-	"""
+def ordinary_function(number_to_count: int) -> None:
+	"""Ordinary function with no knowledge of BTU."""
 	import time
 
 	# This is an ordinary function.
@@ -50,10 +48,8 @@ def ordinary_function(number_to_count):
 
 
 @frappe.whitelist()
-def wait_then_throw_error():
-	"""
-	Wait 10 seconds, then throw an Exception.
-	"""
+def wait_then_throw_error() -> NoReturn:
+	"""Wait 10 seconds, then raise a RuntimeError."""
 	import time
 
 	print("Waiting 10 seconds, then throwing an Exception ...")
@@ -62,8 +58,8 @@ def wait_then_throw_error():
 
 
 @frappe.whitelist()
-def perform_full_db_sync():
-
+def perform_full_db_sync() -> None:
+	"""Force a full JSON-to-database DocType sync for every installed app."""
 	print("Performing a full DB synchronization (JSON --> DocType/MariaDB).  Please standby...")
 	_patch_mode(True)
 
@@ -78,7 +74,8 @@ def perform_full_db_sync():
 	print("DB synchronization complete")
 
 
-def test_get_list():
+def test_get_list() -> None:
+	"""Print how many ToDo documents exist (manual sanity check)."""
 	customers = frappe.get_list("ToDo")
 	print("I got a list of customers.")
 	if frappe.exist_uncommitted_sql_changes():
@@ -87,13 +84,8 @@ def test_get_list():
 	print(f"Found {len(customers)} 'To Do' documents.")
 
 
-def cleanup_transient_tasks(age_in_days=30):
-	"""
-	Remove Log records for historic Transient Tasks.
-
-	CLI:  bench execute btu.examples.cleanup_transient_tasks
-	"""
-
+def cleanup_transient_tasks(age_in_days: int = 30) -> None:
+	"""Delete historic transient task logs (``bench execute btu.examples.cleanup_transient_tasks``)."""
 	older_than_date = get_system_datetime_now().date() + timedelta(days=-age_in_days)
 	task_log_table = frappe.qb.DocType("BTU Task Log")
 	task_table = frappe.qb.DocType("BTU Task")

@@ -1,6 +1,4 @@
-"""btu.hooks.py"""
-
-from . import __version__ as app_version
+"""Frappe hooks and app metadata for Background Tasks Unleashed."""
 
 # pylint: disable=invalid-name
 app_name = "btu"

@@ -1,5 +1,9 @@
+"""BTU Task Log DocType controller."""
+
 # Copyright (c) 2021-2025, Datahenge LLC and contributors
 # For license information, please see license.txt
+
+from datetime import datetime
 
 import frappe
 from frappe.model.document import Document
@@ -11,17 +15,15 @@ from btu.btu_core import btu_email
 
 
 class BTUTaskLog(Document):
-	def after_insert(self):
+	"""Execution log for a BTU Task run."""
 
+	def after_insert(self) -> None:
+		"""Update task metadata and send start or conclusion emails."""
 		if (not self.task_component) or (self.task_component) == "Main":
-			# Update the "Last Result" column on the BTU Task.
-			# NOTE: Setting update_modified prevents "Refresh" errors on the web page.
 			datetime_string = frappe.utils.data.get_datetime_str(get_system_datetime_now())
 			frappe.db.set_value("BTU Task", self.task, "last_runtime", datetime_string, update_modified=False)
 			try:
-				# First, may need to send an email when the task begins.
 				btu_email.email_on_task_start(self)
-				# Next, may need to send an email if the Log is already Success or Failed.
 				if self.success_fail != "In-Progress":
 					btu_email.email_on_task_conclusion(self)
 			except Exception as ex:
@@ -32,14 +34,11 @@ class BTUTaskLog(Document):
 				print_both(message)
 				frappe.set_value("BTU Task Log", self.name, "stdout", message + (self.stdout or ""))
 
-	def on_update(self):
-
+	def on_update(self) -> None:
+		"""Update task metadata and send conclusion emails when a log completes."""
 		if (not self.task_component) or (self.task_component) == "Main":
-			# Update the "Last Result" column on the BTU Task.
-			# NOTE: Setting update_modified prevents "Refresh" errors on the web page.
 			datetime_string = frappe.utils.data.get_datetime_str(get_system_datetime_now())
 			frappe.db.set_value("BTU Task", self.task, "last_runtime", datetime_string, update_modified=False)
-			# Email a summary of the Task to Users:
 			try:
 				if self.success_fail != "In-Progress":
 					btu_email.email_on_task_conclusion(self)
@@ -50,40 +49,24 @@ class BTUTaskLog(Document):
 				frappe.db.set_value("BTU Task Log", self.name, "stdout", message + (self.stdout or ""))
 
 
-def on_doctype_update():  # Yes, 'on_doctype_update' belongs here, outside the Document class.  Pretty silly.
-	"""
-	Create additional indexes and constraints
-	"""
+def on_doctype_update() -> None:
+	"""Create additional indexes and constraints for BTU Task Log."""
 	frappe.db.add_index("BTU Task Log", ["task"], index_name="task_idx")
 	frappe.db.add_index("BTU Task Log", ["schedule"], index_name="schedule_idx")
 	frappe.db.add_index("BTU Task Log", ["task_desc_short"], index_name="description_idx")
 	frappe.db.add_index("BTU Task Log", ["rq_job_id"], index_name="rq_job_id_idx")
 
 
-def write_log_for_task(task_id, result, log_name=None, stdout=None, date_time_started=None, schedule_id=None):
-	"""
-	Given a Task and Result, write to SQL table 'BTU Task Log'
-	References:
-		* btu_task.run_task_on_webserver()
-		* TaskRunner().function_wrapper()
-
-	Arguments
-		task_id	: 	Primary key (name) of a BTU Task.
-		result	:	A Result object.
-		log_name :	Optional.  The name of the Task Log.  Useful when updating an existing, pending log.
-	"""
-
+def write_log_for_task(
+	task_id: str,
+	result: Result,
+	log_name: str | None = None,
+	stdout: str | None = None,
+	date_time_started: datetime | None = None,
+	schedule_id: str | None = None,
+) -> str:
+	"""Write or update a BTU Task Log row for the given task and result."""
 	frappe.logger("btu").info("BTU Task %s overall result: %s", task_id, bool(result))
-
-	# Important Fields in BTU Task Log:
-	#     1.  task
-	#     2.  task_desc_short
-	#     3.  execution_time
-	#     4.  stdout
-	#     5.  schedule
-	#     6.  result_message
-	#     7.  success_fail
-	#     8.  date_time_started
 
 	if not isinstance(result, Result):
 		raise ValueError(
@@ -97,7 +80,6 @@ def write_log_for_task(task_id, result, log_name=None, stdout=None, date_time_st
 				f"Argument 'stdout' should be a Python string.  Found datatype '{type(result)}' instead."
 			)  # pylint: disable=raise-missing-from
 
-	# Slightly faster than 'get_doc()', which would return a complete Document.
 	task_values = frappe.db.get_values(
 		"BTU Task",
 		filters={"name": task_id},
@@ -106,55 +88,41 @@ def write_log_for_task(task_id, result, log_name=None, stdout=None, date_time_st
 		as_dict=True,
 	)
 	if task_values:
-		task_values = task_values[0]  # get first Dictionary in the List.
+		task_values = task_values[0]
 
 	if log_name:
 		new_log = frappe.get_doc("BTU Task Log", log_name)
 	else:
-		new_log = frappe.new_doc("BTU Task Log")  # Create a new Log.
-		new_log.task = task_id  # Field 1
-		new_log.task_desc_short = task_values["desc_short"] if task_values else "Unknown"  # Field 2.
+		new_log = frappe.new_doc("BTU Task Log")
+		new_log.task = task_id
+		new_log.task_desc_short = task_values["desc_short"] if task_values else "Unknown"
 		if schedule_id:
-			new_log.schedule = schedule_id  # Field 5
+			new_log.schedule = schedule_id
 		if date_time_started:
-			new_log.date_time_started = date_time_started  # Field 8
+			new_log.date_time_started = date_time_started
 
 	if result.execution_time:
-		new_log.execution_time = result.execution_time  # Field 3
-	new_log.stdout = (
-		f"{new_log.stdout if new_log.stdout else ''}\n{stdout}"  # Field 4.  Respect previous contents
-	)
-	new_log.result_message = str(
-		result.message
-	)  # Field 6.  Could be a List or Dictionary, so must convert to a String.
+		new_log.execution_time = result.execution_time
+	new_log.stdout = f"{new_log.stdout if new_log.stdout else ''}\n{stdout}"
+	new_log.result_message = str(result.message)
 	if result.okay:
 		new_log.success_fail = "Success"
 	else:
-		new_log.success_fail = "Failed"  # Field 7
+		new_log.success_fail = "Failed"
 
-	# NOTE: Calling new_log.insert() will --not-- trigger Document class controller methods, like 'after_insert'
-	#       Use save() instead.
-	new_log.save(
-		ignore_permissions=True
-	)  # Not even System Administrators are supposed to create and save these.
+	new_log.save(ignore_permissions=True)
 	frappe.db.commit()
 
 	if task_values and task_values["repeat_log_in_stdout"]:
-		print(
-			new_log.stdout
-		)  # intentional: BTU Task field 'repeat_log_in_stdout' explicitly requests echoing captured output to process stdout
+		print(new_log.stdout)
 
 	return new_log.name
 
 
 @frappe.whitelist()
-def delete_logs_by_dates(from_date, to_date):
-	"""
-	Delete records in 'BTU Task Log' where execution date is between a date range.
-	CLI:  bench execute btu.btu_core.doctype.btu_task_log.btu_task_log.delete_logs_by_dates --args "['2025-01-27', '2025-02-17']"
-	"""
-	# First, count the rows to delete (because sql() call does not return # rows deleted, at least not in MariaDB)
-	task_log_table = frappe.qb.DocType("BTU Task Log")  # PyPika Query Builder
+def delete_logs_by_dates(from_date: str, to_date: str) -> int:
+	"""Delete BTU Task Log rows whose start date falls within the given range."""
+	task_log_table = frappe.qb.DocType("BTU Task Log")
 	sql_statement: list = (
 		frappe.qb.from_(task_log_table)
 		.select(fn.Count("*"))
@@ -174,12 +142,8 @@ def delete_logs_by_dates(from_date, to_date):
 
 
 @frappe.whitelist()
-def check_in_progress_logs_for_timeout(verbose=False):
-	"""
-	Examine all logs that are In-Progress.  If they have exceeded the BTU Timeout Minutes, mark them as 'Failed'.
-	"""
-
-	# This function is called via a cron schedule in BTU hooks.py
+def check_in_progress_logs_for_timeout(verbose: bool = False) -> None:
+	"""Mark In-Progress logs as Timeout when they exceed max task duration."""
 	if verbose:
 		frappe.logger("btu").info(
 			"Checking BTU Task Logs that are In-Progress and have exceeded Max Task Duration."
@@ -195,7 +159,7 @@ def check_in_progress_logs_for_timeout(verbose=False):
 		doc_log = frappe.get_doc("BTU Task Log", each_document_name)
 		max_task_duration = frappe.get_value("BTU Task", doc_log.task, "max_task_duration")
 		try:
-			max_task_duration = int(max_task_duration)  # in seconds
+			max_task_duration = int(max_task_duration)
 		except Exception as ex:
 			raise ValueError(
 				"Value of 'Max Task Duration' should be an integer representing seconds."

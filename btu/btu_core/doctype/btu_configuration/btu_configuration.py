@@ -1,3 +1,5 @@
+"""BTU Configuration DocType controller."""
+
 # Copyright (c) 2022-Present, Datahenge LLC and contributors
 # For license information, please see license.txt
 
@@ -11,7 +13,10 @@ from btu.manual_tests import send_hello_email_to_user
 
 
 class BTUConfiguration(Document):
-	def validate(self):
+	"""Site-wide BTU settings including email, scheduler, and timezone configuration."""
+
+	def validate(self) -> None:
+		"""Validate the configured cron timezone name."""
 		from pytz import timezone
 
 		try:
@@ -21,37 +26,26 @@ class BTUConfiguration(Document):
 			raise ValueError(f"Invalid name for Time Zone.  For a list of available names, visit {link_text}")  # pylint: disable=raise-missing-from
 
 	@frappe.whitelist()
-	def button_send_hello_email(self):
-		"""
-		Button for sending a short 'hello' email to the current session user.
-		This demonstrates that BTU email is working.
-		"""
+	def button_send_hello_email(self) -> None:
+		"""Send a short hello email to the current session user."""
 		send_hello_email_to_user()
 
 	@frappe.whitelist()
-	def button_send_ping(self):
-		"""
-		Button sends a 'ping' to the BTU Scheduler daemon on its Unix Domain Socket.
-		"""
+	def button_send_ping(self) -> None:
+		"""Send a ping to the BTU Scheduler daemon on its Unix Domain Socket."""
 		response = SchedulerAPI.send_ping()
 		frappe.msgprint(f"Response from BTU Scheduler daemon:<br>{response}")
 
 	@frappe.whitelist()
-	def button_resubmit_all_task_schedules(self):
-		"""
-		Loop through all enabled Task Schedules, and ask the BTU Scheduler daemon to resubmit them for scheduling.
-		NOTE: This does not immediately execute an RQ Job; only schedule it.
-		"""
+	def button_resubmit_all_task_schedules(self) -> None:
+		"""Resubmit all enabled Task Schedules to the BTU Scheduler daemon."""
 		from btu.btu_core.doctype.btu_task_schedule.btu_task_schedule import resubmit_all_task_schedules
 
 		resubmit_all_task_schedules()
 
 	@frappe.whitelist()
-	def button_send_test_mandrill_email(self):
-		"""
-		Confirm configuration is working by sending an email to the current User.
-		See also: https://mailchimp.com/developer/transactional/api/messages/send-new-message/
-		"""
+	def button_send_test_mandrill_email(self) -> None:
+		"""Send a test Mandrill transactional email to the current user."""
 		from btu.btu_core.btu_email import (
 			MandrillResponse,
 			get_mandrill_response_status_overall,

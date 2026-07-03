@@ -1,7 +1,8 @@
-"""btu/monitor.py"""
+"""Systemd and database monitoring helpers for BTU."""
 
 import json
 import pathlib
+from typing import Any
 
 import frappe
 import requests
@@ -20,11 +21,8 @@ from btu import encode_slack_text
 
 
 # The above code operates on root user units by default. To operate on userspace units, explicitly pass in a user mode DBus instance:
-def check_all_services(expected_services: list, slack_webhook_name=None):
-	"""
-	bench execute btu.monitor.check_all_services
-	"""
-
+def check_all_services(expected_services: list[str] | str, slack_webhook_name: str | None = None) -> None:
+	"""Verify expected systemd services are active (``bench execute btu.monitor.check_all_services``)."""
 	if not expected_services:
 		raise ValueError("Function argument 'expected_services' is mandatory.")
 	if isinstance(expected_services, str):
@@ -59,10 +57,8 @@ def check_all_services(expected_services: list, slack_webhook_name=None):
 		print("All services are online and functioning correctly.")
 
 
-def list_unit_files(print_to_stdout=False):
-	"""
-	bench execute btu.monitor.list_unit_files
-	"""
+def list_unit_files(print_to_stdout: bool = False) -> list[dict[str, str]]:
+	"""List installed systemd unit files (``bench execute btu.monitor.list_unit_files``)."""
 	manager = Manager()
 	manager.load()
 	all_unit_files = manager.Manager.ListUnitFiles()
@@ -80,10 +76,8 @@ def list_unit_files(print_to_stdout=False):
 	return result
 
 
-def show_sql_processes():
-	"""
-	bench execute btu.monitor.show_sql_processes
-	"""
+def show_sql_processes() -> None:
+	"""Print the MariaDB process list (``bench execute btu.monitor.show_sql_processes``)."""
 	statement = """ SHOW FULL PROCESSLIST """
 	result = frappe.db.sql(statement, as_dict=True)
 	if result:
@@ -92,11 +86,8 @@ def show_sql_processes():
 			print(each_row)
 
 
-def post_error_in_slack(webhook_name, error_message: str, verbose=False):
-	"""
-	Post a message in a Slack channel.
-	"""
-
+def post_error_in_slack(webhook_name: str, error_message: str | BaseException, verbose: bool = False) -> None:
+	"""Post a monitor alert message to a configured Slack webhook."""
 	if not webhook_name:
 		raise ValueError("Argument 'webhook_name' is mandatory for function 'post_error_in_slack()'")
 	if not error_message:
@@ -117,7 +108,9 @@ def post_error_in_slack(webhook_name, error_message: str, verbose=False):
 """
 
 	encoded_text = text  # encode_slack_text(text)
-	blocks_object = [{"type": "section", "text": {"type": "mrkdwn", "text": encoded_text}}]
+	blocks_object: list[dict[str, Any]] = [
+		{"type": "section", "text": {"type": "mrkdwn", "text": encoded_text}}
+	]
 
 	blocks_text = json.dumps(blocks_object)
 	encoded_blocks_text = encode_slack_text(blocks_text)

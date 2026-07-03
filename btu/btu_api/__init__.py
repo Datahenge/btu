@@ -1,27 +1,38 @@
-"""btu/btu_api"""
+"""BTU API helpers for RQ job serialization and transient tasks."""
 
 import inspect
 import os
 import pickle
 import time
+from collections.abc import Callable
 from functools import partial
+from typing import TYPE_CHECKING, Any
 
 import frappe
 from frappe.utils import cstr
 from rq.compat import as_text, string_types
 
+if TYPE_CHECKING:
+	from btu.btu_core.doctype.btu_task.btu_task import BTUTask
+
 
 class Sanchez:
-	def __init__(self):
-		self.function_name = None
-		self.instance = None
-		self.args = ()
-		self.kwargs = {}
+	"""Build and pickle RQ job payloads from callables and arguments."""
 
-	def build_internals(self, func, _args, _kwargs):
-		"""
-		Given a function (probably 'execute_job') and _kwargs, create an RQ job.
-		"""
+	def __init__(self) -> None:
+		"""Initialize an empty RQ job serializer."""
+		self.function_name: str | None = None
+		self.instance: Any = None
+		self.args: tuple[Any, ...] = ()
+		self.kwargs: dict[str, Any] = {}
+
+	def build_internals(
+		self,
+		func: Callable[..., Any] | str,
+		_args: tuple[Any, ...] | None,
+		_kwargs: dict[str, Any] | None,
+	) -> None:
+		"""Populate job metadata from a callable (or path string) and arguments."""
 		if inspect.ismethod(func):
 			self.instance = func.__self__
 			self.function_name = func.__name__
@@ -29,7 +40,7 @@ class Sanchez:
 			self.function_name = f"{func.__module__}.{func.__qualname__}"
 		elif isinstance(func, string_types):
 			self.function_name = as_text(func)
-		elif not inspect.isclass(func) and hasattr(func, "__call__"):  # a callable class instance
+		elif not inspect.isclass(func) and callable(func):  # a callable class instance
 			self._instance = func
 			self.function_name = "__call__"
 		else:
@@ -45,10 +56,8 @@ class Sanchez:
 		# if self.kwargs is None:
 		#  self.kwargs = {}
 
-	def get_serialized_rq_job(self):
-		"""
-		Create a tuple of RQ Job 'data', and return in a serialized (pickled) binary format.
-		"""
+	def get_serialized_rq_job(self) -> bytes:
+		"""Return the RQ job tuple as pickled bytes."""
 		job_tuple = self.function_name, self.instance, self.args, self.kwargs
 		dumps = partial(pickle.dumps, protocol=pickle.HIGHEST_PROTOCOL)  # defines how to do the pickling.
 		return dumps(job_tuple)  # this is the serialized/pickled job
@@ -56,10 +65,17 @@ class Sanchez:
 
 # The following function was copied from 'frappe.utils.background_jobs'
 # pylint: disable=too-many-branches, inconsistent-return-statements
-def execute_job(site, method, event, job_name, kwargs, user=None, is_async=True, retry=0):
-	"""
-	Executes job in a worker, performs commit/rollback and logs if there is any error
-	"""
+def execute_job(
+	site: str,
+	method: Callable[..., Any] | str,
+	event: str | None,
+	job_name: str,
+	kwargs: dict[str, Any] | None,
+	user: str | None = None,
+	is_async: bool = True,
+	retry: int = 0,
+) -> None:
+	"""Execute a job in a worker, with commit/rollback and error logging."""
 	if is_async:
 		frappe.connect(site)
 		if os.environ.get("CI"):
@@ -117,36 +133,18 @@ def execute_job(site, method, event, job_name, kwargs, user=None, is_async=True,
 
 
 class TransientTask:
-	"""
-	The Transient Task is a kind of temporary BTU Task.  It only runs 1 time, then is discarded.
-
-	Usage:
-
-		from btu.btu_api import TransientTask
-		TransientTask.create_new_transient(
-			function_path = "path.to_some.function",
-			description = "Description of this Function",
-			max_task_duration='6000s',
-			queue_name='short',
-			argument1='foo',
-			argument2='bar',
-			argument3='baz'
-		).enqueue()
-
-	"""
+	"""Temporary BTU Task that runs once, then is discarded (see ``create_new_transient``)."""
 
 	@staticmethod
 	def create_new_transient(
-		function_path,
-		description,
-		task_group="Transient",
-		max_task_duration="600s",
-		queue_name="short",
-		**kwargs,
-	):
-		"""
-		Create a new, transient Subtask.
-		"""
+		function_path: str,
+		description: str,
+		task_group: str = "Transient",
+		max_task_duration: str = "600s",
+		queue_name: str = "short",
+		**kwargs: object,
+	) -> "TransientTask":
+		"""Create a new transient Subtask document and wrap it in a TransientTask."""
 		doc_task = frappe.new_doc("BTU Task")
 		doc_task.desc_short = description
 		doc_task.task_group = task_group
@@ -167,7 +165,8 @@ class TransientTask:
 		transient_task = TransientTask(doc_task)
 		return transient_task
 
-	def __init__(self, doc_task):
+	def __init__(self, doc_task: "BTUTask") -> None:
+		"""Wrap an existing BTU Task document as a transient Subtask."""
 		from btu.btu_core.doctype.btu_task.btu_task import BTUTask
 
 		if not isinstance(doc_task, BTUTask):
@@ -176,11 +175,8 @@ class TransientTask:
 			)
 		self.doc_task = doc_task
 
-	def enqueue(self):
-		"""
-		Called via button on document's main page.
-		Sends a function call into the Redis Queue named 'default'
-		"""
+	def enqueue(self) -> None:
+		"""Push this transient Subtask into the Redis queue."""
 		if self.doc_task.task_type != "Subtask":
 			raise ValueError(f"BTU Task {self.doc_task.name} is not a transient Subtask.")
 

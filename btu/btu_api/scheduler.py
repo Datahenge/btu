@@ -1,10 +1,14 @@
-"""btu/btu_api/scheduler.py"""
+"""Redis RPC client for communicating with the BTU Scheduler daemon."""
 
 import json
 import uuid
 from enum import Enum
+from typing import TYPE_CHECKING, Any
 
 import frappe
+
+if TYPE_CHECKING:
+	import redis
 
 # Redis key where the BTU Scheduler daemon listens for incoming commands.
 REDIS_COMMAND_QUEUE = "btu:scheduler:commands"
@@ -20,12 +24,14 @@ REDIS_RPC_TIMEOUT_SECONDS = 5
 
 
 class RequestType(Enum):
+	"""Command types accepted by the BTU Scheduler daemon."""
+
 	create_task_schedule = 0
 	ping = 1
 	cancel_task_schedule = 2
 
 
-def _get_redis_connection():
+def _get_redis_connection() -> "redis.Redis[str]":
 	"""Return a Redis connection pointed at Frappe's RQ database."""
 	import redis as redis_lib
 
@@ -33,49 +39,33 @@ def _get_redis_connection():
 
 
 class SchedulerAPI:
-	"""
-	Client-side API for communicating with the BTU Scheduler daemon.
-
-	Commands are delivered via Redis RPC: the caller pushes a JSON command onto
-	REDIS_COMMAND_QUEUE, then blocks on a unique response key.  The scheduler
-	ACKs receipt immediately (before executing), which keeps the caller's wait
-	time near-instantaneous regardless of queue depth.
-
-	See docs/scheduler_redis_rpc.md for the full protocol description.
-	"""
+	"""Redis RPC client for the BTU Scheduler daemon (see ``docs/scheduler_redis_rpc.md``)."""
 
 	@staticmethod
-	def send_ping():
+	def send_ping() -> dict[str, Any] | None:
 		"""Ask the BTU Scheduler to reply with a receipt acknowledgement."""
 		return SchedulerAPI().send_message(RequestType.ping, content=None)
 
 	@staticmethod
-	def reload_task_schedule(task_schedule_id):
-		"""
-		Ask the BTU Scheduler to reload the Task Schedule in RQ using the latest information.
-		Does not trigger an immediate execution; only refreshes the schedule entry.
-		"""
+	def reload_task_schedule(task_schedule_id: str) -> dict[str, Any] | None:
+		"""Reload a Task Schedule in RQ without triggering immediate execution."""
 		return SchedulerAPI().send_message(RequestType.create_task_schedule, content=task_schedule_id)
 
 	@staticmethod
-	def cancel_task_schedule(task_schedule_id):
-		"""Ask the BTU Scheduler to remove the Task Schedule from RQ."""
+	def cancel_task_schedule(task_schedule_id: str) -> dict[str, Any] | None:
+		"""Ask the BTU Scheduler to remove a Task Schedule from RQ."""
 		return SchedulerAPI().send_message(RequestType.cancel_task_schedule, content=task_schedule_id)
 
-	def send_message(self, request_type: RequestType, content):
+	def send_message(self, request_type: RequestType, content: str | None) -> dict[str, Any] | None:
+		"""Send a typed command to the scheduler and return its JSON acknowledgement."""
 		if not isinstance(request_type, RequestType):
 			raise TypeError("Argument 'request_type' must be an enum of RequestType.")
 		return self._send_message_via_redis_rpc(request_type.name, content)
 
-	def _send_message_via_redis_rpc(self, request_type_name: str, content):
-		"""
-		Push a command onto the BTU Scheduler's Redis command queue and block-wait
-		for the receipt acknowledgement.
-
-		Returns the parsed JSON response dict on success, or None on timeout/error.
-		A None return means the scheduler is not running or not reachable via Redis —
-		it does NOT mean the command failed to execute.
-		"""
+	def _send_message_via_redis_rpc(
+		self, request_type_name: str, content: str | None
+	) -> dict[str, Any] | None:
+		"""Push a scheduler command and block-wait for the receipt ACK (or return None)."""
 		response_key = f"{REDIS_RPC_RESPONSE_PREFIX}:{uuid.uuid4().hex}"
 		command = json.dumps(
 			{

@@ -1,10 +1,4 @@
-# What called me?  Or was I just enqueued?
-# How do I lock to prevent multiple instances?
-# Write to a the log:  "In Progress"?
-# If after the Select For Update, I should check the status.
-# Call a Python function.  Make sure it's fully wrapped in Try-Except
-# Get the response
-# Do something with it.
+"""RQ worker handlers for BTU Run Later document execution."""
 
 import json
 
@@ -14,10 +8,11 @@ from btu.btu_core.doctype.btu_task.btu_task import create_and_run_one_shot
 
 
 class WrappedFunction:
-	pass
+	"""Placeholder for future run-later wrapper utilities."""
 
 
-def enqueued_run_later_instance(run_later_key: str):
+def enqueued_run_later_instance(run_later_key: str) -> None:
+	"""Execute a BTU Run Later record (normally invoked from an RQ worker)."""
 	# NOTE: This function will normally be running via RQ Workers.
 
 	# Lock down the BTU Run Later record

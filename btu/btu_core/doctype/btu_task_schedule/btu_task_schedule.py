@@ -1,13 +1,15 @@
+"""BTU Task Schedule DocType controller."""
+
 # Copyright (c) 2015, Codrotech Inc. and contributors
 #
 # Copyright (c) 2021-2025, Datahenge LLC and contributors
 # For license information, please see license.txt
 
-
 import ast
 import calendar
 from calendar import monthrange
 from datetime import datetime as datetime_type
+from typing import Any
 
 # Third Party
 import cron_descriptor
@@ -27,24 +29,23 @@ cron_day_dictionary = {"Sun": 0, "Mon": 1, "Tue": 2, "Wed": 3, "Thu": 4, "Fri": 
 
 
 class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
-	def on_trash(self):
-		"""
-		After deleting this Task Schedule, delete the corresponding Python RQ data.
-		"""
+	"""Cron-based schedule binding a BTU Task to a recurring execution plan."""
+
+	def on_trash(self) -> None:
+		"""Cancel scheduler state after this Task Schedule is deleted."""
 		try:
 			self.cancel_schedule()
 		except Exception as ex:
 			print(ex)
 			frappe.msgprint(ex)
 
-	def before_validate(self):
-
+	def before_validate(self) -> None:
+		"""Normalize schedule fields before validation."""
 		self.task_description = self.get_task_doc().desc_short
 
 		if not self.cron_timezone:
 			self.cron_timezone = frappe.db.get_system_setting("time_zone")
 
-		# Clear fields that are not relevant for this schedule type.
 		if self.run_frequency == "Cron Style":
 			self.day_of_week = None
 			self.day_of_month = None
@@ -61,7 +62,8 @@ class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
 			self.day_of_month = None
 			self.month = None
 
-	def validate(self):
+	def validate(self) -> None:
+		"""Validate schedule fields and build the cron string and description."""
 		if self.run_frequency == "Hourly":
 			check_minutes(self.minute)
 			self.cron_string = schedule_to_cron_string(self)
@@ -92,11 +94,10 @@ class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
 		elif self.run_frequency == "Cron Style":
 			validate_cron_string(str(self.cron_string))
 
-		# Create a friendly, human-readable description based on the cron string:
 		self.schedule_description = cron_descriptor.get_description(self.cron_string)
 
-	def before_save(self):
-
+	def before_save(self) -> None:
+		"""Resubmit or cancel scheduler state when enabled status changes."""
 		if "|" in self.name:
 			raise ValueError("Task Schedules cannot have the pipe character (|) in their primary key 'name'.")
 
@@ -105,21 +106,16 @@ class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
 				self.resubmit_task_schedule()
 			except Exception as ex:
 				frappe.msgprint(ex, indicator="red")
-		else:  # Task is not enabled, so Cancel it.
+		else:
 			doc_orig = self.get_doc_before_save()
 			if doc_orig and doc_orig.enabled != self.enabled:
-				# Request the BTU Scheduler to cancel (if status was not previously Disabled)
 				try:
 					self.cancel_schedule()
 				except Exception as ex:
 					print_both(ex)
 
-	# -----end of standard controller methods-----
-
-	def resubmit_task_schedule(self, autosave=False):
-		"""
-		Send a request to the BTU Scheduler background daemon to reload this Task Schedule in RQ.
-		"""
+	def resubmit_task_schedule(self, autosave: bool = False) -> None:
+		"""Ask the BTU Scheduler daemon to reload this Task Schedule."""
 		try:
 			self.cancel_schedule()
 		except Exception as ex:
@@ -137,10 +133,8 @@ class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
 		if autosave:
 			self.save()
 
-	def cancel_schedule(self):
-		"""
-		Ask the BTU Scheduler daemon to cancel this Task Schedule in the Redis Queue.
-		"""
+	def cancel_schedule(self) -> dict[str, Any] | None:
+		"""Ask the BTU Scheduler daemon to cancel this Task Schedule."""
 		response = SchedulerAPI.cancel_task_schedule(task_schedule_id=self.name)
 		ack = response.get("message", str(response)) if response else "No response from BTU Scheduler daemon."
 		message = f"Request = Cancel Task Schedule.\nResponse from BTU Scheduler: {ack}"
@@ -149,14 +143,13 @@ class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
 		self.redis_job_id = ""
 		return response
 
-	def get_task_doc(self):
+	def get_task_doc(self) -> Document:
+		"""Return the linked BTU Task document."""
 		return frappe.get_doc("BTU Task", self.task)
 
 	@frappe.whitelist()
-	def get_last_execution_results(self):
-		"""
-		Query the Python RQ database for information about the last execution of this Job.
-		"""
+	def get_last_execution_results(self) -> None:
+		"""Query Redis for information about the last execution of this job."""
 		import zlib
 
 		from frappe.utils.background_jobs import get_redis_conn
@@ -183,12 +176,10 @@ class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
 			frappe.msgprint(zlib.decompress(compressed_data))
 
 	@frappe.whitelist()
-	def button_test_email_via_log(self):
-		"""
-		Write an entry to the BTU Task Log, which should trigger emails.  Then delete the entry.
-		"""
+	def button_test_email_via_log(self) -> None:
+		"""Write a temporary Task Log to trigger test emails, then delete it."""
 		from btu.btu_core.doctype.btu_task_log.btu_task_log import (
-			write_log_for_task,  # late import to avoid circular reference
+			write_log_for_task,
 		)
 
 		if not self.email_recipients:
@@ -209,43 +200,33 @@ class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
 			frappe.msgprint(f"Errors while testing Task Emails: {ex}")
 			raise ex
 
-	def built_in_arguments(self):
-		# TODO (v16): The 'argument_overrides' field on BTU Task Schedule uses the same
-		# Python-literal format as the 'arguments' field on BTU Task (see the sister method
-		# on BTUTask for full history).  This function never received the json.loads() upgrade
-		# that BTUTask.built_in_arguments() did in commit fb91e4c (Jun 2025), so it is
-		# still ast.literal_eval-only.
-		#
-		# As part of the v16 JSON migration: migrate 'argument_overrides' alongside
-		# 'arguments', then replace this with json.loads() and remove ast.literal_eval.
+	def built_in_arguments(self) -> dict[str, Any] | None:
+		"""Parse schedule argument overrides into a dictionary."""
 		if not self.argument_overrides:
 			return None
 		return ast.literal_eval(self.argument_overrides)
 
 
-# ----------------
-# STATIC FUNCTIONS
-# ----------------
-
-
-def check_minutes(minute):
+def check_minutes(minute: int | None) -> None:
+	"""Validate the minute field for hourly or finer schedules."""
 	if isinstance(minute, NoneType) or not 0 <= int(minute) < 60:
 		raise ValueError(_("Minute value must be between 0 and 59"))
 
 
-def check_hours(hour):
+def check_hours(hour: str | None) -> None:
+	"""Validate the hour field for daily or finer schedules."""
 	if not hour or not hour.isdigit() or not 0 <= int(hour) < 24:
 		raise ValueError(_("Hour value must be between 0 and 23"))
 
 
-def check_day_of_week(day_of_week):
-
+def check_day_of_week(day_of_week: str | None) -> None:
+	"""Validate the day-of-week field for weekly schedules."""
 	if not day_of_week or day_of_week is None:
 		raise ValueError(_("Please choose a day of the week"))
 
 
-def check_day_of_month(run_frequency, day, month=None):
-
+def check_day_of_month(run_frequency: str, day: int | None, month: str | None = None) -> None:
+	"""Validate day-of-month and month fields for monthly or yearly schedules."""
 	if run_frequency == "Monthly" and not day:
 		raise ValueError(_("Please choose a day of the month"))
 
@@ -259,27 +240,15 @@ def check_day_of_month(run_frequency, day, month=None):
 			raise ValueError(_("Please choose a day of the week and a month"))
 
 
-def schedule_to_cron_string(doc_schedule):
-	"""
-	Convert individual schedule fields (Hour, Day, Minute, etc.) into a Unix cron string.
-
-	Input:   A BTU Task Schedule document class.
-	Output:  A Unix cron string in local time (never UTC).
-
-	Timezone-aware conversion to UTC happens in the BTU Scheduler daemon at scheduling time,
-	using the cron_timezone field.  Storing the cron in local time is what allows DST to be
-	handled correctly — a single "0 18 * * *" in America/New_York fires at 18:00 Eastern
-	year-round, producing 23:00 UTC in winter and 22:00 UTC in summer.
-	"""
-
+def schedule_to_cron_string(doc_schedule: "BTUTaskSchedule") -> str:
+	"""Convert schedule fields into a Unix cron string in local time."""
 	if not isinstance(doc_schedule, BTUTaskSchedule):
 		raise ValueError("Function argument 'doc_schedule' should be a BTU Task Schedule document.")
 
 	if doc_schedule.run_frequency == "Cron Style":
 		return doc_schedule.cron_string
 
-	# Default every position to wildcard; only override positions that carry a real value.
-	cron = ["*", "*", "*", "*", "*"]  # [minute, hour, day-of-month, month, day-of-week]
+	cron = ["*", "*", "*", "*", "*"]
 
 	if not isinstance(doc_schedule.minute, NoneType):
 		cron[0] = str(int(doc_schedule.minute))
@@ -302,11 +271,8 @@ def schedule_to_cron_string(doc_schedule):
 
 
 @frappe.whitelist()
-def resubmit_all_task_schedules():
-	"""
-	Purpose: Loop through all enabled Task Schedules, and ask the BTU Scheduler daemon to resubmit them for scheduling.
-	NOTE: This does -not- immediately execute an RQ Job; it only schedules it.
-	"""
+def resubmit_all_task_schedules() -> None:
+	"""Resubmit all enabled Task Schedules to the BTU Scheduler daemon."""
 	filters = {"enabled": True}
 	task_schedule_ids = frappe.db.get_all("BTU Task Schedule", filters=filters, pluck="name")
 	for task_schedule_id in task_schedule_ids:
@@ -321,23 +287,16 @@ def resubmit_all_task_schedules():
 			doc_schedule.save()
 
 
-def get_system_timezone():
-	"""
-	Returns the Time Zone of the Site.
-	"""
+def get_system_timezone() -> pytz.BaseTzInfo:
+	"""Return the site timezone from System Settings."""
 	system_time_zone = frappe.db.get_system_setting("time_zone")
 	if not system_time_zone:
 		raise ValueError("Please configure a Time Zone under 'System Settings'.")
 	return pytz.timezone(system_time_zone)
 
 
-def localize_datetime(any_datetime):
-	"""
-	Given a naive datetime and time zone, return the localized datetime.
-
-	Necessary because Python is -extremely- confusing when it comes to datetime + timezone.
-	"""
-
+def localize_datetime(any_datetime: datetime_type) -> datetime_type:
+	"""Return a timezone-aware datetime for a naive local datetime."""
 	time_zone = get_system_timezone()
 	if not isinstance(any_datetime, datetime_type):
 		raise TypeError("Argument 'any_datetime' must be a Python datetime object.")
@@ -347,12 +306,9 @@ def localize_datetime(any_datetime):
 			f"Datetime value {any_datetime} is already localized and time zone aware (tzinfo={any_datetime.tzinfo})"
 		)
 
-	# What kind of time zone object was passed?
 	type_name = type(time_zone).__name__
 
 	if type_name == "ZoneInfo":
-		# Only available in Python 3.9+
-		# DO NOT USE:  naive_datetime.astimezone(timezone).  This implicitly shifts you the UTC offset.
 		return any_datetime.replace(tzinfo=time_zone)
 
 	return time_zone.localize(any_datetime)
