@@ -2,7 +2,7 @@
 
 BTU can run a standard Frappe **Report**, build the result, and deliver it on a schedule (or on demand) to one or more targets: Email, a file on disk, or Slack.
 
-The entry point is the Python function `btu.auto_report.run_btu_report`. You normally invoke it from a **BTU Task** by setting the task's function path and passing a dictionary of arguments.
+The entry point is `btu.btu_core.auto_report.run_btu_report` (legacy path `btu.auto_report.run_btu_report` also works). You normally invoke it from a **BTU Task** by setting the task's function path and passing a dictionary of arguments.
 
 This guide uses Frappe's built-in **ToDo** report (`Report` name: `ToDo`). That report ships with Frappe Framework and requires no ERPNext apps. It lists open ToDo items for the current user and accepts no filters, which keeps the example short.
 
@@ -36,7 +36,7 @@ Each delivery target is a dictionary:
 2. Set **Function** to:
 
    ```
-   btu.auto_report.run_btu_report
+   btu.btu_core.auto_report.run_btu_report
    ```
 
 3. Set **Function Arguments** to (JSON or Python dict):
@@ -66,7 +66,7 @@ Each delivery target is a dictionary:
 Useful for testing before scheduling:
 
 ```bash
-bench --site YOUR_SITE execute btu.auto_report.run_btu_report --kwargs '{
+bench --site YOUR_SITE execute btu.btu_core.auto_report.run_btu_report --kwargs '{
   "report_key": "ToDo",
   "report_parameters": {},
   "delivery_targets": [
@@ -123,5 +123,5 @@ For script or query reports that accept filters, put them in `report_parameters`
 
 ### Related code
 
-- Implementation: `btu/auto_report.py` (`BTUReport`, `DeliveryTarget`, `run_btu_report`).
+- Implementation: `btu/btu_core/auto_report.py` (`BTUReport`, `DeliveryTarget`, `run_btu_report`).
 - Task execution: BTU passes **Function Arguments** as keyword arguments to the callable (see **BTU Task** DocType).

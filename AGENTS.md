@@ -10,7 +10,8 @@
 | 2 | [README.md](README.md) | Product overview, links to official docs |
 | 3 | [docs/index.md](docs/index.md) | Local documentation index |
 | 4 | Topic-specific docs under [docs/](docs/) | Installation, configuration, CLI/web guides, FAQ |
-| 5 | [btu/btu_api/REFERENCE.md](btu/btu_api/REFERENCE.md) | Scheduler Redis RPC protocol (when touching scheduler integration) |
+| 5 | [docs/scheduler_redis_rpc.md](docs/scheduler_redis_rpc.md) | Scheduler Redis RPC protocol (when touching scheduler integration) |
+| 6 | [docs/dev/index.md](docs/dev/index.md) | Contributor layout and archived scripts index |
 
 Official user documentation: <https://datahenge.github.io/btu/>
 
@@ -40,12 +41,17 @@ Scheduler ↔ Frappe communication uses a Redis RPC protocol documented in [docs
 btu/                          # Python package root (Frappe app)
 ├── hooks.py                  # Frappe hooks (scheduler_events, fixtures, before_job)
 ├── __init__.py               # Version, Result class, shared utilities
-├── examples.py               # Sample BTU Task target functions
-├── auto_report.py            # Scheduled report build and delivery
+├── samples/                  # Example BTU Task target functions
+├── diagnostics/              # bench execute smoke tests (not production tasks)
+├── examples.py               # Deprecated shim → btu.samples
+├── manual_tests.py           # Deprecated shim → btu.diagnostics
+├── auto_report.py            # Deprecated shim → btu.btu_core.auto_report
 ├── btu_core/                 # Core DocTypes and task execution
 │   ├── task_runner.py        # RQ entry point; runs BTU Tasks in workers
 │   ├── run_later.py          # Deferred execution helpers
 │   ├── housekeeping.py       # BTU-specific maintenance (e.g. transient log cleanup)
+│   ├── rq_admin.py           # Failed RQ job tools (BTU Configuration UI)
+│   ├── auto_report.py        # Scheduled report build and delivery
 │   ├── wrapped_function.py   # Function wrapping for logging
 │   └── doctype/              # BTU Task, BTU Task Schedule, BTU Task Log, etc.
 ├── btu_api/                  # Scheduler daemon API (Redis RPC, endpoints)

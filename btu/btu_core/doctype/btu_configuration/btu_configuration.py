@@ -9,7 +9,7 @@ from mailchimp_transactional.api_client import ApiClientError
 
 from btu import print_both
 from btu.btu_api.scheduler import SchedulerAPI
-from btu.manual_tests import send_hello_email_to_user
+from btu.btu_core.btu_email import send_hello_email_to_current_user
 
 
 class BTUConfiguration(Document):
@@ -28,7 +28,7 @@ class BTUConfiguration(Document):
 	@frappe.whitelist()
 	def button_send_hello_email(self) -> None:
 		"""Send a short hello email to the current session user."""
-		send_hello_email_to_user()
+		send_hello_email_to_current_user()
 
 	@frappe.whitelist()
 	def button_send_ping(self) -> None:

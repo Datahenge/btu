@@ -35,7 +35,7 @@ def test_one() -> None:
 		short_name="test_one",
 		not_before_time=now,
 		target_queue="default",
-		path_to_function="btu.manual_tests.ping_with_wait",
+		path_to_function="btu.diagnostics.smoke.ping_with_wait",
 		arguments={"seconds_to_wait": 10},
 		unique_identifier="TEST-ONE",
 	)

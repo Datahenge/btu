@@ -16,7 +16,7 @@ frappe.ui.form.on('BTU Configuration', {
 		frm.add_custom_button(__('List Failed RQ Jobs'), () => {
 			frappe.call({
 					type:"GET",
-					method:"btu.list_failed_jobs",
+					method:"btu.btu_core.rq_admin.list_failed_jobs",
 				}).done(() => {
 					frm.reload_doc();
 				}).fail(() => {
@@ -53,7 +53,7 @@ frappe.ui.form.on('BTU Configuration', {
 
 				frappe.call({
 					type:"POST",
-					method:"btu.print_job_details",
+					method:"btu.btu_core.rq_admin.print_job_details",
 					args: {
 						"queue_name": args.queue_name,
 						"job_id": args.job_id
@@ -106,7 +106,7 @@ frappe.ui.form.on('BTU Configuration', {
 
 				frappe.call({
 					type:"DELETE",
-					method:"btu.remove_failed_jobs",
+					method:"btu.btu_core.rq_admin.remove_failed_jobs",
 					args: { 
 						"date_from": args.date_from,
 						"date_to": args.date_to,

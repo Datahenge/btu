@@ -58,7 +58,7 @@ def test_hello_world_bytes() -> Response:
 @frappe.whitelist()
 def test_function_ping_now_bytes() -> bytes:
 	"""Return pickled RQ job bytes for the ``ping_now`` test function."""
-	from btu.manual_tests import ping_now
+	from btu.diagnostics.smoke import ping_now
 
 	queue_args = {
 		"site": frappe.local.site,

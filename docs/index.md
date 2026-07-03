@@ -22,3 +22,7 @@ Answers to frequently asked questions [can be found here.](https://datahenge.git
 
 ### Technical Design
 [This article](https://datahenge.github.io/btu/technical_design.html) describes the technology and architecture behind the BTU.
+
+### Developer
+* [Repository layout](dev/repository_layout.md)
+* [Archived utility scripts (Gists)](dev/gists.md)

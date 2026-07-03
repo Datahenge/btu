@@ -396,3 +396,37 @@ def email_on_task_conclusion(doc_task_log: "BTUTaskLog", send_via_queue: bool = 
 			raise NotImplementedError("Not Yet Implemented: Sending email via Redis Queue.")
 
 	frappe.logger("btu").debug("Sent email message to recipients: %s", list(email_recipients))
+
+
+@frappe.whitelist()
+def send_hello_email_to_current_user(debug: bool = False) -> str:
+	"""Send a short test email to the current session user (BTU Configuration smoke test)."""
+	import datetime
+	import inspect
+
+	caller_name = inspect.stack()[2][3]
+	if caller_name in ("execute_cmd", "<lambda>"):
+		caller_name = "JavaScript on a web page."
+
+	user_doc = frappe.get_doc("User", frappe.session.user)
+	if not user_doc.email:
+		frappe.throw(
+			f"Current user '{user_doc.name}' does not have an Email Address associated with their account."
+		)
+
+	datetime_now_string = datetime.datetime.now().strftime("%A, %B %d %Y, %-I:%M %p")
+
+	message_body = f"Hello, {user_doc.full_name}."
+	message_body += "\n\nThis email was initiated by BTU's test-email helper."
+	message_body += f"\n\n* Function caller is '{caller_name}'"
+	message_body += f"\n* Current server time is {datetime_now_string}"
+	message_body += "\n\n--------\n"
+
+	if debug:
+		print(f"Sending test email to address '{user_doc.email}'")
+	frappe.msgprint(f"Sending test email to address '{user_doc.email}' ...")
+
+	subject = f"From BTU: Hello {user_doc.full_name}"
+	Emailer(subject=subject, body=message_body, sender=None, emailto_list=user_doc.email).send()
+
+	return "If successful, a test email will arrive soon."
