@@ -2,6 +2,11 @@
 
 The original BTU Scheduler ([btu_scheduler_daemon](https://github.com/Datahenge/btu_scheduler_daemon)) was a Rust binary distributed per Linux distribution.
 
+<figure class="btu-screenshot" markdown="span">
+![btu-cli 0.3.2 help output](../assets/images/btu_cli_1.png)
+<figcaption>The retired <code>btu-cli</code> 0.3.2 Rust binary — subcommands like <code>list-jobs</code>, <code>queue-task-now</code>, and <code>test-ping</code> are no longer available</figcaption>
+</figure>
+
 ## Status: retired
 
 Maintenance has ended. Reasons include cross-platform build burden (glibc variants, WSL, macOS) vs maintainer capacity.
