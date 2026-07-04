@@ -20,12 +20,37 @@ import frappe
 import mailchimp_transactional as MailchimpTransactional  # This is the official Python SDK for Mandrill
 from frappe import _
 from frappe.model.document import Document
+from frappe.utils import cstr
 
 # BTU
 from btu import print_both
 
 if TYPE_CHECKING:
 	from btu.btu_core.doctype.btu_task_log.btu_task_log import BTUTaskLog
+
+
+class BTUEmailSendError(Exception):
+	"""Raised when BTU cannot send a notification email."""
+
+
+def _raise_btu_email_send_error(
+	delivery_method: str,
+	exc: Exception,
+	account_name: str | None = None,
+) -> None:
+	"""Log a concise email failure and raise BTUEmailSendError."""
+	if isinstance(exc, BTUEmailSendError):
+		raise exc
+
+	detail = cstr(exc).strip() or exc.__class__.__name__
+	if account_name:
+		message = f"BTU failed to send email via {delivery_method} (Email Account '{account_name}'): {detail}"
+	else:
+		message = f"BTU failed to send email via {delivery_method}: {detail}"
+
+	frappe.logger("btu").error(message)
+	print_both(message)
+	raise BTUEmailSendError(message) from exc
 
 
 def new_mandrill_client(doc_configuration: Document | None = None) -> MailchimpTransactional.Client:
@@ -148,11 +173,13 @@ class Emailer:
 		"""Send the email using a linked Frappe Email Account."""
 		account_name = self.doc_btu_config.default_email_account
 		if not account_name:
-			frappe.throw(_("BTU Configuration requires a Default Email Account."))
+			raise BTUEmailSendError(_("BTU Configuration requires a Default Email Account."))
 
 		email_account = frappe.get_doc("Email Account", account_name)
 		if not email_account.enable_outgoing:
-			frappe.throw(_("Email Account {0} does not have outgoing email enabled.").format(account_name))
+			raise BTUEmailSendError(
+				_("Email Account {0} does not have outgoing email enabled.").format(account_name)
+			)
 
 		recipients = list(self.emailto_list)
 		if not recipients:
@@ -163,18 +190,23 @@ class Emailer:
 			html_body = self.body.replace("\n", "<br>")
 			message = f"<html><body>{html_body}</body></html>"
 
-		frappe.sendmail(
-			recipients=recipients,
-			sender=self.sender or email_account.email_id,
-			subject=self.subject,
-			message=message,
-			cc=list(self.ccto_list) or None,
-			bcc=list(self.bccto_list) or None,
-			delayed=False,
-			now=True,
-			reference_doctype="BTU Configuration",
-			reference_name="BTU Configuration",
-		)
+		try:
+			frappe.sendmail(
+				recipients=recipients,
+				sender=self.sender or email_account.email_id,
+				subject=self.subject,
+				message=message,
+				cc=list(self.ccto_list) or None,
+				bcc=list(self.bccto_list) or None,
+				delayed=False,
+				now=True,
+				reference_doctype="BTU Configuration",
+				reference_name="BTU Configuration",
+			)
+		except BTUEmailSendError:
+			raise
+		except Exception as exc:
+			_raise_btu_email_send_error("Email Account", exc, account_name=account_name)
 
 	def _send_via_mandrill(self) -> None:
 		new_message = {
@@ -214,14 +246,11 @@ class Emailer:
 				print_both(f"Unhandled error response from Mandrill API: {response}")
 				raise OSError(response)
 
-		except OSError as ex:
-			if isinstance(ex, list):
-				error_string = json.dumps(ex)
-			else:
-				error_string = str(ex)
-			print_both(f"Error while sending email via Mandrill: {error_string}")
+		except BTUEmailSendError:
+			raise
+		except Exception as ex:
 			frappe.logger("btu").debug("Message sent to Mandrill:\n%s", json.dumps(new_message, indent=4))
-			frappe.msgprint(f"Error while sending email via Mandrill: {error_string}")
+			_raise_btu_email_send_error("Mandrill", ex)
 
 	def _apply_subject_prefix(self, subject: str) -> str:
 		"""Apply an environment prefix to the email subject when configured."""
@@ -402,6 +431,9 @@ def send_hello_email_to_current_user(debug: bool = False) -> str:
 	frappe.msgprint(f"Sending test email to address '{user_doc.email}' ...")
 
 	subject = f"From BTU: Hello {user_doc.full_name}"
-	Emailer(subject=subject, body=message_body, sender=get_default_sender(), emailto_list=user_doc.email).send()
+	try:
+		Emailer(subject=subject, body=message_body, sender=get_default_sender(), emailto_list=user_doc.email).send()
+	except BTUEmailSendError as ex:
+		frappe.throw(str(ex))
 
 	return "If successful, a test email will arrive soon."

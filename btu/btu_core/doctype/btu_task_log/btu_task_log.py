@@ -27,13 +27,19 @@ class BTUTaskLog(Document):
 				btu_email.email_on_task_start(self)
 				if self.success_fail != "In-Progress":
 					btu_email.email_on_task_conclusion(self)
+			except btu_email.BTUEmailSendError as ex:
+				message = str(ex)
+				frappe.logger("btu").error(message)
+				print_both(message)
+				frappe.db.set_value("BTU Task Log", self.name, "stdout", message + "\n" + (self.stdout or ""))
 			except Exception as ex:
 				message = (
 					"Error in BTU Task Log (after_insert) while attempting to send email about Task Log."
 				)
-				message += f"\n{ex!r}\n"
+				message += f"\n{ex!s}\n"
+				frappe.logger("btu").error(message)
 				print_both(message)
-				frappe.set_value("BTU Task Log", self.name, "stdout", message + (self.stdout or ""))
+				frappe.db.set_value("BTU Task Log", self.name, "stdout", message + (self.stdout or ""))
 
 	def on_update(self) -> None:
 		"""Update task metadata and send conclusion emails when a log completes."""
@@ -43,9 +49,15 @@ class BTUTaskLog(Document):
 			try:
 				if self.success_fail != "In-Progress":
 					btu_email.email_on_task_conclusion(self)
+			except btu_email.BTUEmailSendError as ex:
+				message = str(ex)
+				frappe.logger("btu").error(message)
+				print_both(message)
+				frappe.db.set_value("BTU Task Log", self.name, "stdout", message + "\n" + (self.stdout or ""))
 			except Exception as ex:
 				message = "Error in function email_on_task_conclusion(), during attempt to send email about Task Log."
 				message += f"\n{ex!s}\n"
+				frappe.logger("btu").error(message)
 				print_both(message)
 				frappe.db.set_value("BTU Task Log", self.name, "stdout", message + (self.stdout or ""))
 
