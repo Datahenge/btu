@@ -17,6 +17,7 @@
   "btn_send_hello_email",
   "section_break_wwwp",
   "btn_resubmit_all_task_schedules",
+  "btn_reload_timezone_cache",
   "email_tab",
   "email_section",
   "send_email_via",
@@ -89,6 +90,13 @@
    "fieldtype": "Button",
    "label": "Resubmit all Task Schedules",
    "options": "button_resubmit_all_task_schedules"
+  },
+  {
+   "description": "Rebuild the Redis cache of IANA timezone names from the OS zoneinfo database. The cache populates automatically on first use; this button forces an immediate reload.",
+   "fieldname": "btn_reload_timezone_cache",
+   "fieldtype": "Button",
+   "label": "Reload Timezone Cache",
+   "options": "button_reload_timezone_cache"
   },
   {
    "fieldname": "cb2",

@@ -16,8 +16,8 @@
   "argument_overrides",
   "sb_schedule",
   "cron_string",
-  "schedule_description",
   "cron_timezone",
+  "schedule_description",
   "cb2",
   "run_frequency",
   "day_of_week",
@@ -125,12 +125,6 @@
    "read_only": 1
   },
   {
-   "description": "IANA time zone name for this schedule (e.g. 'America/New_York'). Defaults to the site time zone from System Settings. The cron string is always stored in this local time \u2014 UTC conversion happens automatically at scheduling time.",
-   "fieldname": "cron_timezone",
-   "fieldtype": "Autocomplete",
-   "label": "Cron Time Zone"
-  },
-  {
    "columns": 3,
    "default": "task.desc_short",
    "fieldname": "task_description",
@@ -193,6 +187,12 @@
    "fieldtype": "Button",
    "label": "Simulate Log Email",
    "options": "button_test_email_via_log"
+  },
+  {
+   "description": "IANA time zone name for this schedule (e.g. 'America/New_York'). Defaults to the site time zone from System Settings. The cron string is always stored in this local time — UTC conversion happens automatically at scheduling time.",
+   "fieldname": "cron_timezone",
+   "fieldtype": "Autocomplete",
+   "label": "Cron Time Zone"
   }
  ],
  "index_web_pages_for_search": 1,
@@ -202,7 +202,7 @@
    "link_fieldname": "schedule"
   }
  ],
- "modified": "2026-07-03 10:24:06.606388",
+ "modified": "2026-07-06 09:59:19.453336",
  "modified_by": "Administrator",
  "module": "btu_core",
  "name": "BTU Task Schedule",

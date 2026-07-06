@@ -42,6 +42,14 @@ class BTUConfiguration(Document):
 		resubmit_all_task_schedules()
 
 	@frappe.whitelist()
+	def button_reload_timezone_cache(self) -> None:
+		"""Rebuild the Redis IANA timezone cache from the OS zoneinfo database."""
+		from btu.btu_core.form_options import reload_timezone_cache
+
+		message = reload_timezone_cache()
+		frappe.msgprint(message)
+
+	@frappe.whitelist()
 	def button_send_test_mandrill_email(self) -> None:
 		"""Send a test Mandrill transactional email to the current user."""
 		from btu.btu_core.btu_email import (
