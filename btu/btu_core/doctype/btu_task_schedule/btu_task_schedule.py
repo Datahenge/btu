@@ -6,8 +6,6 @@
 # For license information, please see license.txt
 
 import ast
-import calendar
-from calendar import monthrange
 from datetime import datetime as datetime_type
 from typing import Any
 
@@ -25,12 +23,24 @@ from btu.btu_api.scheduler import SchedulerAPI
 from btu.btu_core.form_options import validate_cron_timezone, validate_rq_queue_name
 from btu.utils.datetime import get_system_timezone
 
-NoneType = type(None)
-cron_day_dictionary = {"Sun": 0, "Mon": 1, "Tue": 2, "Wed": 3, "Thu": 4, "Fri": 5, "Sat": 6}
-
 
 class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
 	"""Cron-based schedule binding a BTU Task to a recurring execution plan."""
+
+	def after_insert(self) -> None:
+		"""Inherit email recipients from the parent BTU Task on creation."""
+		task_doc = self.get_task_doc()
+		if not task_doc.email_recipients:
+			return
+		for row in task_doc.email_recipients:
+			self.append("email_recipients", {
+				"email_address": row.email_address,
+				"email_on_start": row.email_on_start,
+				"email_on_success": row.email_on_success,
+				"email_on_error": row.email_on_error,
+				"email_on_timeout": row.email_on_timeout,
+			})
+		self.save()
 
 	def on_trash(self) -> None:
 		"""Cancel scheduler state after this Task Schedule is deleted."""
@@ -42,61 +52,14 @@ class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
 	def before_validate(self) -> None:
 		"""Normalize schedule fields before validation."""
 		self.task_description = self.get_task_doc().desc_short
-
 		if not self.cron_timezone:
 			self.cron_timezone = frappe.db.get_system_setting("time_zone")
 
-		if self.run_frequency == "Cron Style":
-			self.day_of_week = None
-			self.day_of_month = None
-			self.month = None
-			self.hour = None
-			self.minute = None
-		if self.run_frequency == "Hourly":
-			self.day_of_week = None
-			self.day_of_month = None
-			self.month = None
-			self.hour = None
-		if self.run_frequency == "Daily":
-			self.day_of_week = None
-			self.day_of_month = None
-			self.month = None
-
 	def validate(self) -> None:
-		"""Validate schedule fields and build the cron string and description."""
+		"""Validate the cron string and derive its human-readable description."""
 		validate_rq_queue_name(self.queue_name)
 		validate_cron_timezone(self.cron_timezone)
-
-		if self.run_frequency == "Hourly":
-			check_minutes(self.minute)
-			self.cron_string = schedule_to_cron_string(self)
-
-		elif self.run_frequency == "Daily":
-			check_hours(self.hour)
-			check_minutes(self.minute)
-			self.cron_string = schedule_to_cron_string(self)
-
-		elif self.run_frequency == "Weekly":
-			check_day_of_week(self.day_of_week)
-			check_hours(self.hour)
-			check_minutes(self.minute)
-			self.cron_string = schedule_to_cron_string(self)
-
-		elif self.run_frequency == "Monthly":
-			check_day_of_month(self.run_frequency, self.day_of_month)
-			check_hours(self.hour)
-			check_minutes(self.minute)
-			self.cron_string = schedule_to_cron_string(self)
-
-		elif self.run_frequency == "Yearly":
-			check_day_of_month(self.run_frequency, self.day_of_month, self.month)
-			check_hours(self.hour)
-			check_minutes(self.minute)
-			self.cron_string = schedule_to_cron_string(self)
-
-		elif self.run_frequency == "Cron Style":
-			validate_cron_string(str(self.cron_string))
-
+		validate_cron_string(str(self.cron_string))
 		self.schedule_description = cron_descriptor.get_description(self.cron_string)
 
 	def before_save(self) -> None:
@@ -128,7 +91,7 @@ class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
 		response = SchedulerAPI.reload_task_schedule(task_schedule_id=self.name)
 		if not response:
 			message = _(
-				"No response from BTU Task Scheduler daemon. The schedule was saved, but the daemon may be offline. Check logs in '/etc/btu_scheduler/logs'."
+				"No response from BTU Task Scheduler daemon. The schedule was saved locally, but the daemon may be offline. Check BTU Scheduler logs."
 			)
 			if warn_only:
 				frappe.msgprint(message, indicator="orange", title=_("Scheduler unavailable"))
@@ -149,7 +112,6 @@ class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
 			if warn_only:
 				if not quiet:
 					frappe.msgprint(message, indicator="orange", title=_("Scheduler unavailable"))
-				self.redis_job_id = ""
 				return None
 			ack = message
 		else:
@@ -159,40 +121,11 @@ class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
 				_("Request = Cancel Task Schedule.<br>Response from BTU Scheduler: {0}").format(ack)
 			)
 		print(f"Request = Cancel Task Schedule.\nResponse from BTU Scheduler: {ack}")
-		self.redis_job_id = ""
 		return response
 
 	def get_task_doc(self) -> Document:
 		"""Return the linked BTU Task document."""
 		return frappe.get_doc("BTU Task", self.task)
-
-	@frappe.whitelist()
-	def get_last_execution_results(self) -> None:
-		"""Query Redis for information about the last execution of this job."""
-		import zlib
-
-		from frappe.utils.background_jobs import get_redis_conn
-
-		if not self.redis_job_id:
-			frappe.msgprint("No results available; Task may not have been processed yet.")
-			return
-
-		try:
-			conn = get_redis_conn()
-			job_status = conn.hget(f"rq:job:{self.redis_job_id}", "status").decode("utf-8")
-		except Exception:
-			frappe.msgprint(f"No job information is available for Job {self.redis_job_id}")
-			return
-
-		if job_status == "finished":
-			frappe.msgprint(f"Job {self.redis_job_id} completed successfully.")
-			return
-		frappe.msgprint(f"Job status = {job_status}")
-		compressed_data = conn.hget(f"rq:job:{self.redis_job_id}", "exc_info")
-		if not compressed_data:
-			frappe.msgprint("No results available; job may not have been processed yet.")
-		else:
-			frappe.msgprint(zlib.decompress(compressed_data))
 
 	@frappe.whitelist()
 	def button_test_email_via_log(self) -> None:
@@ -224,69 +157,6 @@ class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
 		if not self.argument_overrides:
 			return None
 		return ast.literal_eval(self.argument_overrides)
-
-
-def check_minutes(minute: int | None) -> None:
-	"""Validate the minute field for hourly or finer schedules."""
-	if isinstance(minute, NoneType) or not 0 <= int(minute) < 60:
-		raise ValueError(_("Minute value must be between 0 and 59"))
-
-
-def check_hours(hour: str | None) -> None:
-	"""Validate the hour field for daily or finer schedules."""
-	if not hour or not hour.isdigit() or not 0 <= int(hour) < 24:
-		raise ValueError(_("Hour value must be between 0 and 23"))
-
-
-def check_day_of_week(day_of_week: str | None) -> None:
-	"""Validate the day-of-week field for weekly schedules."""
-	if not day_of_week or day_of_week is None:
-		raise ValueError(_("Please choose a day of the week"))
-
-
-def check_day_of_month(run_frequency: str, day: int | None, month: str | None = None) -> None:
-	"""Validate day-of-month and month fields for monthly or yearly schedules."""
-	if run_frequency == "Monthly" and not day:
-		raise ValueError(_("Please choose a day of the month"))
-
-	if run_frequency == "Yearly":
-		if day and month:
-			month_dict = {value: key for key, value in enumerate(calendar.month_abbr)}
-			last = monthrange(datetime_type.now().year, month_dict.get(str(month).title()))[1]
-			if int(day) > last:
-				raise ValueError(_("Day value for {0} must be between 1 and {1}").format(month, last))
-		else:
-			raise ValueError(_("Please choose a day of the week and a month"))
-
-
-def schedule_to_cron_string(doc_schedule: "BTUTaskSchedule") -> str:
-	"""Convert schedule fields into a Unix cron string in local time."""
-	if not isinstance(doc_schedule, BTUTaskSchedule):
-		raise ValueError("Function argument 'doc_schedule' should be a BTU Task Schedule document.")
-
-	if doc_schedule.run_frequency == "Cron Style":
-		return doc_schedule.cron_string
-
-	cron = ["*", "*", "*", "*", "*"]
-
-	if not isinstance(doc_schedule.minute, NoneType):
-		cron[0] = str(int(doc_schedule.minute))
-
-	if doc_schedule.hour:
-		cron[1] = str(int(doc_schedule.hour))
-
-	if doc_schedule.day_of_month:
-		cron[2] = str(doc_schedule.day_of_month)
-
-	if doc_schedule.month is not None:
-		cron[3] = doc_schedule.month
-
-	if doc_schedule.day_of_week:
-		cron[4] = str(cron_day_dictionary[doc_schedule.day_of_week[:3]])
-
-	result = " ".join(cron)
-	validate_cron_string(result, error_on_invalid=True)
-	return result
 
 
 @frappe.whitelist()

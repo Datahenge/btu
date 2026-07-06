@@ -6,31 +6,24 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
+  "schedule_tab",
   "task",
   "task_description",
   "enabled",
   "cb1",
   "queue_name",
-  "redis_job_id",
-  "sb_argument_overrides",
-  "argument_overrides",
   "sb_schedule",
   "cron_string",
-  "cron_timezone",
+  "btn_set_schedule",
+  "column_break_ldlc",
   "schedule_description",
-  "cb2",
-  "run_frequency",
-  "day_of_week",
-  "day_of_month",
-  "month",
-  "hour",
-  "minute",
+  "cron_timezone",
+  "email_and_overrides_tab",
   "sb_email",
   "email_recipients",
   "btn_test_email_via_log",
-  "sb_help",
-  "cron_help",
-  "btn_get_last_job_results"
+  "sb_argument_overrides",
+  "argument_overrides"
  ],
  "fields": [
   {
@@ -60,57 +53,10 @@
    "label": "Enabled"
   },
   {
-   "default": "Cron Style",
-   "fieldname": "run_frequency",
-   "fieldtype": "Select",
-   "label": "Run Frequency",
-   "options": "Hourly\nDaily\nWeekly\nMonthly\nYearly\nCron Style",
-   "reqd": 1
-  },
-  {
    "description": "UNIX crontab format: \"minute hour day-of-month month day-of-week\"<br>Example:  0 22 * * 1-5.<br><strong>Always enter times in local time, never UTC.</strong>",
    "fieldname": "cron_string",
    "fieldtype": "Data",
-   "label": "Cron String",
-   "read_only_depends_on": "eval:doc.run_frequency != \"Cron Style\""
-  },
-  {
-   "depends_on": "eval:doc.run_frequency === 'Weekly'",
-   "fieldname": "day_of_week",
-   "fieldtype": "Select",
-   "label": "Day of Week",
-   "options": "Monday\nTuesday\nWednesday\nThursday\nFriday\nSaturday\nSunday"
-  },
-  {
-   "depends_on": "eval:doc.run === 'Monthly' || doc.run === 'Yearly'",
-   "fieldname": "day_of_month",
-   "fieldtype": "Int",
-   "label": "Day of Month"
-  },
-  {
-   "depends_on": "eval:doc.run_frequency === 'Monthly' || doc.run_frequency === 'Yearly'",
-   "fieldname": "month",
-   "fieldtype": "Select",
-   "label": "Month of Year",
-   "options": "JAN\nFEB\nMAR\nAPR\nMAY\nJUN\nJUL\nAUG\nSEP\nOCT\nNOV\nDEC"
-  },
-  {
-   "depends_on": "eval:doc.run_frequency !== 'Hourly' && doc.run_frequency !== 'Cron Style'",
-   "fieldname": "hour",
-   "fieldtype": "Data",
-   "label": "Hour (0 to 23)"
-  },
-  {
-   "depends_on": "eval: doc.run_frequency !== 'Cron Style'",
-   "fieldname": "minute",
-   "fieldtype": "Int",
-   "label": "Minute"
-  },
-  {
-   "fieldname": "redis_job_id",
-   "fieldtype": "Data",
-   "label": "Redis Job ID",
-   "read_only": 1
+   "label": "Cron String"
   },
   {
    "fieldname": "cb1",
@@ -135,24 +81,15 @@
    "search_index": 1
   },
   {
+   "description": "<div>\nFor more help, see examples by Cronitor authors\n<b>\n<a href=\"https://crontab.guru/examples.html\" style=\"color: blue;\" target=\"_blank\">\nhere.\n</a>\n</b>\n</div>",
+   "fieldname": "btn_set_schedule",
+   "fieldtype": "Button",
+   "label": "Cron Helper"
+  },
+  {
    "fieldname": "sb_schedule",
    "fieldtype": "Section Break",
    "label": "Schedule"
-  },
-  {
-   "fieldname": "cb2",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "sb_help",
-   "fieldtype": "Section Break",
-   "label": "Help"
-  },
-  {
-   "fieldname": "cron_help",
-   "fieldtype": "HTML",
-   "label": "Cron Help",
-   "options": "<div>\nCron examples from the makers of Cronitor\n<b>\n<a href=\"https://crontab.guru/examples.html\" style=\"color: blue;\" target=\"_blank\">\nhere.\n</a>\n</b>\n</div>"
   },
   {
    "collapsible": 1,
@@ -164,12 +101,6 @@
    "fieldname": "argument_overrides",
    "fieldtype": "Long Text",
    "label": "Function Arguments"
-  },
-  {
-   "fieldname": "btn_get_last_job_results",
-   "fieldtype": "Button",
-   "label": "Get Last Job Results",
-   "options": "get_last_execution_results"
   },
   {
    "fieldname": "email_recipients",
@@ -189,10 +120,24 @@
    "options": "button_test_email_via_log"
   },
   {
-   "description": "IANA time zone name for this schedule (e.g. 'America/New_York'). Defaults to the site time zone from System Settings. The cron string is always stored in this local time — UTC conversion happens automatically at scheduling time.",
+   "description": "IANA time zone name for this schedule (e.g. 'America/New_York'). Defaults to the site time zone from System Settings.",
    "fieldname": "cron_timezone",
    "fieldtype": "Autocomplete",
-   "label": "Cron Time Zone"
+   "label": "Schedule Time Zone"
+  },
+  {
+   "fieldname": "email_and_overrides_tab",
+   "fieldtype": "Tab Break",
+   "label": "Email and Overrides"
+  },
+  {
+   "fieldname": "schedule_tab",
+   "fieldtype": "Tab Break",
+   "label": "Schedule"
+  },
+  {
+   "fieldname": "column_break_ldlc",
+   "fieldtype": "Column Break"
   }
  ],
  "index_web_pages_for_search": 1,
@@ -202,7 +147,7 @@
    "link_fieldname": "schedule"
   }
  ],
- "modified": "2026-07-06 09:59:19.453336",
+ "modified": "2026-07-06 10:55:16.915299",
  "modified_by": "Administrator",
  "module": "btu_core",
  "name": "BTU Task Schedule",
