@@ -14,10 +14,11 @@
  "name": "BTU Scheduled Task Summary",
  "owner": "Administrator",
  "prepared_report": 0,
- "query": "SELECT\n\t TaskSchedule.name\t\t AS \"Schedule ID:Link/BTU Task Schedule:100\"\n\t,TaskSchedule.task\t\t AS \"Task ID:Link/BTU Task:100\"\n\t,TaskSchedule.task_description\t AS \"Task Description:Data:200\"\n\t,TaskSchedule.schedule_description\t AS \"Schedule:Data:150\"\n\t,DATE_FORMAT(CAST(drv1.date_time_started AS DateTime), \"%%W, %%M %%d %%Y @ %%h:%%i %%p\") AS \"Last Run On:Data:250\"\n\t,drv1.execution_time\t\t AS \"Last Duration (secs):Data:150\"\n\t,drv1.success_fail\t\t AS \"Last Result:Data:120\"\n\t,TIMESTAMPDIFF(HOUR, drv1.date_time_started, NOW())\t AS \"Hours Since Last:Data:150\"\nFROM\n\t`tabBTU Task Schedule`\t AS TaskSchedule\n\nLEFT JOIN\n\t(\n\tSELECT schedule, date_time_started, execution_time, success_fail,\n\tROW_NUMBER() OVER (PARTITION BY schedule ORDER BY date_time_started DESC) AS occurrence\n\tFROM `tabBTU Task Log`\n\t) drv1\n\nON\n\tdrv1.schedule = TaskSchedule.name\nAND drv1.occurrence = 1\n\nWHERE\n\tTaskSchedule.enabled = 1\n",
+ "json": "{}",
+ "query": "",
  "ref_doctype": "BTU Task Log",
  "report_name": "BTU Scheduled Task Summary",
- "report_type": "Query Report",
+ "report_type": "Script Report",
  "roles": [
   {
    "role": "System Manager"
