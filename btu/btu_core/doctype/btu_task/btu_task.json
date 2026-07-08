@@ -123,7 +123,6 @@
    "fieldtype": "Datetime",
    "in_list_view": 1,
    "label": "Last Runtime",
-   "length": 10,
    "no_copy": 1,
    "read_only": 1
   },
@@ -197,9 +196,9 @@
    "link_fieldname": "task"
   }
  ],
- "modified": "2026-07-03 10:18:22.221837",
+ "modified": "2026-07-07 00:00:00.000000",
  "modified_by": "Administrator",
- "module": "btu_core",
+ "module": "BTU_Core",
  "name": "BTU Task",
  "naming_rule": "Expression (old style)",
  "owner": "Administrator",

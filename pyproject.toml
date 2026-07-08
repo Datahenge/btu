@@ -6,14 +6,11 @@ authors = [
 description = "Background Tasks Unleashed: A task scheduler for Frappe Framework"
 dynamic = [ "version" ]
 readme = "README.md"
-requires-python = ">=3.10,<3.14"
+requires-python = ">=3.14,<3.15"
 
 dependencies = [
-	"rq~=1.15.1",
-	"rq-scheduler~=0.11.0",
-	"cron-descriptor",
-	"mailchimp_transactional",
-	"schema",
+	"cron-descriptor~=2.1.0",
+	"schema~=0.7.8",
 	"temporal-lib~=0.1.2"
 ]
 

@@ -9,17 +9,13 @@
 # NOTE: To avoiding spam detection, when sending HTML, it's important to send both the plain text --and-- HTML parts.
 
 # Standard Library
-import json
-from enum import Enum
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 # Frappe Library
 import frappe
 
 # Third Party
-import mailchimp_transactional as MailchimpTransactional  # This is the official Python SDK for Mandrill
 from frappe import _
-from frappe.model.document import Document
 from frappe.utils import cstr
 
 # BTU
@@ -53,47 +49,16 @@ def _raise_btu_email_send_error(
 	raise BTUEmailSendError(message) from exc
 
 
-def new_mandrill_client(doc_configuration: Document | None = None) -> MailchimpTransactional.Client:
-	"""Create a new, authenticated Mandrill client."""
-	if not doc_configuration:
-		doc_configuration = frappe.get_doc("BTU Configuration")  # singles DocType
-	api_key = doc_configuration.get_password(fieldname="mandrill_api_key")
-	return MailchimpTransactional.Client(api_key)
-
-
-class MandrillResponse(Enum):
-	"""Overall status of a Mandrill API send response."""
-
-	SUCCESS = 1
-	REJECTED = 2
-	UNHANDLED_ERROR = 3
-
-
-def get_mandrill_response_status_overall(mandrill_response: list[dict[str, Any]]) -> MandrillResponse:
-	"""Interpret Mandrill API send response status from a list of per-recipient dicts."""
-	# Look for bad 'status' or any kind of rejection reason.
-	try:
-		for each_dict in mandrill_response:
-			if each_dict.get("status", None) != "sent":
-				return MandrillResponse.REJECTED
-	except Exception as ex:
-		frappe.logger("btu").warning("Unhandled exception in get_mandrill_response_status_overall(): %s", ex)
-		return MandrillResponse.UNHANDLED_ERROR
-	return MandrillResponse.SUCCESS
-
-
 def get_default_sender() -> str | None:
 	"""Return the configured default sender address for BTU notification emails."""
 	config = frappe.get_single("BTU Configuration")
-	if config.send_email_via == "Email Account" and config.default_email_account:
+	if config.default_email_account:
 		return frappe.db.get_value("Email Account", config.default_email_account, "email_id")
-	if config.send_email_via == "Mandrill":
-		return config.mandrill_from_email_address
 	return None
 
 
 class Emailer:
-	"""Create and send emails using Frappe Email Account or Mandrill."""
+	"""Create and send emails using a Frappe Email Account."""
 
 	def __init__(
 		self,
@@ -159,15 +124,7 @@ class Emailer:
 	@frappe.whitelist()
 	def send(self) -> None:
 		"""Send an email using BTU."""
-		if self.doc_btu_config.send_email_via == "Email Account":
-			self._send_via_email_account()
-
-		elif self.doc_btu_config.send_email_via == "Mandrill":
-			self._send_via_mandrill()
-		else:
-			raise ValueError(
-				f"Unexpected configuration value '{self.doc_btu_config.send_email_via}' in BTU Configuration."
-			)
+		self._send_via_email_account()
 
 	def _send_via_email_account(self) -> None:
 		"""Send the email using a linked Frappe Email Account."""
@@ -207,50 +164,6 @@ class Emailer:
 			raise
 		except Exception as exc:
 			_raise_btu_email_send_error("Email Account", exc, account_name=account_name)
-
-	def _send_via_mandrill(self) -> None:
-		new_message = {
-			"from_email": self.doc_btu_config.mandrill_from_email_address,
-			"subject": self.subject,
-			"to": [],
-			"Reply-To": "",  # TODO: This custom reply-to is not working.
-		}
-
-		# Loop through each Destination email address, and append to new_message.
-		for each_email_address in self.emailto_list:
-			new_message["to"].append({"email": each_email_address, "type": "to"})
-
-		# Loop through each CC email address, and append to new_message.
-		for each_cc in self.ccto_list:
-			if each_cc not in self.emailto_list:
-				new_message["to"].append({"email": each_cc, "type": "cc"})
-
-		# Optional: Add BCC to the email, assuming the Recipient isn't the same value.
-		for each_bcc in self.bccto_list:
-			if each_bcc not in self.emailto_list:
-				new_message["to"].append({"email": each_bcc, "type": "bcc"})
-
-		try:
-			# ========
-			# ERPNEXT TEMPLATE
-			# ========
-			if bool(self.doc_btu_config.email_body_is_html):
-				html_body = self.body.replace("\n", "<br>")
-				new_message["html"] = html_body
-			else:
-				new_message["text"] = self.body
-
-			response = new_mandrill_client().messages.send({"message": new_message})
-
-			if get_mandrill_response_status_overall(response) == MandrillResponse.UNHANDLED_ERROR:
-				print_both(f"Unhandled error response from Mandrill API: {response}")
-				raise OSError(response)
-
-		except BTUEmailSendError:
-			raise
-		except Exception as ex:
-			frappe.logger("btu").debug("Message sent to Mandrill:\n%s", json.dumps(new_message, indent=4))
-			_raise_btu_email_send_error("Mandrill", ex)
 
 	def _apply_subject_prefix(self, subject: str) -> str:
 		"""Apply an environment prefix to the email subject when configured."""

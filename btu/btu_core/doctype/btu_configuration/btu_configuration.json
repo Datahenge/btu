@@ -20,7 +20,6 @@
   "btn_reload_timezone_cache",
   "email_tab",
   "email_section",
-  "send_email_via",
   "default_email_account",
   "email_body_is_html",
   "sb_default_recipients",
@@ -31,14 +30,7 @@
   "max_task_duration",
   "repeat_log_in_stdout",
   "sb_advanced_logging",
-  "create_in_progress_logs",
-  "mandrill_tab",
-  "mandrill_email_section",
-  "server_prefix",
-  "mandrill_api_key",
-  "column_break_kfdc",
-  "mandrill_from_email_address",
-  "btn_send_test_mandrill_email"
+  "create_in_progress_logs"
  ],
  "fields": [
   {
@@ -54,12 +46,11 @@
    "label": "Email"
   },
   {
-   "depends_on": "eval:doc.send_email_via=='Email Account'",
    "fieldname": "default_email_account",
    "fieldtype": "Link",
    "label": "Default Email Account",
-   "mandatory_depends_on": "eval:doc.send_email_via=='Email Account'",
-   "options": "Email Account"
+   "options": "Email Account",
+   "reqd": 1
   },
   {
    "default": "0",
@@ -142,27 +133,6 @@
    "label": "Advanced Logging"
   },
   {
-   "fieldname": "send_email_via",
-   "fieldtype": "Select",
-   "in_list_view": 1,
-   "label": "Send Email Via",
-   "options": "Email Account\nMandrill",
-   "reqd": 1
-  },
-  {
-   "fieldname": "mandrill_email_section",
-   "fieldtype": "Section Break",
-   "label": "Mandrill Email"
-  },
-  {
-   "description": "Emails sent from BTU will have this email address as the \"From\" sender.",
-   "fieldname": "mandrill_from_email_address",
-   "fieldtype": "Data",
-   "in_list_view": 1,
-   "label": "From Email Address",
-   "reqd": 1
-  },
-  {
    "fieldname": "email_recipients",
    "fieldtype": "Table",
    "label": "Default Email Recipients",
@@ -188,32 +158,6 @@
    "label": "Maintenance - Repairs"
   },
   {
-   "fieldname": "mandrill_tab",
-   "fieldtype": "Tab Break",
-   "label": "Mandrill"
-  },
-  {
-   "fieldname": "mandrill_api_key",
-   "fieldtype": "Password",
-   "label": "API Key"
-  },
-  {
-   "description": "Example: 'us5'",
-   "fieldname": "server_prefix",
-   "fieldtype": "Data",
-   "label": "Server Prefix"
-  },
-  {
-   "fieldname": "column_break_kfdc",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "btn_send_test_mandrill_email",
-   "fieldtype": "Button",
-   "label": "Test Mandrill Email",
-   "options": "button_send_test_mandrill_email"
-  },
-  {
    "default": "Defer To Code",
    "description": "Allows admins to forcibly enable/disable the TaskRunner debug mode.",
    "fieldname": "force_debug_mode",
@@ -232,9 +176,9 @@
  "hide_toolbar": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-07-03 10:47:27.602962",
+ "modified": "2026-07-07 00:00:00.000000",
  "modified_by": "Administrator",
- "module": "btu_core",
+ "module": "BTU_Core",
  "name": "BTU Configuration",
  "owner": "Administrator",
  "permissions": [
