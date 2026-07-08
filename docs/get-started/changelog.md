@@ -16,7 +16,7 @@ Source file for releases: [CHANGELOG.md on GitHub](https://github.com/Datahenge/
 
 ### Changed
 
-- **Email configuration** — BTU Configuration no longer stores its own SMTP server settings. Notifications use a standard Frappe **Email Account** (Mandrill remains supported). Existing SMTP settings are migrated on `bench migrate`.
+- **Email configuration** — BTU Configuration no longer stores its own SMTP server settings. Notifications use a standard Frappe **Email Account**. Existing SMTP settings are migrated on `bench migrate`.
 - **Saving schedules when the scheduler is offline** — BTU Task Schedule documents save successfully even when the scheduler daemon is unreachable; a warning is shown instead of blocking the save.
 
 ### Removed

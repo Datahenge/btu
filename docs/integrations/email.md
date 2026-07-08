@@ -4,15 +4,11 @@ BTU sends task notifications through Frappe's email stack.
 
 ## Configuration (15.2+)
 
-1. Create or select a Frappe **Email Account** (SMTP or Mandrill).
+1. Create or select a Frappe **Email Account** (SMTP).
 2. Set **BTU Configuration → Default Email Account**.
 3. Set **Environment Name** for subject/body prefix.
 
 Migration from legacy BTU SMTP fields runs on `bench migrate`.
-
-## Mandrill
-
-Mandrill (Mailchimp Transactional) is supported via Email Account configuration.
 
 ## Failure vs email failure
 

@@ -8,7 +8,6 @@ DocType: `BTU Configuration` (single). Key fields:
 |-----------|------|-------------|
 | `environment_name` | Data | Email prefix tag |
 | `force_debug_mode` | Check | Verbose BTU logging |
-| `send_email_via` | Select | Email provider |
 | `default_email_account` | Link | Email Account |
 | `email_body_is_html` | Check | HTML notification bodies |
 | `queue_name` | Data | Default RQ queue |

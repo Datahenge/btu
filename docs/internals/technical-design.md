@@ -88,7 +88,7 @@ Teach users (and developers) one chain:
 4. **Worker** runs the task; BTU writes a **Task Log**.
 5. **User** inspects the log (and optional emails) to confirm success or failure.
 
-Everything else — Run Later, RQ admin buttons, auto-report delivery, Mandrill/SMTP — extends this chain; it should not replace it.
+Everything else — Run Later, RQ admin buttons, auto-report delivery, SMTP — extends this chain; it should not replace it.
 
 ---
 

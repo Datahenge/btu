@@ -11,7 +11,7 @@ bench restart
 
 ### Email configuration change
 
-BTU Configuration no longer stores SMTP settings. Notifications use a standard Frappe **Email Account** (Mandrill remains supported). Migration patches move existing SMTP data on `bench migrate`.
+BTU Configuration no longer stores SMTP settings. Notifications use a standard Frappe **Email Account**. Migration patches move existing SMTP data on `bench migrate`.
 
 After migrate:
 

@@ -38,7 +38,6 @@ Singleton settings for BTU and scheduler integration.
 
 | Field | Purpose |
 |-------|---------|
-| Send Email Via | Provider selection: *Email Account* or *Mandrill* |
 | Default Email Account | Frappe Email Account used for outgoing notifications |
 | Send email Body as HTML | When checked, notification bodies are formatted as HTML |
 | Default Email Recipients | Table of addresses with per-event checkboxes: On Start, On Success, On Error, On Timeout |
@@ -66,20 +65,6 @@ Singleton settings for BTU and scheduler integration.
 | Option | Purpose |
 |--------|---------|
 | Create 'In-Progress' Logs | Creates a Task Log with status *In Progress* before execution — useful for catching tasks that fail before they can write their own log row |
-
-## Mandrill tab
-
-<figure class="btu-screenshot" markdown="span">
-![BTU Configuration — Mandrill tab](../../assets/images/btu-configuration-4.png)
-<figcaption>BTU Configuration — Mandrill tab: API key and sender address for Mandrill email delivery</figcaption>
-</figure>
-
-| Field | Purpose |
-|-------|---------|
-| Server Prefix | Mandrill server prefix (e.g. `us5`) |
-| API Key | Mandrill API key (stored encrypted) |
-| From Email Address | Sender address used on all BTU emails sent via Mandrill |
-| Test Mandrill Email | Button to send a test message and verify credentials |
 
 ## Documentation link
 
