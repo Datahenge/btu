@@ -104,7 +104,7 @@
    }
   ],
   "modified": "2024-12-31 16:29:45.561482",
-  "module": "BTU_Core",
+  "module": "btu_core",
   "name": "Automated Tasks",
   "number_cards": [],
   "parent_page": "",
@@ -163,6 +163,7 @@
     "url": null
    }
   ],
-  "title": "Automated Tasks"
+  "title": "Automated Tasks",
+  "type": "Workspace"
  }
 ]

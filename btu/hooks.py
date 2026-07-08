@@ -24,5 +24,7 @@ fixtures = [
 	{"dt": "Workspace", "filters": [["module", "=", "BTU_Core"]]},
 ]
 
+after_install = "btu.setup.sync_desk"
+
 # Run this code before Workers initialize
 before_job = "btu.patches.suppress_deprecation_warnings.init"
