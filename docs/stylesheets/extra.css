@@ -105,3 +105,25 @@
 	color: var(--md-default-fg-color--light);
 	text-align: center;
 }
+
+/* Landing page — lead paragraph directly under the hero H1 */
+.md-content h1:first-child + p {
+	color: var(--md-default-fg-color--light);
+}
+
+/* Grid card icons pick up the accent color */
+.md-typeset .grid.cards .lg,
+.md-typeset .grid.cards .middle {
+	color: var(--md-accent-fg-color);
+}
+
+/* Lift grid cards slightly on hover */
+.md-typeset .grid.cards > ul > li {
+	transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+
+.md-typeset .grid.cards > ul > li:hover {
+	border-color: var(--md-accent-fg-color);
+	box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+	transform: translateY(-2px);
+}

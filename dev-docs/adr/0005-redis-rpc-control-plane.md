@@ -18,5 +18,5 @@ Remove Unix socket configuration from BTU Configuration and documentation.
 ## Consequences
 
 - Daemon and Frappe must share the same Redis instance used for `redis_queue`.
-- BLPOP timeouts indicate daemon unreachability, not command failure (receipt ACK model — see [Redis RPC protocol](../../reference/redis-rpc.md)).
+- BLPOP timeouts indicate daemon unreachability, not command failure (receipt ACK model — see [Redis RPC protocol](../../docs/scheduler/redis-rpc.md)).
 - TCP/UDS control paths are out of scope for the Frappe app; daemon-side legacy listeners are a separate project concern.

@@ -15,4 +15,4 @@ Every BTU task execution creates a **BTU Task Log** with status, timing, stdout,
 
 Logs are first-class Desk documents — searchable, linkable, and auditable. This is a core reason to prefer BTU over opaque `frappe.enqueue` or external cron.
 
-See [Desk → BTU Task Log](../guides/desk/task-log.md) and [Timeouts and housekeeping](../operations/timeouts-and-housekeeping.md).
+See [Desk → BTU Task Log](../guides/desk/task-log.md) and [Timeouts and housekeeping](../scheduler/timeouts-and-housekeeping.md).

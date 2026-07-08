@@ -47,4 +47,4 @@ If upgrading from a Unix-socket scheduler:
 2. Upgrade scheduler to a Redis-RPC-capable `btu_scheduler_py` build.
 3. Remove Unix-socket-only configuration; control plane is Redis-only.
 
-See [Redis RPC protocol](../reference/redis-rpc.md).
+See [Redis RPC protocol](../scheduler/redis-rpc.md).

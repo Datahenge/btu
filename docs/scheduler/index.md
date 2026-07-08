@@ -21,6 +21,6 @@ The Rust [btu_scheduler_daemon](https://github.com/Datahenge/btu_scheduler_daemo
 
 ## Operations
 
-- [Install scheduler](../operations/install-scheduler.md)
-- [Scheduler configuration](../operations/scheduler-config.md)
-- [Run the scheduler](../operations/run-scheduler.md)
+- [Install scheduler](install-scheduler.md)
+- [Scheduler configuration](scheduler-config.md)
+- [Run the scheduler](run-scheduler.md)

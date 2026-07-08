@@ -26,4 +26,4 @@ Schedule and task **data** live in Frappe. Schedule **timing** lives in the daem
 - Two repositories to install, configure, and operate.
 - Redis (RQ + RPC) and HTTP are required integration surfaces.
 - DocTypes remain the system of record; the daemon is a client, not a second database of truth.
-- Contributors must understand which code belongs in which component (see [Technical Design](../technical-design.md)).
+- Contributors must understand which code belongs in which component (see [Technical Design](../../docs/internals/technical-design.md)).

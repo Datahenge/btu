@@ -8,5 +8,5 @@ Core ideas behind BTU. Read these before diving into Desk guides or recipes.
 - [Logs](logs.md) — execution history and output
 - [Run Later](run-later.md) — deferred one-shot work
 - [Workers and RQ](workers-and-rq.md) — where Python actually runs
-- [Scheduler](scheduler.md) — the daemon's role
-- [Redis control plane](redis-control-plane.md) — ping, reload, cancel
+
+For the scheduler daemon and its operations, see the [BTU Scheduler](../scheduler/index.md) section.

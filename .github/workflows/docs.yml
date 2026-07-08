@@ -2,7 +2,7 @@ name: Deploy docs
 
 on:
   push:
-    branches: [main, version-15]
+    branches: [main, version-16]
     paths:
       - 'docs/**'
       - 'mkdocs.yml'
@@ -28,7 +28,7 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install mkdocs-material
-      - run: mkdocs build
+      - run: mkdocs build --strict
       - uses: actions/upload-pages-artifact@v4
         with:
           path: site

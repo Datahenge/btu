@@ -1,6 +1,6 @@
 # Architecture Decision Records (ADR)
 
-Short, durable notes on **why** BTU is shaped the way it is. Each ADR captures one decision; the full narrative lives in [Technical Design](../technical-design.md).
+Short, durable notes on **why** BTU is shaped the way it is. Each ADR captures one decision; the full narrative lives in [Technical Design](../../docs/internals/technical-design.md).
 
 | ADR | Title | Status |
 |-----|-------|--------|

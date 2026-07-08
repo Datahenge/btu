@@ -38,7 +38,7 @@ Plus [BTU Scheduler](https://github.com/Datahenge/btu_scheduler_py) and RQ worke
 |-------|------|
 | Why two components? | [Why BTU](https://btu.datahenge.com/get-started/why-btu/) |
 | Run Later poller | [Recipe](https://btu.datahenge.com/recipes/set-up-run-later-poller/) |
-| Scheduler config | [Operations](https://btu.datahenge.com/operations/scheduler-config/) |
+| Scheduler config | [BTU Scheduler](https://btu.datahenge.com/scheduler/scheduler-config/) |
 | Changelog | [Changelog](https://btu.datahenge.com/get-started/changelog/) |
 
 ### License

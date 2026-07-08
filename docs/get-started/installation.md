@@ -27,7 +27,7 @@ cd btu_scheduler_py
 pip install -e .
 ```
 
-Create configuration (see [Scheduler configuration](../operations/scheduler-config.md)):
+Create configuration (see [Scheduler configuration](../scheduler/scheduler-config.md)):
 
 ```bash
 mkdir -p ~/.config/btu_scheduler
@@ -44,7 +44,7 @@ Start the daemon:
 btu-py run-daemon
 ```
 
-For production, run under systemd or your process supervisor. See [Run the scheduler](../operations/run-scheduler.md).
+For production, run under systemd or your process supervisor. See [Run the scheduler](../scheduler/run-scheduler.md).
 
 ## Part 3 — RQ workers
 

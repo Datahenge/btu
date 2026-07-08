@@ -1,6 +1,6 @@
 # Scheduler environment variables
 
-All variables use prefix `BTU_SCHEDULER_`. See [Scheduler configuration](../operations/scheduler-config.md) for narrative setup.
+All variables use prefix `BTU_SCHEDULER_`. See [Scheduler configuration](scheduler-config.md) for narrative setup.
 
 ## Required
 

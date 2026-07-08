@@ -9,4 +9,4 @@
 
 Schedule save/cancel also sends reload/cancel RPC when the daemon is reachable. If offline, schedule **saves still succeed** (15.2+) with a warning.
 
-See [Redis control plane](../concepts/redis-control-plane.md).
+See [Redis control plane](redis-control-plane.md).

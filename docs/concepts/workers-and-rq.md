@@ -22,4 +22,4 @@ btu.btu_core.task_runner.run_task_by_id
 
 Workers must have BTU installed and site context initialized (standard Frappe worker process).
 
-See [RQ workers](../operations/rq-workers.md) and [Failed jobs](../operations/failed-jobs.md).
+See [RQ workers](../scheduler/rq-workers.md) and [Failed jobs](../scheduler/failed-jobs.md).

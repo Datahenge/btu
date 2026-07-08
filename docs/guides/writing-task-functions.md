@@ -28,8 +28,9 @@ Use Python `logging` or `frappe.logger("btu")`. Stdout/stderr are captured into 
 
 | Path | Purpose |
 |------|---------|
-| `btu.samples.simple.hello_world` | Minimal example |
-| `btu.samples.errors.raise_error` | Failure testing |
+| `btu.samples.weather.get_current_weather` | End-to-end demo — prints *and* returns (see [Your first task](../get-started/first-task.md)) |
+| `btu.samples.simple.ordinary_function` | Minimal plain callable |
+| `btu.samples.errors.wait_then_throw_error` | Failure testing |
 | `btu.diagnostics.smoke.ping_with_wait` | Worker smoke test |
 
 ## Packaging

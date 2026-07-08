@@ -16,6 +16,6 @@ The Frappe app sends **control commands** to the scheduler daemon over Redis RPC
 
 ## Protocol details
 
-See [Reference → Redis RPC protocol](../reference/redis-rpc.md).
+See [Reference → Redis RPC protocol](redis-rpc.md).
 
 Set `BTU_SCHEDULER_DISABLE_REDIS_RPC=true` only for debugging — the Frappe app will not reach the daemon.

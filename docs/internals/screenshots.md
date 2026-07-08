@@ -32,7 +32,7 @@ Desk and CLI screenshots live in [`docs/assets/images/`](../assets/images/).
 | [BTU Task Schedule](../guides/desk/task-schedule.md) | Cron + timezone fields |
 | [BTU Task Log](../guides/desk/task-log.md) | Log with stdout/stderr |
 | [BTU Run Later](../guides/desk/run-later.md) | List + document detail |
-| [Install scheduler](../operations/install-scheduler.md) | `btu-py config show` terminal |
+| [Install scheduler](../scheduler/install-scheduler.md) | `btu-py config show` terminal |
 
 Share screenshots in chat or commit directly to `docs/assets/images/` — either works.
 

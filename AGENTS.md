@@ -10,9 +10,10 @@
 | 2 | [README.md](README.md) | Product overview, links to official docs |
 | 3 | [docs/index.md](docs/index.md) | Documentation home (MkDocs source) |
 | 4 | [mkdocs.yml](mkdocs.yml) | Site nav and build config |
-| 5 | Topic docs under [docs/](docs/) | get-started, concepts, guides, operations, … |
-| 6 | [docs/reference/redis-rpc.md](docs/reference/redis-rpc.md) | Scheduler Redis RPC (when touching scheduler integration) |
-| 7 | [docs/internals/](docs/internals/) | ADRs, technical design, contributor docs |
+| 5 | Topic docs under [docs/](docs/) | get-started, concepts, guides, scheduler, … |
+| 6 | [docs/scheduler/redis-rpc.md](docs/scheduler/redis-rpc.md) | Scheduler Redis RPC (when touching scheduler integration) |
+| 7 | [docs/internals/](docs/internals/) | Technical design, contributor docs |
+| 8 | [dev-docs/](dev-docs/) | Internal, unpublished maintainer notes (ADRs, repository layout) |
 
 Official user documentation: <https://btu.datahenge.com/>
 
@@ -34,7 +35,7 @@ BTU is **one product, two required components**. User docs are unified at btu.da
 | [btu_scheduler_py](https://github.com/Datahenge/btu_scheduler_py) | **Canonical** Python scheduler daemon |
 | [btu_scheduler_daemon](https://github.com/Datahenge/btu_scheduler_daemon) | Rust scheduler — **retired** |
 
-Scheduler ↔ Frappe communication uses Redis RPC documented in [docs/reference/redis-rpc.md](docs/reference/redis-rpc.md).
+Scheduler ↔ Frappe communication uses Redis RPC documented in [docs/scheduler/redis-rpc.md](docs/scheduler/redis-rpc.md).
 
 ## Repository layout
 

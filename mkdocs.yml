@@ -3,7 +3,7 @@ site_url: https://btu.datahenge.com/
 site_description: Documentation for BTU — the Frappe app and Python scheduler for cron-based background tasks.
 repo_url: https://github.com/Datahenge/btu
 repo_name: Datahenge/btu
-edit_uri: edit/version-15/docs/
+edit_uri: edit/version-16/docs/
 
 theme:
   name: material
@@ -47,6 +47,9 @@ markdown_extensions:
   - pymdownx.tabbed:
       alternate_style: true
   - pymdownx.highlight
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
   - attr_list
   - md_in_html
   - toc:
@@ -66,6 +69,7 @@ nav:
       - Welcome to BTU: index.md
       - Why BTU: get-started/why-btu.md
       - Installation: get-started/installation.md
+      - Your first task: get-started/first-task.md
       - Configuration overview: get-started/configuration-overview.md
       - Upgrade: get-started/upgrade.md
       - Version policy: get-started/version-policy.md
@@ -77,8 +81,6 @@ nav:
       - Logs: concepts/logs.md
       - Run Later: concepts/run-later.md
       - Workers and RQ: concepts/workers-and-rq.md
-      - Scheduler: concepts/scheduler.md
-      - Redis control plane: concepts/redis-control-plane.md
   - Guides:
       - Desk:
           - Overview: guides/desk/index.md
@@ -87,14 +89,6 @@ nav:
           - BTU Task Schedule: guides/desk/task-schedule.md
           - BTU Task Log: guides/desk/task-log.md
           - BTU Run Later: guides/desk/run-later.md
-      - Operations:
-          - Install scheduler: operations/install-scheduler.md
-          - Scheduler configuration: operations/scheduler-config.md
-          - Run the scheduler: operations/run-scheduler.md
-          - RQ workers: operations/rq-workers.md
-          - Scheduler buttons: operations/scheduler-buttons.md
-          - Failed jobs: operations/failed-jobs.md
-          - Timeouts and housekeeping: operations/timeouts-and-housekeeping.md
       - Recipes:
           - Set up Run Later poller: recipes/set-up-run-later-poller.md
           - Recurring schedule with timezone: recipes/recurring-schedule-with-timezone.md
@@ -105,11 +99,21 @@ nav:
           - One-shot task: recipes/one-shot-task.md
       - Command line: guides/command-line.md
       - Writing task functions: guides/writing-task-functions.md
+  - BTU Scheduler:
+      - Overview: scheduler/index.md
+      - Install scheduler: scheduler/install-scheduler.md
+      - Scheduler configuration: scheduler/scheduler-config.md
+      - Run the scheduler: scheduler/run-scheduler.md
+      - RQ workers: scheduler/rq-workers.md
+      - Scheduler buttons: scheduler/scheduler-buttons.md
+      - Failed jobs: scheduler/failed-jobs.md
+      - Timeouts and housekeeping: scheduler/timeouts-and-housekeeping.md
+      - Redis control plane: scheduler/redis-control-plane.md
+      - Redis RPC protocol: scheduler/redis-rpc.md
+      - Environment variables: scheduler/scheduler-env-vars.md
   - Reference:
       - BTU Configuration fields: reference/configuration-fields.md
-      - Scheduler environment variables: reference/scheduler-env-vars.md
       - Schedule cron fields: reference/schedule-cron-fields.md
-      - Redis RPC protocol: reference/redis-rpc.md
       - Public API: reference/public-api.md
       - FAQ: troubleshooting/faq.md
       - Common errors: troubleshooting/common-errors.md
@@ -118,14 +122,6 @@ nav:
       - Auto Report: integrations/auto-report.md
   - Internals:
       - Technical design: internals/technical-design.md
-      - ADRs:
-          - Overview: internals/adr/README.md
-          - "0001 Two-component architecture": internals/adr/0001-two-component-architecture.md
-          - "0002 Mandatory scheduler daemon": internals/adr/0002-mandatory-scheduler-daemon.md
-          - "0003 Frappe scheduler insufficient": internals/adr/0003-frappe-scheduler-insufficient-for-users.md
-          - "0004 Run Later visibility": internals/adr/0004-run-later-visibility-over-rq-delay.md
-          - "0005 Redis RPC control plane": internals/adr/0005-redis-rpc-control-plane.md
-      - Repository layout: internals/repository-layout.md
       - Legacy Rust scheduler: internals/legacy-rust-scheduler.md
       - Contributing to docs: internals/contributing-docs.md
       - Screenshot conventions: internals/screenshots.md

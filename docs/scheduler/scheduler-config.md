@@ -50,7 +50,7 @@ Set the same variables in the process environment. **Environment always override
 | `BTU_SCHEDULER_SLACK_WEBHOOK_URL` | unset | Slack notifications |
 | `BTU_SCHEDULER_LOGGER_PATH` | `$XDG_STATE_HOME/btu_scheduler/logger.log` | Log file |
 
-Full reference: [Scheduler environment variables](../reference/scheduler-env-vars.md).
+Full reference: [Scheduler environment variables](scheduler-env-vars.md).
 
 ## Loading precedence
 

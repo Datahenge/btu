@@ -8,7 +8,7 @@
 
 from __future__ import annotations
 
-__version__ = "15.2.0"
+__version__ = "16.0.0"
 
 from btu.btu_core.rq_admin import list_failed_jobs, print_job_details, remove_failed_jobs
 from btu.utils import (

@@ -36,7 +36,7 @@ Source file for releases: [CHANGELOG.md on GitHub](https://github.com/Datahenge/
 ### Added
 
 - **Per-schedule time zones** — Each BTU Task Schedule can specify its own IANA time zone.
-- **Scheduler Redis RPC** — See [Redis RPC protocol](../reference/redis-rpc.md).
+- **Scheduler Redis RPC** — See [Redis RPC protocol](../scheduler/redis-rpc.md).
 - **Documentation** — MkDocs site at [btu.datahenge.com](https://btu.datahenge.com/), technical design, ADRs.
 - **Repository layout** — Shared utilities, samples, diagnostics.
 - **Contributor tooling** — `AGENTS.md`, VS Code workspace, Ruff.

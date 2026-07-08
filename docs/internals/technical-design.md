@@ -2,7 +2,7 @@
 
 This document explains **why** Background Tasks Unleashed (BTU) exists, how it is split across two projects, and the product constraints that shaped those decisions. It is written for maintainers and contributors who need context beyond “what the code does.”
 
-For protocol details between the Frappe app and the scheduler daemon, see [Scheduler Redis RPC](../reference/redis-rpc.md).
+For protocol details between the Frappe app and the scheduler daemon, see [Scheduler Redis RPC](../scheduler/redis-rpc.md).
 
 ---
 
@@ -94,7 +94,7 @@ Everything else — Run Later, RQ admin buttons, auto-report delivery, SMTP — 
 
 ## Inter-app communication
 
-Scheduler control commands (ping, reload schedule, cancel schedule) use **Redis RPC** on the same Redis instance as Frappe’s RQ queues. See [redis-rpc.md](../reference/redis-rpc.md).
+Scheduler control commands (ping, reload schedule, cancel schedule) use **Redis RPC** on the same Redis instance as Frappe’s RQ queues. See [redis-rpc.md](../scheduler/redis-rpc.md).
 
 Historical Unix-domain-socket and TCP control paths have been removed from the Frappe app; Redis is the supported control plane for container-friendly deployments.
 
@@ -135,8 +135,6 @@ Trade-offs (accepted):
 
 | Document | Topic |
 |----------|--------|
-| [Architecture Decision Records](adr/README.md) | Numbered decisions (ADR format) |
-| [Repository layout](repository-layout.md) | Python package structure |
-| [Scheduler Redis RPC](../reference/redis-rpc.md) | Daemon ↔ Frappe protocol |
+| [Scheduler Redis RPC](../scheduler/redis-rpc.md) | Daemon ↔ Frappe protocol |
 | [Desk guides](../guides/desk/index.md) | DocTypes and Configuration |
-| [AGENTS.md on GitHub](https://github.com/Datahenge/btu/blob/version-15/AGENTS.md) | Contributor entry point |
+| [AGENTS.md on GitHub](https://github.com/Datahenge/btu/blob/version-16/AGENTS.md) | Contributor entry point |

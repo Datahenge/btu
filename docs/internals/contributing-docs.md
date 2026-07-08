@@ -12,15 +12,15 @@ mkdocs build   # outputs site/
 
 ## Source layout
 
-User docs: `docs/get-started/`, `concepts/`, `guides/`, `recipes/`, `operations/`, `reference/`, `integrations/`, `troubleshooting/`.
+User docs: `docs/get-started/`, `concepts/`, `guides/`, `recipes/`, `scheduler/`, `reference/`, `integrations/`, `troubleshooting/`.
 
-Maintainer docs: `docs/internals/` (ADRs, technical design).
+Maintainer docs: `docs/internals/` (technical design). Internal-only material that is **not** published (ADRs, repository layout) lives in `dev-docs/` at the repo root, outside the MkDocs build.
 
-Nav is defined in [`mkdocs.yml`](https://github.com/Datahenge/btu/blob/version-15/mkdocs.yml) at repo root.
+Nav is defined in [`mkdocs.yml`](https://github.com/Datahenge/btu/blob/version-16/mkdocs.yml) at repo root.
 
 ## Scheduler doc changes
 
-User-facing scheduler content lives **here**, not on a separate scheduler docs site. When changing `btu_scheduler_py` behaviour or config, update matching pages in `docs/operations/` and `docs/reference/`.
+User-facing scheduler content lives **here**, not on a separate scheduler docs site. When changing `btu_scheduler_py` behaviour or config, update matching pages in `docs/scheduler/`.
 
 ## PR checklist
 

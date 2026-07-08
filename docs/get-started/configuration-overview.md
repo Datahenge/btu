@@ -24,7 +24,7 @@ The Python scheduler reads `BTU_SCHEDULER_*` variables from:
 
 Process environment **always wins** over the `.env` file.
 
-See [Scheduler configuration](../operations/scheduler-config.md) and [Reference → Scheduler environment variables](../reference/scheduler-env-vars.md).
+See [Scheduler configuration](../scheduler/scheduler-config.md) and [Reference → Scheduler environment variables](../scheduler/scheduler-env-vars.md).
 
 ## Shared infrastructure
 
