@@ -18,8 +18,6 @@ All variables use prefix `BTU_SCHEDULER_`. See [Scheduler configuration](schedul
 | `SQL_PASSWORD` | DB password |
 | `RQ_HOST` | Redis host |
 | `RQ_PORT` | Redis port |
-| `TCP_SOCKET_PORT` | TCP listener |
-| `SOCKET_PATH` | Unix socket path |
 | `WEBSERVER_IP` | Frappe host |
 | `WEBSERVER_PORT` | Frappe port |
 | `WEBSERVER_TOKEN` | API token |
@@ -30,8 +28,6 @@ All variables use prefix `BTU_SCHEDULER_`. See [Scheduler configuration](schedul
 | Variable | Default |
 |----------|---------|
 | `DISABLE_REDIS_RPC` | `false` |
-| `DISABLE_UNIX_SOCKET` | `false` |
-| `DISABLE_TCP_SOCKET` | `false` |
 | `WEBSERVER_HOST_HEADER` | unset |
 | `SLACK_WEBHOOK_URL` | unset |
 | `LOGGER_PATH` | `$XDG_STATE_HOME/btu_scheduler/logger.log` |

@@ -39,7 +39,7 @@ def _get_redis_connection() -> "redis.Redis[str]":
 
 
 class SchedulerAPI:
-	"""Redis RPC client for the BTU Scheduler daemon (see docs/reference/redis-rpc.md)."""
+	"""Redis RPC client for the BTU Scheduler daemon (see docs/scheduler/redis-rpc.md)."""
 
 	@staticmethod
 	def send_ping() -> dict[str, Any] | None:

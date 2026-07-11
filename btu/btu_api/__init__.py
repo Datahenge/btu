@@ -10,7 +10,6 @@ from typing import TYPE_CHECKING, Any
 
 import frappe
 from frappe.utils import cstr
-from rq.compat import as_text, string_types
 
 if TYPE_CHECKING:
 	from btu.btu_core.doctype.btu_task.btu_task import BTUTask
@@ -38,8 +37,8 @@ class Sanchez:
 			self.function_name = func.__name__
 		elif inspect.isfunction(func) or inspect.isbuiltin(func):
 			self.function_name = f"{func.__module__}.{func.__qualname__}"
-		elif isinstance(func, string_types):
-			self.function_name = as_text(func)
+		elif isinstance(func, str):
+			self.function_name = func
 		elif not inspect.isclass(func) and callable(func):  # a callable class instance
 			self.instance = func
 			self.function_name = "__call__"
@@ -84,7 +83,7 @@ def execute_job(
 		if user:
 			frappe.set_user(user)
 
-	if isinstance(method, string_types):
+	if isinstance(method, str):
 		method_name = method
 		method = frappe.get_attr(method)
 	else:

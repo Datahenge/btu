@@ -34,7 +34,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Added
 
 - **Per-schedule time zones** — Each BTU Task Schedule can specify its own IANA time zone. Cron times are entered in local time; UTC conversion happens at scheduling time. Defaults to the site time zone from System Settings.
-- **Scheduler Redis RPC** — Control commands between the Frappe app and the BTU Scheduler daemon (ping, reload, cancel) now use Redis instead of Unix domain sockets. See [docs/reference/redis-rpc.md](docs/reference/redis-rpc.md).
+- **Scheduler Redis RPC** — Control commands between the Frappe app and the BTU Scheduler daemon (ping, reload, cancel) now use Redis instead of Unix domain sockets. See [docs/scheduler/redis-rpc.md](docs/scheduler/redis-rpc.md).
 - **Documentation** — Technical design overview, Architecture Decision Records (ADRs), expanded Auto Report guide, and contributor layout docs.
 - **Repository layout** — Shared utilities (`btu/utils/`), sample tasks (`btu/samples/`), and diagnostics (`btu/diagnostics/`). Deprecated top-level shims remain for compatibility.
 - **Contributor tooling** — `AGENTS.md`, VS Code workspace, and Ruff lint/format configuration.
