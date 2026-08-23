@@ -17,16 +17,11 @@
 # Standard Library
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-import json
 import smtplib
 
 # Frappe Library
 import frappe
 from frappe.utils.password import get_decrypted_password
-
-# Mandrill App
-from mailchimp.mailchimp_core.doctype.mailchimp_settings.mailchimp_settings import get_client
-from mailchimp.mailchimp_core import MandrillResponse, get_mandrill_response_status_overall
 
 # BTU
 from btu import dprint
@@ -105,9 +100,16 @@ class Emailer():
 		"""
 		if self.doc_btu_config.send_email_via == "SMTP":
 			self._send_via_smtp()
-
 		elif self.doc_btu_config.send_email_via == "Mandrill":
-			self._send_via_mandrill()
+			# Mandrill delivery was removed from BTU: it required the separate
+			# 'mailchimp' Frappe app, which BTU does not otherwise need. An
+			# existing site may still hold this value in BTU Configuration, so
+			# say what happened rather than falling through to a message about
+			# an unexpected value.
+			raise NotImplementedError(
+				"BTU Configuration is set to send email via 'Mandrill', which BTU no longer supports. "
+				"Change 'Send Email Via' to 'SMTP'."
+			)
 		else:
 			raise ValueError(f"Unexpected configuration value '{self.doc_btu_config.send_email_via}' in BTU Configuration.")
 
@@ -158,54 +160,6 @@ class Emailer():
 			smtp_server.sendmail(from_addr=self.sender,
 								 to_addrs=self.to_as_string.split(","),  # requires a Python List of Recipients
 								 msg=message)
-
-	def _send_via_mandrill(self):
-
-		new_message = {
-			"from_email": self.doc_btu_config.mandrill_from_email_address,
-			"subject": self.subject,
-			"to": [],
-			'Reply-To': "",  # TODO: This custom reply-to is not working.
-		}
-
-		# Loop through each Destination email address, and append to new_message.
-		for each_email_address in self.emailto_list:
-			new_message["to"].append({ "email": each_email_address, "type": "to" })
-
-		# Loop through each CC email address, and append to new_message.
-		for each_cc in self.ccto_list:
-			if each_cc not in self.emailto_list:
-				new_message["to"].append({ "email": each_cc, "type": "cc" })
-
-		# Optional: Add BCC to the email, assuming the Recipient isn't the same value.
-		for each_bcc in self.bccto_list:
-			if each_bcc not in self.emailto_list:
-				new_message['to'].append({ "email": each_bcc, "type": "bcc" })
-
-		try:
-			# ========
-			# ERPNEXT TEMPLATE
-			# ========
-			if bool(self.doc_btu_config.email_body_is_html):
-				html_body = self.body.replace('\n', '<br>')
-				new_message["html"] = html_body
-			else:
-				new_message["text"] = MIMEText(self.body, "plain")
-
-			response = get_client().messages.send({"message": new_message})
-
-			if get_mandrill_response_status_overall(response) == MandrillResponse.UNHANDLED_ERROR:
-				frappe.msgprint(f"Unhandled error response from Mandrill API: {response}", to_console=True)
-				raise IOError(response)
-
-		except IOError as ex:
-			if isinstance(ex, list):
-				error_string = json.dumps(ex)
-			else:
-				error_string = str(ex)
-			frappe.msgprint(f"Error while sending email via Mandrill: {error_string}", to_console=True)
-			print(f"Message sent to Mandrill:\n{json.dumps(new_message, indent=4)}")
-			frappe.msgprint(f"Error while sending email via Mandrill: {error_string}")
 
 	def _create_plaintext_message(self):
 		"""

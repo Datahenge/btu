@@ -175,16 +175,7 @@
   }
  ],
  "is_submittable": 1,
- "links": [
-  {
-   "link_doctype": "BTU Task Log",
-   "link_fieldname": "task"
-  },
-  {
-   "link_doctype": "BTU Task Schedule",
-   "link_fieldname": "task"
-  }
- ],
+ "links": [],
  "modified": "2024-10-13 15:45:10.429629",
  "modified_by": "Administrator",
  "module": "BTU_Core",

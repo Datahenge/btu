@@ -30,9 +30,7 @@
   "column_break_5",
   "email_auth_username",
   "email_auth_password",
-  "email_encryption",
-  "mandrill_email_section",
-  "mandrill_from_email_address"
+  "email_encryption"
  ],
  "fields": [
   {
@@ -156,7 +154,7 @@
    "fieldname": "send_email_via",
    "fieldtype": "Select",
    "label": "Send Email Via",
-   "options": "SMTP\nMandrill",
+   "options": "SMTP",
    "reqd": 1
   },
   {
@@ -167,17 +165,6 @@
   {
    "fieldname": "column_break_15",
    "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "mandrill_email_section",
-   "fieldtype": "Section Break",
-   "label": "Mandrill Email"
-  },
-  {
-   "fieldname": "mandrill_from_email_address",
-   "fieldtype": "Data",
-   "label": "From Email Address",
-   "reqd": 1
   },
   {
    "fieldname": "email_recipients",
