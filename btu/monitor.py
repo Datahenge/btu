@@ -4,80 +4,10 @@ import json
 import pathlib
 
 # Third Party
-from pystemd.systemd1 import Unit, Manager
 import requests
 import frappe
 
 from btu import encode_slack_text
-
-### Prerequisites
-
-#   sudo apt install libsystemd-dev
-#   pip install pystemd==0.13.2
-
-# The 'pystemd' library allows you to talk to systemd over dbus from python.  This is rather nicer than using subprocess and Bash commands.abs(
-
-
-# The above code operates on root user units by default. To operate on userspace units, explicitly pass in a user mode DBus instance:
-def check_all_services(expected_services: list, slack_webhook_name=None):
-	"""
-	bench execute btu.monitor.check_all_services
-	"""
-
-	if not expected_services:
-		raise ValueError("Function argument 'expected_services' is mandatory.")
-	if isinstance(expected_services, str):
-		expected_services = [ expected_services ]
-
-	known_unit_files = [ each["name"] for each in list_unit_files() ]
-	errors_found = 0
-
-	for each_service in expected_services:
-
-		try:
-			if each_service not in known_unit_files:
-				raise ValueError(f"An expected systemd service '{each_service}' is not configured on this device.")
-			unit = Unit(each_service)
-			unit.load()
-
-			if unit.Unit.ActiveState == b"active" and unit.Unit.SubState == b"running":
-				print(f"\u2713 Service '{each_service}' : {unit.Unit.SubState.decode()}")
-			else:
-				raise RuntimeError(f"Warning: Systemd Service '{each_service}' : is {unit.Unit.ActiveState} and {unit.Unit.SubState}")
-
-		except Exception as ex:
-			errors_found += 1
-			print(f"Error: {ex}")
-			if slack_webhook_name:
-				post_error_in_slack(slack_webhook_name, error_message=ex)
-
-	if not errors_found:
-		print("All services are online and functioning correctly.")
-
-
-def list_unit_files(print_to_stdout=False):
-	"""
-	bench execute btu.monitor.list_unit_files
-	"""
-	manager = Manager()
-	manager.load()
-	all_unit_files = manager.Manager.ListUnitFiles()
-
-	result = [
-		{
-			"name": pathlib.Path(each[0].decode()).name,
-			"enabled": each[1].decode()
-		}
-		for each in all_unit_files
-	]
-
-	result.sort(key=lambda each: each["name"] )  # inline sort
-
-	if print_to_stdout:
-		for each_service in result:
-			print(f"Service: {each_service['name']}, State: {each_service['enabled']}")
-
-	return result
 
 
 def show_sql_processes():
