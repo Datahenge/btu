@@ -38,6 +38,19 @@ def _get_redis_connection() -> "redis.Redis[str]":
 	return redis_lib.from_url(frappe.local.conf.redis_queue, decode_responses=True)
 
 
+def _scheduler_poll_mode() -> bool:
+	"""
+	True when the BTU Scheduler daemon is running with BTU_SCHEDULER_CONNECTIVITY_MODE=webserver.
+
+	Set via site_config.json / common_site_config.json key 'btu_scheduler_connectivity_mode'.
+	Must match the scheduler daemon's own env var — see
+	docs/technical/04-webserver-only-architecture.md in btu_scheduler_py. In poll mode, the
+	daemon pulls commands via get_pending_scheduler_commands() instead of blocking on
+	Redis RPC, so nothing will ever answer a BLPOP wait here.
+	"""
+	return frappe.conf.get("btu_scheduler_connectivity_mode", "direct") == "webserver"
+
+
 class SchedulerAPI:
 	"""Redis RPC client for the BTU Scheduler daemon (see docs/scheduler/redis-rpc.md)."""
 
@@ -65,8 +78,15 @@ class SchedulerAPI:
 	def _send_message_via_redis_rpc(
 		self, request_type_name: str, content: str | None
 	) -> dict[str, Any] | None:
-		"""Push a scheduler command and block-wait for the receipt ACK (or return None)."""
-		response_key = f"{REDIS_RPC_RESPONSE_PREFIX}:{uuid.uuid4().hex}"
+		"""
+		Push a scheduler command. In direct mode, block-wait for the receipt ACK (or return
+		None). In poll mode (_scheduler_poll_mode()), the daemon isn't listening on Redis at
+		all — it polls get_pending_scheduler_commands() on its own schedule — so push the
+		command without a response_key and return a synthetic "queued" acknowledgement
+		immediately instead of waiting on a BLPOP nothing will ever answer.
+		"""
+		poll_mode = _scheduler_poll_mode()
+		response_key = None if poll_mode else f"{REDIS_RPC_RESPONSE_PREFIX}:{uuid.uuid4().hex}"
 		command = json.dumps(
 			{
 				"request_type": request_type_name,
@@ -78,6 +98,13 @@ class SchedulerAPI:
 		try:
 			redis_conn = _get_redis_connection()
 			redis_conn.lpush(REDIS_COMMAND_QUEUE, command)
+
+			if poll_mode:
+				return {
+					"status": "queued",
+					"request_type": request_type_name,
+					"message": "Command queued; BTU Scheduler polls for commands periodically (connectivity_mode=webserver).",
+				}
 
 			# BLPOP blocks until the scheduler pushes an ACK, or the timeout expires.
 			result = redis_conn.blpop(response_key, timeout=REDIS_RPC_TIMEOUT_SECONDS)

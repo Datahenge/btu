@@ -76,6 +76,91 @@ def test_function_ping_now_bytes() -> bytes:
 	return http_result
 
 
+@frappe.whitelist()
+def get_enabled_task_schedules() -> list[dict[str, str]]:
+	"""
+	Return every enabled BTU Task Schedule as {'schedule_key': ..., 'task_key': ...}.
+
+	Used by the BTU Scheduler daemon in 'webserver' connectivity mode, replacing the
+	direct SQL read in btu_scheduler's lib/sql.py::get_enabled_task_schedules(). See
+	docs/technical/04-webserver-only-architecture.md in btu_scheduler_py.
+	"""
+	rows = frappe.get_all(
+		"BTU Task Schedule",
+		filters={"enabled": 1},
+		fields=["name", "task"],
+	)
+	return [{"schedule_key": row.name, "task_key": row.task} for row in rows]
+
+
+@frappe.whitelist()
+def get_task_schedule_details(task_schedule_key: str) -> dict[str, str | int]:
+	"""
+	Return one BTU Task Schedule's scheduling details.
+
+	Used by the BTU Scheduler daemon in 'webserver' connectivity mode, replacing the
+	direct SQL read in btu_scheduler's lib/sql.py::get_task_schedule_by_id(). Reads the
+	document directly rather than joining against BTU Configuration, since
+	BTUTaskSchedule.before_validate() already guarantees cron_timezone is populated
+	(falling back to the system time zone) at save time.
+	"""
+	if not frappe.db.exists("BTU Task Schedule", task_schedule_key):
+		frappe.throw(
+			f"BTU Task Schedule '{task_schedule_key}' not found.",
+			exc=frappe.DoesNotExistError,
+		)
+
+	doc = frappe.get_doc("BTU Task Schedule", task_schedule_key)
+	return {
+		"name": doc.name,
+		"task": doc.task,
+		"task_description": doc.task_description,
+		"enabled": doc.enabled,
+		"queue_name": doc.queue_name,
+		"argument_overrides": doc.argument_overrides,
+		"schedule_description": doc.schedule_description,
+		"cron_string": doc.cron_string,
+		"cron_timezone": doc.cron_timezone,
+	}
+
+
+@frappe.whitelist()
+def get_pending_scheduler_commands() -> list[dict[str, str]]:
+	"""
+	Drain and return commands queued for the BTU Scheduler daemon.
+
+	Used by the BTU Scheduler daemon in 'webserver' connectivity mode, which polls this
+	endpoint instead of blocking on Redis RPC (see btu.btu_api.scheduler.SchedulerAPI).
+	Commands pushed in poll mode omit 'response_key', since nothing blocks waiting for
+	a synchronous acknowledgement.
+
+	Uses LPOP to match the pop side of the direct-mode listener's BLPOP (both LPUSH
+	is the producer side), so command ordering is identical between the two modes.
+	"""
+	import json
+
+	from btu.btu_api.scheduler import REDIS_COMMAND_QUEUE, _get_redis_connection
+
+	redis_conn = _get_redis_connection()
+	commands = []
+	while True:
+		raw_message = redis_conn.lpop(REDIS_COMMAND_QUEUE)
+		if raw_message is None:
+			break
+		try:
+			command = json.loads(raw_message)
+		except json.JSONDecodeError:
+			frappe.logger("btu").warning("Discarding non-JSON scheduler command: %r", raw_message)
+			continue
+		commands.append(
+			{
+				"request_type": command.get("request_type", ""),
+				"request_content": command.get("request_content", ""),
+			}
+		)
+	return commands
+
+
 @frappe.whitelist(methods=["POST", "PUT"])
 def enqueue_for_next_available_worker(task_schedule_key: str) -> dict[str, int | str]:
 	"""Enqueue a scheduled task when the BTU scheduler daemon fires its cron."""

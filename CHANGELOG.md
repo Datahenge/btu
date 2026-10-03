@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Autocomplete for queue names** — BTU Task and BTU Run Later forms load queue names from bench worker configuration (`common_site_config.json`) with validation.
 - **Autocomplete for schedule time zones** — BTU Task Schedule uses IANA time zone names with validation.
 - **Migration patches** — Automatic upgrade helpers for SMTP → Email Account and removal of deprecated BTU Queue records.
+- **Web-server-only scheduler connectivity mode** — New endpoints `get_enabled_task_schedules`, `get_task_schedule_details`, and `get_pending_scheduler_commands` let the BTU Scheduler daemon run without direct SQL or Redis access, reaching ERPNext only through the Frappe REST API. Opt in by setting `btu_scheduler_connectivity_mode: "webserver"` in site config to match the daemon's `BTU_SCHEDULER_CONNECTIVITY_MODE=webserver`; default (`direct`) behavior is unchanged. See `btu_scheduler_py`'s `docs/technical/04-webserver-only-architecture.md`.
 
 ### Changed
 
