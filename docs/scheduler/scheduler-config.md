@@ -5,25 +5,37 @@ All scheduler settings use the `BTU_SCHEDULER_` prefix.
 ## Configuration file (development)
 
 ```bash
-mkdir -p ~/.config/btu_scheduler
-cp .env.example ~/.config/btu_scheduler/.env
-nano ~/.config/btu_scheduler/.env
+mkdir -p ~/.config/btu-scheduler
+cp .env.example ~/.config/btu-scheduler/.env
+nano ~/.config/btu-scheduler/.env
 ```
 
-Path: `$XDG_CONFIG_HOME/btu_scheduler/.env` or `~/.config/btu_scheduler/.env`.
+Path: `$XDG_CONFIG_HOME/btu-scheduler/.env` or `~/.config/btu-scheduler/.env`.
 
 ## Production (systemd / containers)
 
-Set the same variables in the process environment. **Environment always overrides** the `.env` file.
+Set the same variables in the process environment (systemd `EnvironmentFile=`, Docker/Compose
+`environment:`, or Kubernetes env). **Process environment always overrides** the `.env` file —
+see [Run the scheduler](run-scheduler.md) for a systemd example and
+[docker/](https://github.com/Datahenge/btu_scheduler_py/tree/main/docker) in the repo for a
+Compose example.
 
-## Required variables
+## Connectivity mode
+
+`BTU_SCHEDULER_CONNECTIVITY_MODE` controls how the scheduler reaches ERPNext, and determines
+which of the variables below are actually required:
+
+| Value | Reaches ERPNext via | Needs SQL/RQ variables? |
+|-------|---------------------|--------------------------|
+| `direct` (default) | Direct SQL + Redis, plus the Frappe web server for enqueueing | Yes |
+| `webserver` | Frappe REST API only | No |
+
+## Required variables (`connectivity_mode=direct`)
 
 | Variable | Description |
 |----------|-------------|
 | `BTU_SCHEDULER_FULL_REFRESH_INTERNAL_SECS` | Seconds between full queue refills |
-| `BTU_SCHEDULER_SCHEDULER_POLLING_INTERVAL` | Seconds between RQ eligibility checks |
-| `BTU_SCHEDULER_TIME_ZONE_STRING` | Default IANA timezone |
-| `BTU_SCHEDULER_TRACING_LEVEL` | Log level (`INFO`, `DEBUG`, …) |
+| `BTU_SCHEDULER_SCHEDULER_POLLING_INTERVAL` | Seconds between RQ eligibility checks (and, in `webserver` mode, the command-poll interval) |
 | `BTU_SCHEDULER_SQL_TYPE` | `postgres` or `mariadb` |
 | `BTU_SCHEDULER_SQL_HOST` | Database host |
 | `BTU_SCHEDULER_SQL_PORT` | Database port |
@@ -32,27 +44,34 @@ Set the same variables in the process environment. **Environment always override
 | `BTU_SCHEDULER_SQL_PASSWORD` | Database password |
 | `BTU_SCHEDULER_RQ_HOST` | Redis host (same as bench) |
 | `BTU_SCHEDULER_RQ_PORT` | Redis port |
-| `BTU_SCHEDULER_WEBSERVER_IP` | Frappe web server IP |
-| `BTU_SCHEDULER_WEBSERVER_PORT` | Frappe web port |
+
+## Required variables (both modes)
+
+| Variable | Description |
+|----------|-------------|
+| `BTU_SCHEDULER_WEBSERVER_IP` | Frappe web server host or public DNS name |
+| `BTU_SCHEDULER_WEBSERVER_PORT` | Frappe web port (443 for HTTPS) |
 | `BTU_SCHEDULER_WEBSERVER_TOKEN` | Frappe API token (`token api_key:api_secret`) |
-| `BTU_SCHEDULER_JOBS_SITE_PREFIX` | Prefix for RQ job identifiers |
 
 ## Optional variables
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `BTU_SCHEDULER_DISABLE_REDIS_RPC` | `false` | Disable Redis RPC listener |
+| `BTU_SCHEDULER_CONNECTIVITY_MODE` | `direct` | `direct` or `webserver` — see above |
+| `BTU_SCHEDULER_RQ_PASSWORD` | unset | Redis password, if required |
 | `BTU_SCHEDULER_WEBSERVER_HOST_HEADER` | unset | Host header for multi-tenant sites |
-| `BTU_SCHEDULER_SLACK_WEBHOOK_URL` | unset | Slack notifications |
-| `BTU_SCHEDULER_LOGGER_PATH` | `$XDG_STATE_HOME/btu_scheduler/logger.log` | Log file |
+| `BTU_SCHEDULER_LOG_LEVEL` | `INFO` | Log level (`DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`) |
+| `BTU_SCHEDULER_TRACING_LEVEL` | unset | Legacy alias for `LOG_LEVEL` |
 
 Full reference: [Scheduler environment variables](scheduler-env-vars.md).
 
 ## Loading precedence
 
 ```
-Process environment  (highest)
-.env file            (fills unset keys only)
+Process environment          (highest)
+.env in current directory
+$XDG_CONFIG_HOME/btu-scheduler/.env, or ~/.config/btu-scheduler/.env
+Field defaults                (lowest)
 ```
 
-See scheduler source `btu_py/lib/config.py`.
+See scheduler source `btu_scheduler/lib/config.py`.

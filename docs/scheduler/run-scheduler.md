@@ -4,29 +4,49 @@
 
 ```bash
 source ~/venvs/btu-scheduler/bin/activate
-btu-py run-daemon
+btu run-daemon
 ```
 
-## systemd example
+## systemd (production)
+
+Install the unit file and an `EnvironmentFile` — `scripts/install-vps.sh` (see
+[Install scheduler](install-scheduler.md)) does this for you, or set it up by hand:
 
 ```ini
+# /etc/systemd/system/btu-scheduler.service
 [Unit]
-Description=BTU Scheduler
-After=network.target redis.service mariadb.service
+Description=BTU Scheduler daemon
+After=network-online.target mariadb.service redis-server.service
+Wants=network-online.target
 
 [Service]
 Type=simple
-User=frappe
-EnvironmentFile=/etc/btu_scheduler/env
-ExecStart=/home/frappe/venvs/btu-scheduler/bin/btu-py run-daemon
-Restart=always
-RestartSec=10
+User=btu-scheduler
+Group=btu-scheduler
+EnvironmentFile=/etc/btu-scheduler/btu-scheduler.env
+ExecStart=/opt/btu-scheduler/.venv/bin/btu run-daemon
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
 
 [Install]
 WantedBy=multi-user.target
 ```
 
-Use `EnvironmentFile` or inline `Environment=` for all `BTU_SCHEDULER_*` variables in production instead of `~/.config/.../.env`.
+`EnvironmentFile` takes plain `KEY=VALUE` lines — no shell, so no quotes even around values
+containing spaces (e.g. `BTU_SCHEDULER_WEBSERVER_TOKEN=token abc:def`). See
+[Scheduler environment variables](scheduler-env-vars.md) for the full list, and
+[Scheduler configuration](scheduler-config.md) for `BTU_SCHEDULER_CONNECTIVITY_MODE`, which
+decides whether `EnvironmentFile` needs the SQL/Redis variables at all.
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable --now btu-scheduler
+sudo journalctl -u btu-scheduler -f
+```
 
 ## Health check
 
@@ -34,5 +54,5 @@ From Frappe Desk → **BTU Configuration** → **Send 'ping' to Schedule Bot**.
 
 ## Logs
 
-- Scheduler file log: `BTU_SCHEDULER_LOGGER_PATH`
-- CLI: `btu-py config show` (secrets redacted)
+- `sudo journalctl -u btu-scheduler -f` (systemd) or stdout (foreground/container)
+- CLI: `btu config show` (secrets redacted)

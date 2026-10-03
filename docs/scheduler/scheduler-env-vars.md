@@ -1,15 +1,21 @@
 # Scheduler environment variables
 
-All variables use prefix `BTU_SCHEDULER_`. See [Scheduler configuration](scheduler-config.md) for narrative setup.
+All variables use prefix `BTU_SCHEDULER_`. See [Scheduler configuration](scheduler-config.md) for narrative setup, including which variables `connectivity_mode` makes optional.
 
-## Required
+## Always required
 
 | Variable | Description |
 |----------|-------------|
-| `FULL_REFRESH_INTERNAL_SECS` | Full queue refill interval |
-| `SCHEDULER_POLLING_INTERVAL` | RQ eligibility poll interval |
-| `TIME_ZONE_STRING` | Default IANA timezone |
-| `TRACING_LEVEL` | Log level |
+| `FULL_REFRESH_INTERNAL_SECS` | Full queue refill interval, in seconds |
+| `SCHEDULER_POLLING_INTERVAL` | RQ eligibility poll interval, in seconds (also the command-poll interval in `webserver` mode) |
+| `WEBSERVER_IP` | Frappe web server host or public DNS name |
+| `WEBSERVER_PORT` | Frappe web port |
+| `WEBSERVER_TOKEN` | Frappe API token (`token api_key:api_secret`) |
+
+## Required only when `CONNECTIVITY_MODE=direct` (the default)
+
+| Variable | Description |
+|----------|-------------|
 | `SQL_TYPE` | `postgres` or `mariadb` |
 | `SQL_HOST` | DB host |
 | `SQL_PORT` | DB port |
@@ -18,18 +24,15 @@ All variables use prefix `BTU_SCHEDULER_`. See [Scheduler configuration](schedul
 | `SQL_PASSWORD` | DB password |
 | `RQ_HOST` | Redis host |
 | `RQ_PORT` | Redis port |
-| `WEBSERVER_IP` | Frappe host |
-| `WEBSERVER_PORT` | Frappe port |
-| `WEBSERVER_TOKEN` | API token |
-| `JOBS_SITE_PREFIX` | RQ job ID prefix |
 
 ## Optional (defaults)
 
 | Variable | Default |
 |----------|---------|
-| `DISABLE_REDIS_RPC` | `false` |
+| `CONNECTIVITY_MODE` | `direct` (or `webserver` — no SQL/RQ variables needed; see [Scheduler configuration](scheduler-config.md)) |
+| `RQ_PASSWORD` | unset |
 | `WEBSERVER_HOST_HEADER` | unset |
-| `SLACK_WEBHOOK_URL` | unset |
-| `LOGGER_PATH` | `$XDG_STATE_HOME/btu_scheduler/logger.log` |
+| `LOG_LEVEL` | `INFO` |
+| `TRACING_LEVEL` | unset — legacy alias for `LOG_LEVEL` |
 
-Source of truth: `btu_py/lib/config.py` in [btu_scheduler_py](https://github.com/Datahenge/btu_scheduler_py).
+Source of truth: `btu_scheduler/lib/config.py` in [btu_scheduler_py](https://github.com/Datahenge/btu_scheduler_py).

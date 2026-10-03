@@ -18,4 +18,9 @@ The Frappe app sends **control commands** to the scheduler daemon over Redis RPC
 
 See [Reference → Redis RPC protocol](redis-rpc.md).
 
-Set `BTU_SCHEDULER_DISABLE_REDIS_RPC=true` only for debugging — the Frappe app will not reach the daemon.
+!!! note "webserver connectivity mode"
+    This Redis RPC channel only runs when the scheduler daemon is in `connectivity_mode=direct`
+    (the default). In `connectivity_mode=webserver`, the daemon has no direct Redis access, so it
+    polls `get_pending_scheduler_commands` on the Frappe web server instead of listening on
+    Redis — the Frappe side still pushes to the same queue, it's just drained by HTTP poll rather
+    than `BLPOP`. See [Scheduler configuration](scheduler-config.md).
