@@ -265,7 +265,11 @@ class BTUTask(Document):
 						any_result = callable_function(self.name).run()
 					else:
 						any_result = callable_function()
-			success = True
+			if isinstance(any_result, Result):
+				success = any_result.okay
+				any_result = any_result.message
+			else:
+				success = True
 		except Exception as ex:
 			any_result = str(ex)
 			success = False

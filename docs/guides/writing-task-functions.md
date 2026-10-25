@@ -16,9 +16,9 @@ Tasks receive kwargs from **Function Arguments**. No special base class required
 
 ## Return values
 
-Return normally on success. Raise on failure — BTU captures traceback in Task Log.
+Return normally on success. Raise on an unexpected failure — BTU captures its traceback in the Task Log.
 
-Optional: return `btu.Result` for structured messages in custom wrappers.
+For an expected failure with an operator-facing reason, return `btu.Result(False, "reason")`. BTU marks the Task Log **Failed** and puts the reason in **Result Message** without a traceback. A successful task can return `btu.Result(True, message)`.
 
 ## Logging
 

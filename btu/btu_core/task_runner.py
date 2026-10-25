@@ -124,6 +124,15 @@ class StandardOutput(Enum):
 	# FILE was removed: writing to disk is not container-safe and was never used.
 
 
+def task_result(response: object, execution_time: float, *, threw_exception: bool = False) -> Result:
+	"""Honor an explicit Result returned by a task while preserving exception failures."""
+	if threw_exception:
+		return Result(False, response, execution_time=execution_time)
+	if isinstance(response, Result):
+		return Result(response.okay, response.message, execution_time=execution_time)
+	return Result(True, response, execution_time=execution_time)
+
+
 # Further Reading:
 # https://www.geeksforgeeks.org/decorators-with-parameters-in-python/
 # http://gael-varoquaux.info/programming/decoration-in-python-done-right-decorating-and-pickling.html
@@ -263,10 +272,9 @@ class TaskRunner:
 				)
 
 			execution_time = round(time.time() - execution_start, 3)
-			if function_threw_exception:
-				function_result = Result(False, ret, execution_time=execution_time)
-			else:
-				function_result = Result(True, ret, execution_time=execution_time)
+			function_result = task_result(
+				ret, execution_time, threw_exception=function_threw_exception
+			)
 
 		except Exception as ex:
 			logger.error("Error in function '%s': %s", self.function_name(), ex)
