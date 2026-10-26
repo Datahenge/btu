@@ -98,7 +98,10 @@ class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
 				return
 			raise ConnectionError(message)
 		scheduler_message = response.get("message", str(response))
-		print(f"Response from BTU Scheduler: {scheduler_message}")
+		print(
+			f"BTU Scheduler reload response for schedule {self.name} "
+			f"(command=create_task_schedule): {scheduler_message}"
+		)
 		if not warn_only:
 			frappe.msgprint(_("Response from BTU Scheduler daemon:<br>{0}").format(scheduler_message))
 		if autosave:
@@ -120,7 +123,10 @@ class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
 			frappe.msgprint(
 				_("Request = Cancel Task Schedule.<br>Response from BTU Scheduler: {0}").format(ack)
 			)
-		print(f"Request = Cancel Task Schedule.\nResponse from BTU Scheduler: {ack}")
+		print(
+			f"BTU Scheduler cancel response for schedule {self.name} "
+			f"(command=cancel_task_schedule): {ack}"
+		)
 		return response
 
 	def get_task_doc(self) -> Document:
