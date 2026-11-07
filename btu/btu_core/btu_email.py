@@ -186,7 +186,7 @@ class Emailer:
 		return body
 
 
-def _build_recipients_from_task_log(doc_task_log: "BTUTaskLog") -> dict[str, dict[str, int]]:
+def _build_recipients_from_task_log(doc_task_log: BTUTaskLog) -> dict[str, dict[str, int]]:
 	"""Build email recipient options from a BTU Task Log and its related Task or Schedule."""
 	from btu.btu_core.doctype.btu_task_log.btu_task_log import (
 		BTUTaskLog as BTUTaskLogType,  # late import to avoid any circular reference problems.
@@ -239,7 +239,7 @@ def _build_recipients_from_task_log(doc_task_log: "BTUTaskLog") -> dict[str, dic
 
 
 # Non-Class Methods
-def email_on_task_start(doc_task_log: "BTUTaskLog", send_via_queue: bool = False) -> None:
+def email_on_task_start(doc_task_log: BTUTaskLog, send_via_queue: bool = False) -> None:
 	"""Send email when a Task Log is first inserted into the database."""
 	from btu.btu_core.doctype.btu_task_log.btu_task_log import (
 		BTUTaskLog as BTUTaskLogType,  # late import to avoid any circular reference problems.
@@ -268,14 +268,16 @@ def email_on_task_start(doc_task_log: "BTUTaskLog", send_via_queue: bool = False
 			"Sending email to %s because Task %s has started.", each_recipient, doc_task_log.task
 		)
 		if not send_via_queue:
-			Emailer(sender=get_default_sender(), emailto_list=each_recipient or None, subject=subject, body=body).send()
+			Emailer(
+				sender=get_default_sender(), emailto_list=each_recipient or None, subject=subject, body=body
+			).send()
 		else:
 			raise NotImplementedError("Not Yet Implemented: Sending email via Redis Queue.")
 
 	frappe.logger("btu").debug("Sent email message to recipients: %s", recipients)
 
 
-def email_on_task_conclusion(doc_task_log: "BTUTaskLog", send_via_queue: bool = False) -> None:
+def email_on_task_conclusion(doc_task_log: BTUTaskLog, send_via_queue: bool = False) -> None:
 	"""Send an email about the Task Log's success or failure."""
 	from btu.btu_core.doctype.btu_task_log.btu_task_log import (
 		BTUTaskLog as BTUTaskLogType,  # late import to avoid any circular reference problems.
@@ -349,7 +351,9 @@ def send_hello_email_to_current_user(debug: bool = False) -> str:
 
 	subject = f"From BTU: Hello {user_doc.full_name}"
 	try:
-		sent = Emailer(subject=subject, body=message_body, sender=get_default_sender(), emailto_list=user_doc.email).send()
+		sent = Emailer(
+			subject=subject, body=message_body, sender=get_default_sender(), emailto_list=user_doc.email
+		).send()
 	except BTUEmailSendError as ex:
 		frappe.throw(str(ex))
 	if not sent:

@@ -31,7 +31,7 @@ class RequestType(Enum):
 	cancel_task_schedule = 2
 
 
-def _get_redis_connection() -> "redis.Redis[str]":
+def _get_redis_connection() -> redis.Redis[str]:
 	"""Return a Redis connection pointed at Frappe's RQ database."""
 	import redis as redis_lib
 

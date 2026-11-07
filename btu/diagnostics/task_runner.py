@@ -5,7 +5,7 @@ import frappe
 PING_WITH_WAIT_PATH = "btu.diagnostics.smoke.ping_with_wait"
 
 
-def _find_or_create_ping_task() -> "frappe.Document":
+def _find_or_create_ping_task() -> frappe.Document:
 	"""Find or create the ``ping_with_wait`` BTU Task document."""
 	for legacy_path in (PING_WITH_WAIT_PATH, "btu.manual_tests.ping_with_wait"):
 		task_names = frappe.get_list("BTU Task", filters={"function_string": legacy_path}, pluck="name")

@@ -142,7 +142,7 @@ class TransientTask:
 		max_task_duration: str = "600s",
 		queue_name: str = "short",
 		**kwargs: object,
-	) -> "TransientTask":
+	) -> TransientTask:
 		"""Create a new transient Subtask document and wrap it in a TransientTask."""
 		doc_task = frappe.new_doc("BTU Task")
 		doc_task.desc_short = description
@@ -164,7 +164,7 @@ class TransientTask:
 		transient_task = TransientTask(doc_task)
 		return transient_task
 
-	def __init__(self, doc_task: "BTUTask") -> None:
+	def __init__(self, doc_task: BTUTask) -> None:
 		"""Wrap an existing BTU Task document as a transient Subtask."""
 		from btu.btu_core.doctype.btu_task.btu_task import BTUTask
 

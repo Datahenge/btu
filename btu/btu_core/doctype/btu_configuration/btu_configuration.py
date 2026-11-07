@@ -8,7 +8,7 @@ import json
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from btu import print_both
+
 from btu.btu_api.scheduler import SchedulerAPI
 from btu.btu_core.btu_email import send_hello_email_to_current_user
 from btu.btu_core.form_options import validate_rq_queue_name
@@ -63,7 +63,9 @@ class BTUConfiguration(Document):
 		)
 		task.insert()  # the BTU Task naming series sets the name
 		task.submit()
-		frappe.msgprint(_("Created BTU Task {0}.").format(frappe.utils.get_link_to_form("BTU Task", task.name)))
+		frappe.msgprint(
+			_("Created BTU Task {0}.").format(frappe.utils.get_link_to_form("BTU Task", task.name))
+		)
 		return task.name
 
 	@frappe.whitelist()
@@ -73,4 +75,3 @@ class BTUConfiguration(Document):
 
 		message = reload_timezone_cache()
 		frappe.msgprint(message)
-

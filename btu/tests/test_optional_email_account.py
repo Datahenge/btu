@@ -39,6 +39,9 @@ class TestOptionalEmailAccount(unittest.TestCase):
 			patch.object(frappe, "msgprint") as msgprint,
 			patch.object(frappe, "throw") as throw,
 			patch("btu.btu_core.doctype.btu_configuration.btu_configuration.validate_rq_queue_name"),
+			patch(
+				"btu.btu_core.doctype.btu_configuration.btu_configuration._", side_effect=lambda text: text
+			),
 		):
 			doc.validate()
 		msgprint.assert_called_once()

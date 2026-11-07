@@ -97,7 +97,7 @@ class DeliveryTarget:
 		return schema
 
 	@staticmethod
-	def init_from_dictionary(data_dictionary: dict[str, Any]) -> "DeliveryTarget":
+	def init_from_dictionary(data_dictionary: dict[str, Any]) -> DeliveryTarget:
 		"""Construct a DeliveryTarget from a validated dictionary."""
 		DeliveryTarget.get_data_dictionary_schema().validate(
 			data_dictionary
@@ -164,8 +164,8 @@ class DeliveryTarget:
 		"""Validate the target type attribute."""
 		if self.target_type not in DeliveryTarget.valid_target_types:
 			frappe.throw(
-				_("{0} is not a valid Target Type (should one of the following {1})").format(
-					frappe.bold(self.report_format), frappe.bold(", ".join(DeliveryTarget.valid_target_types))
+				_("{0} is not a valid Target Type (should be one of the following {1})").format(
+					frappe.bold(self.target_type), frappe.bold(", ".join(DeliveryTarget.valid_target_types))
 				)
 			)
 
@@ -173,7 +173,9 @@ class DeliveryTarget:
 		"""Validate the report format attribute."""
 		if self.report_format not in DeliveryTarget.valid_report_formats:
 			frappe.throw(
-				_("{0} is not a valid report format. Report format should one of the following {1}").format(
+				_(
+					"{0} is not a valid report format. Report format should be one of the following {1}"
+				).format(
 					frappe.bold(self.report_format),
 					frappe.bold(", ".join(DeliveryTarget.valid_report_formats)),
 				)

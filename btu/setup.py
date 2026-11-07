@@ -28,9 +28,7 @@ def sync_desk():
 	workspace_file = frappe.get_app_path(
 		"btu", "btu_core", "workspace", "automated_tasks", "automated_tasks.json"
 	)
-	sidebar_file = frappe.get_app_path(
-		"btu", "workspace_sidebar", "automated_tasks.json"
-	)
+	sidebar_file = frappe.get_app_path("btu", "workspace_sidebar", "automated_tasks.json")
 
 	print("Importing workspace...")
 	import_file_by_path(workspace_file, force=True)
@@ -60,8 +58,9 @@ def _create_desktop_icon():
 
 	if frappe.db.exists("Desktop Icon", {"label": "Automated Tasks", "icon_type": "Link"}):
 		frappe.db.set_value(
-			"Desktop Icon", "Automated Tasks",
-			{"standard": 1, "bg_color": None, "icon": workspace.icon, "app": "btu"}
+			"Desktop Icon",
+			"Automated Tasks",
+			{"standard": 1, "bg_color": None, "icon": workspace.icon, "app": "btu"},
 		)
 		print("Updated existing desktop icon.")
 		return

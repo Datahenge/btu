@@ -33,13 +33,16 @@ class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
 		if not task_doc.email_recipients:
 			return
 		for row in task_doc.email_recipients:
-			self.append("email_recipients", {
-				"email_address": row.email_address,
-				"email_on_start": row.email_on_start,
-				"email_on_success": row.email_on_success,
-				"email_on_error": row.email_on_error,
-				"email_on_timeout": row.email_on_timeout,
-			})
+			self.append(
+				"email_recipients",
+				{
+					"email_address": row.email_address,
+					"email_on_start": row.email_on_start,
+					"email_on_success": row.email_on_success,
+					"email_on_error": row.email_on_error,
+					"email_on_timeout": row.email_on_timeout,
+				},
+			)
 		self.save()
 
 	def on_trash(self) -> None:
@@ -123,10 +126,7 @@ class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
 			frappe.msgprint(
 				_("Request = Cancel Task Schedule.<br>Response from BTU Scheduler: {0}").format(ack)
 			)
-		print(
-			f"BTU Scheduler cancel response for schedule {self.name} "
-			f"(command=cancel_task_schedule): {ack}"
-		)
+		print(f"BTU Scheduler cancel response for schedule {self.name} (command=cancel_task_schedule): {ack}")
 		return response
 
 	def get_task_doc(self) -> Document:

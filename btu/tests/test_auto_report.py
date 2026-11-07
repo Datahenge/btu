@@ -2,6 +2,8 @@
 
 import unittest
 
+from schema import SchemaError
+
 from btu.btu_core.auto_report import DeliveryTarget
 
 
@@ -28,7 +30,7 @@ class TestDeliveryTargetSchema(unittest.TestCase):
 		self.assertEqual(target.target_type, "Email")
 
 	def test_invalid_target_type_rejected(self) -> None:
-		with self.assertRaises(Exception):
+		with self.assertRaises(SchemaError):
 			DeliveryTarget.init_from_dictionary(
 				{
 					"report_key": "ToDo",

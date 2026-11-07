@@ -29,7 +29,8 @@ def get_task_defaults_from_configuration(config: Document | None = None) -> dict
 		config = frappe.get_single("BTU Configuration")
 	return {
 		"queue_name": config.queue_name or TASK_DOCTYPE_FIELD_DEFAULTS["queue_name"],
-		"max_task_duration": cint(config.max_task_duration) or TASK_DOCTYPE_FIELD_DEFAULTS["max_task_duration"],
+		"max_task_duration": cint(config.max_task_duration)
+		or TASK_DOCTYPE_FIELD_DEFAULTS["max_task_duration"],
 		"repeat_log_in_stdout": cint(config.repeat_log_in_stdout),
 	}
 

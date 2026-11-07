@@ -272,9 +272,7 @@ class TaskRunner:
 				)
 
 			execution_time = round(time.time() - execution_start, 3)
-			function_result = task_result(
-				ret, execution_time, threw_exception=function_threw_exception
-			)
+			function_result = task_result(ret, execution_time, threw_exception=function_threw_exception)
 
 		except Exception as ex:
 			logger.error("Error in function '%s': %s", self.function_name(), ex)

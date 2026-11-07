@@ -88,10 +88,10 @@ def write_log_for_task(
 	if stdout and not isinstance(stdout, str):
 		try:
 			stdout = str(stdout)
-		except Exception:
+		except Exception as ex:
 			raise ValueError(
-				f"Argument 'stdout' should be a Python string.  Found datatype '{type(result)}' instead."
-			)  # pylint: disable=raise-missing-from
+				f"Argument 'stdout' should be a Python string.  Found datatype '{type(stdout)}' instead."
+			) from ex
 
 	task_values = frappe.db.get_values(
 		"BTU Task",
