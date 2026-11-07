@@ -104,6 +104,7 @@ nav:
       - Install scheduler: scheduler/install-scheduler.md
       - Scheduler configuration: scheduler/scheduler-config.md
       - Run the scheduler: scheduler/run-scheduler.md
+      - Run in Docker (webserver mode): scheduler/run-in-docker.md
       - RQ workers: scheduler/rq-workers.md
       - Scheduler buttons: scheduler/scheduler-buttons.md
       - Failed jobs: scheduler/failed-jobs.md

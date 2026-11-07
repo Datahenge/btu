@@ -7,6 +7,11 @@ source ~/venvs/btu-scheduler/bin/activate
 btu run-daemon
 ```
 
+## Docker (webserver mode)
+
+On a containerized ERPNext stack, run the daemon as its own Compose project: see
+[Run in Docker (webserver mode)](run-in-docker.md).
+
 ## systemd (production)
 
 Install the unit file and an `EnvironmentFile` — `scripts/install-vps.sh` (see

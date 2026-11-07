@@ -38,6 +38,13 @@ User only the **BTU Scheduler** role: it has no Desk access, and the scheduler e
 `get_pending_scheduler_commands`, `get_pickled_task`) refuse any caller without BTU Scheduler or
 System Manager. `test_ping` stays open to any signed-in user, for connectivity checks.
 
+Scheduled Tasks do not run as this User: they run as **BTU Configuration → Run Scheduled Tasks As**
+(default Administrator), so the BTU Scheduler role is all the daemon's User needs.
+
+In webserver mode, also set the site's `btu_scheduler_connectivity_mode` to `webserver`
+(`bench --site <site> set-config btu_scheduler_connectivity_mode webserver`). See
+[Run in Docker (webserver mode)](run-in-docker.md) for a complete example.
+
 ## Required variables (`connectivity_mode=direct`)
 
 | Variable | Description |
