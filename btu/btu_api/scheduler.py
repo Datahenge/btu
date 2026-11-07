@@ -51,6 +51,44 @@ def _scheduler_poll_mode() -> bool:
 	return frappe.conf.get("btu_scheduler_connectivity_mode", "direct") == "webserver"
 
 
+LAST_POLL_CACHE_KEY = "btu_scheduler:last_poll_utc"
+# A webserver-mode daemon polls every scheduler_polling_interval (30 s by default); after this
+# many seconds without a poll it is reported as not polling.
+POLL_STALE_AFTER_SECONDS = 120
+
+
+def record_scheduler_poll() -> None:
+	"""Remember when the webserver-mode daemon last polled for commands (its liveness signal)."""
+	from datetime import UTC, datetime
+
+	frappe.cache.set_value(LAST_POLL_CACHE_KEY, datetime.now(UTC).isoformat())
+
+
+def scheduler_status() -> dict[str, Any]:
+	"""Connectivity mode and, in webserver mode, when the daemon last polled."""
+	from datetime import UTC, datetime
+
+	poll_mode = _scheduler_poll_mode()
+	status: dict[str, Any] = {
+		"poll_mode": poll_mode,
+		"last_poll_utc": None,
+		"seconds_since_poll": None,
+		"polling": None,
+	}
+	if poll_mode:
+		last_poll = frappe.cache.get_value(LAST_POLL_CACHE_KEY)
+		if last_poll:
+			seconds = int((datetime.now(UTC) - datetime.fromisoformat(last_poll)).total_seconds())
+			status.update(
+				last_poll_utc=last_poll,
+				seconds_since_poll=seconds,
+				polling=seconds <= POLL_STALE_AFTER_SECONDS,
+			)
+		else:
+			status["polling"] = False
+	return status
+
+
 class SchedulerAPI:
 	"""Redis RPC client for the BTU Scheduler daemon (see docs/scheduler/redis-rpc.md)."""
 

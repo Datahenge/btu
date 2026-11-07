@@ -10,6 +10,28 @@ frappe.ui.form.on('BTU Configuration', {
 		frm.events.add_button_list_failed_jobs(frm);
 		frm.events.add_button_describe_job(frm);
 		frm.events.add_button_delete_failed_jobs(frm);
+		frm.events.show_scheduler_status(frm);
+	}
+
+	,show_scheduler_status: function (frm) {
+		// Webserver mode: a ping cannot be answered, so disable the button and show the last poll.
+		const status = (frm.doc.__onload || {}).btu_scheduler_status;
+		if (!status || !status.poll_mode) {
+			return;
+		}
+		const button = frm.get_field('btn_send_ping');
+		if (button && button.$input) {
+			button.$input.prop('disabled', true);
+			button.set_description(__('Unavailable in webserver mode: the scheduler cannot answer a ping.'));
+		}
+		if (status.last_poll_utc) {
+			frm.dashboard.set_headline_alert(
+				__('BTU Scheduler (webserver mode) last polled {0} seconds ago.', [status.seconds_since_poll]),
+				status.polling ? 'green' : 'red'
+			);
+		} else {
+			frm.dashboard.set_headline_alert(__('BTU Scheduler (webserver mode): no poll recorded yet.'), 'red');
+		}
 	}
 
 	,add_button_list_failed_jobs: function (frm) {

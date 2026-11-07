@@ -20,6 +20,12 @@ PING_TASK_WAIT_SECONDS = 10
 class BTUConfiguration(Document):
 	"""Site-wide BTU settings including email and scheduler configuration."""
 
+	def onload(self) -> None:
+		"""Give the form the scheduler's connectivity mode and, in webserver mode, its last poll."""
+		from btu.btu_api.scheduler import scheduler_status
+
+		self.set_onload("btu_scheduler_status", scheduler_status())
+
 	def validate(self) -> None:
 		"""Warn, without blocking, when no Default Email Account is configured."""
 		if not self.default_email_account:
@@ -37,7 +43,20 @@ class BTUConfiguration(Document):
 
 	@frappe.whitelist()
 	def button_send_ping(self) -> None:
-		"""Send a ping to the BTU Scheduler daemon via Redis RPC."""
+		"""Send a ping to the BTU Scheduler daemon via Redis RPC (direct mode only)."""
+		from btu.btu_api.scheduler import scheduler_status
+
+		status = scheduler_status()
+		if status["poll_mode"]:
+			# Nothing answers a ping in webserver mode; report the daemon's last poll instead.
+			if status["last_poll_utc"]:
+				message = _(
+					"Webserver mode: the BTU Scheduler last polled {0} seconds ago ({1} UTC)."
+				).format(status["seconds_since_poll"], status["last_poll_utc"])
+			else:
+				message = _("Webserver mode: no poll from the BTU Scheduler has been recorded.")
+			frappe.msgprint(message, indicator="green" if status["polling"] else "red")
+			return
 		response = SchedulerAPI.send_ping()
 		frappe.msgprint(f"Response from BTU Scheduler daemon:<br>{response}")
 

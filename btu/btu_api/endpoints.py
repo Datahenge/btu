@@ -162,7 +162,9 @@ def get_pending_scheduler_commands() -> list[dict[str, str]]:
 	_require_scheduler_role()
 	import json
 
-	from btu.btu_api.scheduler import REDIS_COMMAND_QUEUE, _get_redis_connection
+	from btu.btu_api.scheduler import REDIS_COMMAND_QUEUE, _get_redis_connection, record_scheduler_poll
+
+	record_scheduler_poll()
 
 	redis_conn = _get_redis_connection()
 	commands = []
