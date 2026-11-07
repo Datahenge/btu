@@ -18,6 +18,7 @@
   "section_break_wwwp",
   "btn_resubmit_all_task_schedules",
   "btn_reload_timezone_cache",
+  "btn_create_ping_task",
   "email_tab",
   "email_section",
   "default_email_account",
@@ -50,7 +51,7 @@
    "fieldtype": "Link",
    "label": "Default Email Account",
    "options": "Email Account",
-   "reqd": 1
+   "description": "Optional. Without it, BTU skips its notification emails and logs a warning."
   },
   {
    "default": "0",
@@ -88,6 +89,13 @@
    "fieldtype": "Button",
    "label": "Reload Timezone Cache",
    "options": "button_reload_timezone_cache"
+  },
+  {
+   "description": "Creates and submits a BTU Task that runs btu.diagnostics.smoke.ping_with_wait with a 10-second wait.",
+   "fieldname": "btn_create_ping_task",
+   "fieldtype": "Button",
+   "label": "Create Ping Task (10 s wait)",
+   "options": "button_create_ping_task"
   },
   {
    "fieldname": "cb2",
@@ -176,7 +184,7 @@
  "hide_toolbar": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-07-07 00:00:00.000000",
+ "modified": "2026-11-07 15:00:00.000000",
  "modified_by": "Administrator",
  "module": "BTU_Core",
  "name": "BTU Configuration",

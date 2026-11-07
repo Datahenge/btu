@@ -122,15 +122,18 @@ class Emailer:
 		self.bcc_as_string = Emailer.recipients_to_csv_string(self.bccto_list)
 
 	@frappe.whitelist()
-	def send(self) -> None:
-		"""Send an email using BTU."""
-		self._send_via_email_account()
+	def send(self) -> bool:
+		"""Send an email using BTU. Returns False when skipped because no Email Account is set."""
+		return self._send_via_email_account()
 
-	def _send_via_email_account(self) -> None:
+	def _send_via_email_account(self) -> bool:
 		"""Send the email using a linked Frappe Email Account."""
 		account_name = self.doc_btu_config.default_email_account
 		if not account_name:
-			raise BTUEmailSendError(_("BTU Configuration requires a Default Email Account."))
+			message = f"BTU Configuration has no Default Email Account; skipped email '{self.subject}'."
+			frappe.logger("btu").warning(message)
+			print_both(message)
+			return False
 
 		email_account = frappe.get_doc("Email Account", account_name)
 		if not email_account.enable_outgoing:
@@ -164,6 +167,7 @@ class Emailer:
 			raise
 		except Exception as exc:
 			_raise_btu_email_send_error("Email Account", exc, account_name=account_name)
+		return True
 
 	def _apply_subject_prefix(self, subject: str) -> str:
 		"""Apply an environment prefix to the email subject when configured."""
@@ -345,8 +349,15 @@ def send_hello_email_to_current_user(debug: bool = False) -> str:
 
 	subject = f"From BTU: Hello {user_doc.full_name}"
 	try:
-		Emailer(subject=subject, body=message_body, sender=get_default_sender(), emailto_list=user_doc.email).send()
+		sent = Emailer(subject=subject, body=message_body, sender=get_default_sender(), emailto_list=user_doc.email).send()
 	except BTUEmailSendError as ex:
 		frappe.throw(str(ex))
+	if not sent:
+		frappe.msgprint(
+			_("No Default Email Account is set in BTU Configuration, so no email was sent."),
+			title=_("Email Not Configured"),
+			indicator="orange",
+		)
+		return "No email was sent: BTU Configuration has no Default Email Account."
 
 	return "If successful, a test email will arrive soon."
