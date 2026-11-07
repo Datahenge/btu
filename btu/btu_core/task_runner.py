@@ -42,19 +42,38 @@ def _configure_btu_logger() -> logging.Logger:
 	return logger
 
 
+def _user_is_enabled(user: str) -> bool:
+	return bool(frappe.db.get_value("User", user, "enabled"))
+
+
+def _switch_to_scheduled_task_user(user: str) -> None:
+	"""Run the Task as ``user``; refuse a missing or disabled User rather than run as the caller."""
+	if not _user_is_enabled(user):
+		raise frappe.ValidationError(f"BTU cannot run a scheduled Task as '{user}': no such enabled User.")
+	frappe.set_user(user)
+
+
 def run_task_by_id(
 	task_id: str,
 	site_name: str,
 	schedule_id: str | None = None,
 	extra_arguments: dict[str, Any] | None = None,
 	rq_job_id: str | None = None,
+	run_as_user: str | None = None,
 ) -> None:
-	"""RQ entry point: load a BTU Task by id and run it in the worker process."""
+	"""RQ entry point: load a BTU Task by id and run it in the worker process.
+
+	``run_as_user`` is set for scheduled runs: the Task runs as that User instead of the API user
+	that enqueued it. Runs a person queues by hand keep that person's identity.
+	"""
 	from rq import get_current_job
 
 	if not getattr(frappe.local, "initialised", None):
 		frappe.init(site=site_name)
 		frappe.connect()
+
+	if run_as_user:
+		_switch_to_scheduled_task_user(run_as_user)
 
 	logger = _configure_btu_logger()
 

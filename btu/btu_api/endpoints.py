@@ -12,11 +12,19 @@ from btu.btu_core.doctype.btu_task.btu_task import _task_has_active_log
 # Roles allowed to call the scheduler daemon's endpoints. Give the daemon's API user only
 # "BTU Scheduler"; a System Manager may call them for diagnosis.
 SCHEDULER_ROLES = ("BTU Scheduler", "System Manager")
+DEFAULT_SCHEDULED_TASK_USER = "Administrator"
 
 
 def _require_scheduler_role() -> None:
 	"""Refuse a caller who is neither the scheduler daemon's user nor a System Manager."""
 	frappe.only_for(SCHEDULER_ROLES)
+
+
+def scheduled_task_user() -> str:
+	"""The User scheduled Tasks run as (BTU Configuration > Run Scheduled Tasks As), never the caller."""
+	return (
+		frappe.db.get_single_value("BTU Configuration", "scheduled_task_user") or DEFAULT_SCHEDULED_TASK_USER
+	)
 
 
 @frappe.whitelist()
@@ -36,6 +44,7 @@ def get_pickled_task(task_id: str, task_schedule_id: str | None = None) -> bytes
 			"task_id": task_id,
 			"site_name": frappe.local.site,
 			"schedule_id": task_schedule_id,
+			"run_as_user": scheduled_task_user(),
 		},
 	}
 
@@ -224,6 +233,7 @@ def enqueue_for_next_available_worker(task_schedule_key: str) -> dict[str, int |
 			site_name=frappe.local.site,
 			schedule_id=task_schedule_key,
 			rq_job_id=rq_job_id,
+			run_as_user=scheduled_task_user(),
 		)
 
 	except Exception as ex:

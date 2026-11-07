@@ -29,6 +29,7 @@
   "sb_default_task_settings",
   "queue_name",
   "max_task_duration",
+  "scheduled_task_user",
   "repeat_log_in_stdout",
   "sb_advanced_logging",
   "create_in_progress_logs"
@@ -122,6 +123,14 @@
    "label": "Max Task Duration (secs)"
   },
   {
+   "default": "Administrator",
+   "fieldname": "scheduled_task_user",
+   "fieldtype": "Link",
+   "options": "User",
+   "label": "Run Scheduled Tasks As",
+   "description": "The User that scheduled Tasks run as. The BTU Scheduler daemon's own API user only needs the BTU Scheduler role; it never lends its identity to the Tasks. Blank means Administrator."
+  },
+  {
    "default": "0",
    "description": "When marked, new BTU Tasks will repeat stdout to the worker log as well as BTU Task Log.",
    "fieldname": "repeat_log_in_stdout",
@@ -184,7 +193,7 @@
  "hide_toolbar": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-11-07 15:00:00.000000",
+ "modified": "2026-11-07 16:00:00.000000",
  "modified_by": "Administrator",
  "module": "BTU_Core",
  "name": "BTU Configuration",
