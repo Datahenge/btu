@@ -30,6 +30,14 @@ which of the variables below are actually required:
 | `direct` (default) | Direct SQL + Redis, plus the Frappe web server for enqueueing | Yes |
 | `webserver` | Frappe REST API only | No |
 
+## The scheduler's API user
+
+`BTU_SCHEDULER_WEBSERVER_TOKEN` belongs to a Frappe User that the daemon signs in as. Give that
+User only the **BTU Scheduler** role: it has no Desk access, and the scheduler endpoints
+(`enqueue_for_next_available_worker`, `get_enabled_task_schedules`, `get_task_schedule_details`,
+`get_pending_scheduler_commands`, `get_pickled_task`) refuse any caller without BTU Scheduler or
+System Manager. `test_ping` stays open to any signed-in user, for connectivity checks.
+
 ## Required variables (`connectivity_mode=direct`)
 
 | Variable | Description |
