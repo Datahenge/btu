@@ -1,0 +1,21 @@
+{
+ "app": "btu",
+ "bg_color": "gray",
+ "creation": "2026-11-03 12:26:01.855182",
+ "docstatus": 0,
+ "doctype": "Desktop Icon",
+ "hidden": 0,
+ "icon": "workflow",
+ "icon_type": "Link",
+ "idx": 0,
+ "label": "Automated Tasks",
+ "link_to": "Automated Tasks",
+ "link_type": "Workspace Sidebar",
+ "modified": "2026-11-03 12:26:01.855182",
+ "modified_by": "Administrator",
+ "name": "Automated Tasks",
+ "owner": "Administrator",
+ "restrict_removal": 0,
+ "roles": [],
+ "standard": 1
+}
