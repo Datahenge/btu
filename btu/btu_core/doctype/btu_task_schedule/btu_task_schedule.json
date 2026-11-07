@@ -147,7 +147,7 @@
    "link_fieldname": "schedule"
   }
  ],
- "modified": "2026-07-07 00:00:00.000000",
+ "modified": "2026-11-07 14:00:00.000000",
  "modified_by": "Administrator",
  "module": "BTU_Core",
  "name": "BTU Task Schedule",
@@ -168,11 +168,8 @@
    "write": 1
   },
   {
-   "email": 1,
-   "export": 1,
-   "print": 1,
    "read": 1,
-   "role": "All"
+   "role": "BTU Scheduler"
   }
  ],
  "row_format": "Dynamic",

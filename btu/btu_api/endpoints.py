@@ -9,10 +9,20 @@ from werkzeug.wrappers import Response
 from btu.btu_api import Sanchez, execute_job
 from btu.btu_core.doctype.btu_task.btu_task import _task_has_active_log
 
+# Roles allowed to call the scheduler daemon's endpoints. Give the daemon's API user only
+# "BTU Scheduler"; a System Manager may call them for diagnosis.
+SCHEDULER_ROLES = ("BTU Scheduler", "System Manager")
+
+
+def _require_scheduler_role() -> None:
+	"""Refuse a caller who is neither the scheduler daemon's user nor a System Manager."""
+	frappe.only_for(SCHEDULER_ROLES)
+
 
 @frappe.whitelist()
 def get_pickled_task(task_id: str, task_schedule_id: str | None = None) -> bytes:
 	"""Return pickled RQ job bytes for ``task_id`` (optional ``task_schedule_id``)."""
+	_require_scheduler_role()
 	doc_task = frappe.get_doc("BTU Task", task_id)
 
 	queue_args = {
@@ -58,6 +68,7 @@ def test_hello_world_bytes() -> Response:
 @frappe.whitelist()
 def test_function_ping_now_bytes() -> bytes:
 	"""Return pickled RQ job bytes for the ``ping_now`` test function."""
+	_require_scheduler_role()
 	from btu.diagnostics.smoke import ping_now
 
 	queue_args = {
@@ -85,6 +96,7 @@ def get_enabled_task_schedules() -> list[dict[str, str]]:
 	direct SQL read in btu_scheduler's lib/sql.py::get_enabled_task_schedules(). See
 	docs/technical/04-webserver-only-architecture.md in btu_scheduler_py.
 	"""
+	_require_scheduler_role()
 	rows = frappe.get_all(
 		"BTU Task Schedule",
 		filters={"enabled": 1},
@@ -104,6 +116,7 @@ def get_task_schedule_details(task_schedule_key: str) -> dict[str, str | int]:
 	BTUTaskSchedule.before_validate() already guarantees cron_timezone is populated
 	(falling back to the system time zone) at save time.
 	"""
+	_require_scheduler_role()
 	if not frappe.db.exists("BTU Task Schedule", task_schedule_key):
 		frappe.throw(
 			f"BTU Task Schedule '{task_schedule_key}' not found.",
@@ -137,6 +150,7 @@ def get_pending_scheduler_commands() -> list[dict[str, str]]:
 	Uses LPOP to match the pop side of the direct-mode listener's BLPOP (both LPUSH
 	is the producer side), so command ordering is identical between the two modes.
 	"""
+	_require_scheduler_role()
 	import json
 
 	from btu.btu_api.scheduler import REDIS_COMMAND_QUEUE, _get_redis_connection
@@ -164,6 +178,7 @@ def get_pending_scheduler_commands() -> list[dict[str, str]]:
 @frappe.whitelist(methods=["POST", "PUT"])
 def enqueue_for_next_available_worker(task_schedule_key: str) -> dict[str, int | str]:
 	"""Enqueue a scheduled task when the BTU scheduler daemon fires its cron."""
+	_require_scheduler_role()
 	# Added March of 2025 as part of BTU Scheduler - Python edition.
 	#
 	# Avoids headaches with having to:

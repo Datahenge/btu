@@ -4,3 +4,4 @@ btu.patches.v15_2_0.migrate_smtp_to_email_account
 [post_model_sync]
 btu.patches.v0_8_0.max_task_duration
 btu.patches.v15_2_0.remove_btu_queue_doctype
+btu.patches.v16_0_0.btu_scheduler_role
