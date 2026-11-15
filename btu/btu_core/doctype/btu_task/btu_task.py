@@ -150,8 +150,8 @@ class BTUTask(Document):
 	def on_trash(self) -> None:
 		"""Delete related BTU Task Log rows when this task is deleted."""
 		self.flags.ignore_submitted = True  # tell a lie, to bypass the Submitted checks
-		sql_statement = """ DELETE FROM "tabBTU Task Log" WHERE task = %(task_id)s """
-		frappe.db.sql(sql_statement, values={"task_id": self.name})
+		# The query builder quotes the table for the database in use; MariaDB rejects "tabBTU Task Log".
+		frappe.db.delete("BTU Task Log", {"task": self.name})
 
 	def built_in_arguments(self) -> dict[str, Any] | None:
 		"""Parse the task arguments field into a dictionary (JSON first, then ast.literal_eval)."""
