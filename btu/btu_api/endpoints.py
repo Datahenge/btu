@@ -9,10 +9,20 @@ from werkzeug.wrappers import Response
 from btu.btu_api import Sanchez, execute_job
 from btu.btu_core.doctype.btu_task.btu_task import _task_has_active_log
 
+# Roles allowed to call the scheduler daemon's endpoints. Give the daemon's API user
+# "BTU Scheduler"; a System Manager may call them for diagnosis.
+SCHEDULER_ROLES = ("BTU Scheduler", "System Manager")
+
+
+def _require_scheduler_role() -> None:
+	"""Refuse a caller who is neither the scheduler daemon's user nor a System Manager."""
+	frappe.only_for(SCHEDULER_ROLES)
+
 
 @frappe.whitelist()
 def get_pickled_task(task_id: str, task_schedule_id: str | None = None) -> bytes:
 	"""Return pickled RQ job bytes for ``task_id`` (optional ``task_schedule_id``)."""
+	_require_scheduler_role()
 	doc_task = frappe.get_doc("BTU Task", task_id)
 
 	queue_args = {
@@ -44,7 +54,6 @@ def test_ping() -> str:
 	return "pong"
 
 
-@frappe.whitelist()
 def test_hello_world_bytes() -> Response:
 	"""Return raw bytes to the HTTP client."""
 	hello_bytes: bytes = b"Hello World"
@@ -58,6 +67,7 @@ def test_hello_world_bytes() -> Response:
 @frappe.whitelist()
 def test_function_ping_now_bytes() -> bytes:
 	"""Return pickled RQ job bytes for the ``ping_now`` test function."""
+	_require_scheduler_role()
 	from btu.diagnostics.smoke import ping_now
 
 	queue_args = {
@@ -79,6 +89,7 @@ def test_function_ping_now_bytes() -> bytes:
 @frappe.whitelist(methods=["POST", "PUT"])
 def enqueue_for_next_available_worker(task_schedule_key: str) -> dict[str, int | str]:
 	"""Enqueue a scheduled task when the BTU scheduler daemon fires its cron."""
+	_require_scheduler_role()
 	# Added March of 2025 as part of BTU Scheduler - Python edition.
 	#
 	# Avoids headaches with having to:

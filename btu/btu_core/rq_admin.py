@@ -46,6 +46,7 @@ def rq_job_to_dict(rq_job: Job) -> dict[str, Any]:
 @frappe.whitelist()
 def list_failed_jobs() -> None:
 	"""List all failed RQ jobs across queues via frappe.msgprint."""
+	frappe.only_for("System Manager")
 	conn = get_redis_conn()
 	queues = Queue.all(conn)
 	message = "Failed Jobs:<br><br>"
@@ -64,6 +65,7 @@ def list_failed_jobs() -> None:
 @frappe.whitelist()
 def print_job_details(queue_name: str, job_id: str) -> None:
 	"""Fetch and display details for a single RQ job."""
+	frappe.only_for("System Manager")
 	conn = get_redis_conn()
 	this_queue_key = "rq:queue:" + queue_name
 	this_queue = Queue.from_queue_key(queue_key=this_queue_key, connection=conn)
@@ -81,6 +83,7 @@ def print_job_details(queue_name: str, job_id: str) -> None:
 @frappe.whitelist(methods=["DELETE"])
 def remove_failed_jobs(date_from: str, date_to: str, wildcard_text: str | None = None) -> None:
 	"""Delete failed RQ jobs matching date range and optional description filter."""
+	frappe.only_for("System Manager")
 	date_from_parsed = iso_string_to_date(date_from)
 	date_to_parsed = iso_string_to_date(date_to)
 

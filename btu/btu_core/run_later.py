@@ -142,7 +142,6 @@ def _release_poll_lock() -> None:
 		frappe.db.sql("SELECT RELEASE_LOCK('btu_poll_for_ready_work')")
 
 
-@frappe.whitelist()
 def poll_for_ready_work() -> None:
 	"""Poll Redis and SQL for run-later work ready to execute (run at least every minute).
 

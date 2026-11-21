@@ -38,7 +38,6 @@ def get_cron_timezones() -> list[str]:
 	return _get_cached_timezones()
 
 
-@frappe.whitelist()
 def reload_timezone_cache() -> str:
 	"""Force a rebuild of the IANA timezone cache from the OS zoneinfo database.
 

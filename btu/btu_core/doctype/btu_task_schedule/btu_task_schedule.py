@@ -159,7 +159,6 @@ class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
 		return ast.literal_eval(self.argument_overrides)
 
 
-@frappe.whitelist()
 def resubmit_all_task_schedules() -> None:
 	"""Resubmit all enabled Task Schedules to the BTU Scheduler daemon."""
 	filters = {"enabled": True}

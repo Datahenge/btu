@@ -10,6 +10,8 @@ app_color = "grey"
 app_email = "brian@datahenge.com"
 app_license = "MIT"
 
+after_install = "btu.setup.after_install"
+
 # Uses the native ERPNext Scheduler to investigate BTU Tasks that are still In-Progress after N minutes.
 scheduler_events = {
 	"cron": {

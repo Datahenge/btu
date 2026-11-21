@@ -3,7 +3,6 @@
 import frappe
 
 
-@frappe.whitelist()
 def ping_with_wait(seconds_to_wait: int | str) -> str:
 	"""Wait N seconds, then return a pong message."""
 	import time

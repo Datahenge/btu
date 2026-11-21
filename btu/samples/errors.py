@@ -5,7 +5,6 @@ from typing import NoReturn
 import frappe
 
 
-@frappe.whitelist()
 def wait_then_throw_error() -> NoReturn:
 	"""Wait 10 seconds, then raise a RuntimeError."""
 	import time

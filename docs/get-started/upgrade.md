@@ -1,5 +1,13 @@
 # Upgrade
 
+## BTU 15.2.1 (security)
+
+1. Run `bench --site YOUR_SITE migrate`.
+2. Give the scheduler daemon's API user the **BTU Scheduler** role, unless it already has System Manager. Without it, the daemon can no longer fetch or enqueue Tasks.
+3. Restart the scheduler daemon.
+
+See the [changelog](changelog.md) for the full list of changes.
+
 ## BTU 15.2.0
 
 Run after upgrading the Frappe app:
