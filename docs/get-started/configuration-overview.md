@@ -20,7 +20,7 @@ See [BTU Configuration guide](../guides/desk/configuration.md) and [Reference â†
 The Python scheduler reads `BTU_SCHEDULER_*` variables from:
 
 - Process environment (systemd, Docker, Kubernetes), and/or
-- `~/.config/btu_scheduler/.env` (optional developer convenience)
+- `~/.config/btu-scheduler/.env` (optional developer convenience)
 
 Process environment **always wins** over the `.env` file.
 
@@ -39,6 +39,6 @@ Ensure `redis_queue` in `site_config.json` / `common_site_config.json` matches `
 
 - [ ] BTU app installed and migrated
 - [ ] Scheduler `.env` or env vars set with correct DB + Redis + Frappe token
-- [ ] `btu-py run-daemon` running
+- [ ] `btu-scheduler run-daemon` running
 - [ ] `bench worker` running with expected queues
 - [ ] Ping from BTU Configuration succeeds

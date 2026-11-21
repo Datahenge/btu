@@ -1,13 +1,13 @@
 # Installation
 
-Install **both** components and verify they work together. ERPNext is not required — any Frappe v15 site with RQ workers is sufficient.
+Install **both** components and verify they work together. ERPNext is not required — any Frappe v16 site with RQ workers is sufficient. (For Frappe v15, use the `version-15` branches of both repositories.)
 
 ## Part 1 — BTU Frappe app
 
 From your bench directory:
 
 ```bash
-bench get-app --branch version-15 https://github.com/Datahenge/btu
+bench get-app --branch version-16 https://github.com/Datahenge/btu
 bench --site YOUR_SITE install-app btu
 bench --site YOUR_SITE migrate
 bench restart
@@ -24,24 +24,27 @@ python3 -m venv ~/venvs/btu-scheduler
 source ~/venvs/btu-scheduler/bin/activate
 git clone https://github.com/Datahenge/btu_scheduler_py.git
 cd btu_scheduler_py
-pip install -e .
+# direct mode (the default) needs the SQL drivers:
+pip install -e ".[direct]"
+# webserver mode needs none:
+# pip install -e .
 ```
 
 Create configuration (see [Scheduler configuration](../scheduler/scheduler-config.md)):
 
 ```bash
-mkdir -p ~/.config/btu_scheduler
-cp .env.example ~/.config/btu_scheduler/.env
+mkdir -p ~/.config/btu-scheduler
+cp .env.example ~/.config/btu-scheduler/.env
 # edit BTU_SCHEDULER_* variables for your site
-nano ~/.config/btu_scheduler/.env
+nano ~/.config/btu-scheduler/.env
 ```
 
-Required settings include database credentials (same DB as your Frappe site), Redis/RQ host, and Frappe API token for enqueue.
+Required settings include the Frappe API token for enqueue and, in direct mode, database credentials (same DB as your Frappe site) and the Redis/RQ host. Webserver mode needs no database or Redis settings; see [Run the scheduler in Docker](../scheduler/run-in-docker.md).
 
 Start the daemon:
 
 ```bash
-btu-py run-daemon
+btu-scheduler run-daemon
 ```
 
 For production, run under systemd or your process supervisor. See [Run the scheduler](../scheduler/run-scheduler.md).

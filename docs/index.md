@@ -96,8 +96,8 @@ Both are required for recurring schedules. See the [BTU Scheduler](scheduler/ind
 
 ## Requirements
 
-- Frappe v15+ bench with Redis and RQ workers
-- PostgreSQL or MariaDB (the scheduler reads the same site database)
-- BTU Scheduler daemon running continuously (`btu-py run-daemon`)
+- Frappe v16 bench with Redis and RQ workers (Frappe v15: use the `version-15` branches)
+- PostgreSQL or MariaDB (in direct mode the scheduler reads the same site database; webserver mode needs no database access)
+- BTU Scheduler daemon running continuously (`btu-scheduler run-daemon`)
 
 ERPNext is **not** required.

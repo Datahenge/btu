@@ -4,9 +4,75 @@ All notable changes to Background Tasks Unleashed (BTU) are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-Source file for releases: [CHANGELOG.md on GitHub](https://github.com/Datahenge/btu/blob/version-15/CHANGELOG.md).
+Source file for releases: [CHANGELOG.md on GitHub](https://github.com/Datahenge/btu/blob/version-16/CHANGELOG.md).
 
-## [15.2.0] — Unreleased
+## [Unreleased]
+
+Work on `version-16` since 16.0.0, running in production in webserver mode.
+
+### Added
+
+- **Webserver connectivity mode:** the BTU Scheduler daemon can run with no direct SQL or Redis access, reaching the site only through BTU's REST endpoints (`get_enabled_task_schedules`, `get_task_schedule_details`, `get_pending_scheduler_commands`). Opt in by setting `btu_scheduler_connectivity_mode: "webserver"` in site config to match the daemon's `BTU_SCHEDULER_CONNECTIVITY_MODE=webserver`. The default (`direct`) is unchanged. Suited to Docker: the daemon can run as its own Compose project on the ERPNext stack's private network. See [Run the scheduler in Docker](https://btu.datahenge.com/scheduler/run-in-docker/).
+- **BTU Scheduler role:** an API-only role (no Desk access) for the scheduler daemon's user. Created on install and by a patch on migrate.
+- **Run Scheduled Tasks As:** a new field in BTU Configuration choosing the User that scheduled Tasks run as (default Administrator). Tasks a person queues by hand still run as that person.
+- **Scheduler liveness in webserver mode:** BTU Configuration shows when the daemon last polled, in green or red.
+- **"Create Ping Task" button** in BTU Configuration, for a quick end-to-end check.
+
+### Changed
+
+- **Scheduler endpoints require the BTU Scheduler or System Manager role.** Previously any signed-in user could call them. Give the daemon's API user only the BTU Scheduler role.
+- **Scheduled Tasks no longer run as the daemon's API user**, so that user no longer needs broad roles such as System Manager.
+- **BTU Task Schedule** no longer grants read access to "All".
+- **Default Email Account is optional.** Saving without one shows a warning, and failure emails are skipped instead of raising an error.
+- Clearer scheduler command responses in schedule logs.
+- Workspace fixture refreshed for Frappe v16.
+
+### Fixed
+
+- **Deleting a BTU Task failed on MariaDB** (error 1064).
+- Explicit task Result failures are now honored.
+- Three incorrect error messages.
+
+### Upgrade notes
+
+1. Run `bench migrate` after upgrading.
+2. Give the scheduler daemon's API user the **BTU Scheduler** role, and remove any broader roles it no longer needs.
+3. Check **BTU Configuration → Run Scheduled Tasks As**.
+4. To use webserver mode, set `btu_scheduler_connectivity_mode` on the site and the matching variable on the daemon.
+
+---
+
+## [16.0.0] — 2026-07-10
+
+BTU for Frappe v16. Includes everything in 15.2.0 below.
+
+### Added
+
+- **Frappe v16 and Python 3.14 support.**
+- **Desk workspace tile and icon** ("Automated Tasks"), created on install.
+- **New documentation** for v16.
+
+### Changed
+
+- **BTU Scheduled Task Summary and BTU Task Log Summary** are now Script Reports, compatible with MariaDB and PostgreSQL.
+
+### Removed
+
+- **Mandrill / Mailchimp Transactional email support.** Use a Frappe Email Account.
+- Legacy `rq.compat` code and obsolete environment variables. BTU no longer pins `rq` itself; Frappe owns it.
+
+### Fixed
+
+- SQL bugs in the summary reports (minutes shown as months, hard-coded time zone).
+
+### Upgrade notes
+
+1. Run `bench migrate` after upgrading.
+2. If you sent email through Mandrill, configure a Frappe Email Account.
+
+---
+
+## [15.2.0] — 2026-07-06
 
 ### Added
 

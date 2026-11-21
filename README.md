@@ -1,4 +1,4 @@
-## Background Tasks Unleashed (BTU) v15
+## Background Tasks Unleashed (BTU) v16
 
 **[Official documentation](https://btu.datahenge.com/)** — Frappe app + Python scheduler, one product.
 
@@ -26,7 +26,7 @@ Using the Desk (no SSH, no `hooks.py` edits):
 See the unified guide: **[Installation](https://btu.datahenge.com/get-started/installation/)**
 
 ```bash
-bench get-app --branch version-15 https://github.com/Datahenge/btu
+bench get-app --branch version-16 https://github.com/Datahenge/btu
 bench --site YOUR_SITE install-app btu
 ```
 

@@ -34,7 +34,7 @@ Upgrade the scheduler package separately:
 cd btu_scheduler_py
 git pull
 pip install -e .
-# restart btu-py run-daemon
+# restart btu-scheduler run-daemon
 ```
 
 When Redis RPC or protocol changes land in both repos, upgrade **app and scheduler together**. See [Version policy](version-policy.md).

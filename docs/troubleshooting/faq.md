@@ -20,7 +20,7 @@ See [Why BTU](../get-started/why-btu.md).
 
 ## Schedules never fire
 
-1. Is `btu-py run-daemon` running?
+1. Is `btu-scheduler run-daemon` running?
 2. Does ping from BTU Configuration succeed?
 3. Is the schedule **Enabled**?
 4. Are SQL credentials in scheduler env correct (same DB as site)?

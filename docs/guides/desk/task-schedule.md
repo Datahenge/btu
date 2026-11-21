@@ -17,6 +17,6 @@ Saving notifies the scheduler via Redis RPC when reachable. If the daemon is off
 
 ## Requires scheduler
 
-Cron firing needs `btu-py run-daemon` running continuously.
+Cron firing needs `btu-scheduler run-daemon` running continuously.
 
 See [Recurring schedule recipe](../../recipes/recurring-schedule-with-timezone.md).

@@ -28,9 +28,9 @@ bench --site SITE execute btu.diagnostics.rq_workers.check_workers
 On the scheduler host (not bench):
 
 ```bash
-btu-py config show
-btu-py config path
-btu-py run-daemon
+btu-scheduler config show
+btu-scheduler config path
+btu-scheduler run-daemon
 ```
 
 Legacy Rust `btu_scheduler` binary is retired.
