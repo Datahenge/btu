@@ -142,7 +142,6 @@ def _release_poll_lock() -> None:
 		frappe.db.sql("SELECT RELEASE_LOCK('btu_poll_for_ready_work')")
 
 
-@frappe.whitelist()
 def poll_for_ready_work() -> None:
 	"""Poll Redis and SQL for run-later work ready to execute (run at least every minute).
 
@@ -195,7 +194,7 @@ def _run_tasks_from_redis_database() -> None:
 		try:
 			if int(not_before_timestamp) > timestamp_now:
 				continue  # not-yet time to enqueue this task.
-		except (TypeError, ValueError):
+		except TypeError, ValueError:
 			frappe.logger("btu").warning(
 				"Malformed run_later key %s: invalid not_before_timestamp %r", key, not_before_timestamp
 			)

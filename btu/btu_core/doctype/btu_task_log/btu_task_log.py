@@ -135,6 +135,7 @@ def write_log_for_task(
 @frappe.whitelist()
 def delete_logs_by_dates(from_date: str, to_date: str) -> int:
 	"""Delete BTU Task Log rows whose start date falls within the given range."""
+	frappe.has_permission("BTU Task Log", "delete", throw=True)
 	task_log_table = frappe.qb.DocType("BTU Task Log")
 	sql_statement: list = (
 		frappe.qb.from_(task_log_table)
@@ -154,7 +155,6 @@ def delete_logs_by_dates(from_date: str, to_date: str) -> int:
 	return rows_to_delete
 
 
-@frappe.whitelist()
 def check_in_progress_logs_for_timeout(verbose: bool = False) -> None:
 	"""Mark In-Progress logs as Timeout when they exceed max task duration."""
 	if verbose:

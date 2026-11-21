@@ -11,7 +11,6 @@ def test_rq_workers1() -> None:
 	print(result)
 
 
-@frappe.whitelist()
 def test_rq_workers2() -> None:
 	"""Enqueue the BTU hello-email test on the short queue."""
 	frappe.enqueue(

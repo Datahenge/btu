@@ -351,7 +351,6 @@ class BTUReport:
 		print("---End of Function---")
 
 
-@frappe.whitelist()
 def run_btu_report(*_args: object, **kwargs: object) -> None:
 	"""Whitelisted entry point for BTU automatic report tasks."""
 	instance = BTUReport(

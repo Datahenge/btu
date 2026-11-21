@@ -321,7 +321,6 @@ def email_on_task_conclusion(doc_task_log: BTUTaskLog, send_via_queue: bool = Fa
 	frappe.logger("btu").debug("Sent email message to recipients: %s", list(email_recipients))
 
 
-@frappe.whitelist()
 def send_hello_email_to_current_user(debug: bool = False) -> str:
 	"""Send a short test email to the current session user (BTU Configuration smoke test)."""
 	import datetime

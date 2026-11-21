@@ -63,7 +63,6 @@ def test_ping() -> str:
 	return "pong"
 
 
-@frappe.whitelist()
 def test_hello_world_bytes() -> Response:
 	"""Return raw bytes to the HTTP client."""
 	hello_bytes: bytes = b"Hello World"

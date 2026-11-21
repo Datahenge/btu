@@ -4,9 +4,9 @@ All notable changes to Background Tasks Unleashed (BTU) are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased]
+## [16.1.0] — 2026-11-21
 
-Work on `version-16` since 16.0.0, running in production in webserver mode.
+Webserver connectivity mode is released. It has been running in production on a Frappe v16 implementation.
 
 ### Added
 
@@ -21,9 +21,11 @@ Work on `version-16` since 16.0.0, running in production in webserver mode.
 - **Scheduler endpoints require the BTU Scheduler or System Manager role.** Previously any signed-in user could call them. Give the daemon's API user only the BTU Scheduler role.
 - **Scheduled Tasks no longer run as the daemon's API user**, so that user no longer needs broad roles such as System Manager.
 - **BTU Task Schedule** no longer grants read access to "All".
+- **Other whitelisted methods locked down.** The RQ failed-job tools (`list_failed_jobs`, `print_job_details`, `remove_failed_jobs`) now require System Manager, and `delete_logs_by_dates` requires delete permission on BTU Task Log. Functions meant only for `bench execute` or for BTU Tasks (`poll_for_ready_work`, `resubmit_all_task_schedules`, `run_btu_report`, `check_in_progress_logs_for_timeout`, `reload_timezone_cache`, `send_hello_email_to_current_user`, `ping_with_wait`, `wait_then_throw_error`, `test_rq_workers2`, `test_hello_world_bytes`) are no longer callable over HTTP. Calling them from Python or as a BTU Task is unchanged.
 - **Default Email Account is optional.** Saving without one shows a warning, and failure emails are skipped instead of raising an error.
 - Clearer scheduler command responses in schedule logs.
 - Workspace fixture refreshed for Frappe v16.
+- Removed unused code: `localize_datetime()` in BTU Task Schedule and the legacy `btu/config/docs.py`.
 
 ### Fixed
 
@@ -136,7 +138,7 @@ BTU for Frappe v16. Includes everything in 15.2.0 below.
 
 Prior releases are not documented in this file. See [git tags](https://github.com/Datahenge/btu/tags) for earlier versions.
 
-[Unreleased]: https://github.com/Datahenge/btu/compare/v16.0.0...version-16
+[16.1.0]: https://github.com/Datahenge/btu/compare/v16.0.0...v16.1.0
 [16.0.0]: https://github.com/Datahenge/btu/compare/v15.2.0...v16.0.0
 [15.2.0]: https://github.com/Datahenge/btu/compare/15.1.1...v15.2.0
 [15.1.1]: https://github.com/Datahenge/btu/compare/15.1.0...15.1.1

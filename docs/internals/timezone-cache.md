@@ -22,6 +22,7 @@ The authoritative source for valid timezone names is the **OS zoneinfo database*
 
 ```python
 from zoneinfo import available_timezones
+
 sorted(available_timezones())  # → ['Africa/Abidjan', 'Africa/Accra', ...]
 ```
 
@@ -39,7 +40,7 @@ Because building this list on every form load or every `validate()` call would b
 _build_timezone_list()        — calls zoneinfo, returns sorted list
 _get_cached_timezones()       — checks Redis; calls _build_timezone_list() on miss
 get_cron_timezones()          — @whitelist; returns _get_cached_timezones()
-reload_timezone_cache()       — @whitelist; forces rebuild and stores in Redis
+reload_timezone_cache()       — forces rebuild and stores in Redis (BTU Configuration button)
 validate_cron_timezone(name)  — checks name against set(_get_cached_timezones())
 ```
 

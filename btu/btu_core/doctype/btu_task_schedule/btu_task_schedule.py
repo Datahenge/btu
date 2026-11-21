@@ -6,7 +6,6 @@
 # For license information, please see license.txt
 
 import ast
-from datetime import datetime as datetime_type
 from typing import Any
 
 # Third Party
@@ -21,7 +20,6 @@ from frappe.model.document import Document
 from btu import Result, print_both, validate_cron_string
 from btu.btu_api.scheduler import SchedulerAPI
 from btu.btu_core.form_options import validate_cron_timezone, validate_rq_queue_name
-from btu.utils.datetime import get_system_timezone
 
 
 class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
@@ -165,7 +163,6 @@ class BTUTaskSchedule(Document):  # pylint: disable=too-many-instance-attributes
 		return ast.literal_eval(self.argument_overrides)
 
 
-@frappe.whitelist()
 def resubmit_all_task_schedules() -> None:
 	"""Resubmit all enabled Task Schedules to the BTU Scheduler daemon."""
 	filters = {"enabled": True}
@@ -180,22 +177,3 @@ def resubmit_all_task_schedules() -> None:
 			print_both(message)
 			doc_schedule.enabled = False
 			doc_schedule.save()
-
-
-def localize_datetime(any_datetime: datetime_type) -> datetime_type:
-	"""Return a timezone-aware datetime for a naive local datetime."""
-	time_zone = get_system_timezone()
-	if not isinstance(any_datetime, datetime_type):
-		raise TypeError("Argument 'any_datetime' must be a Python datetime object.")
-
-	if any_datetime.tzinfo:
-		raise ValueError(
-			f"Datetime value {any_datetime} is already localized and time zone aware (tzinfo={any_datetime.tzinfo})"
-		)
-
-	type_name = type(time_zone).__name__
-
-	if type_name == "ZoneInfo":
-		return any_datetime.replace(tzinfo=time_zone)
-
-	return time_zone.localize(any_datetime)

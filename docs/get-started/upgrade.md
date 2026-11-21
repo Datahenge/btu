@@ -1,5 +1,37 @@
 # Upgrade
 
+## BTU 16.1.0
+
+Run after upgrading the Frappe app:
+
+```bash
+bench --site YOUR_SITE migrate
+bench restart
+```
+
+### Scheduler permissions
+
+The scheduler endpoints now require the **BTU Scheduler** or **System Manager** role. Migration creates the BTU Scheduler role.
+
+1. Give the scheduler daemon's API user the **BTU Scheduler** role.
+2. Remove any broader roles that user no longer needs (such as System Manager).
+3. Open **BTU Configuration** and check **Run Scheduled Tasks As**. Scheduled Tasks run as that User (default Administrator), never as the daemon's API user.
+
+### Webserver mode (optional)
+
+To run the scheduler without SQL or Redis access, set the site's mode and the matching daemon variable:
+
+```bash
+bench --site YOUR_SITE set-config btu_scheduler_connectivity_mode webserver
+# daemon: BTU_SCHEDULER_CONNECTIVITY_MODE=webserver
+```
+
+See [Run the scheduler in Docker](../scheduler/run-in-docker.md).
+
+## BTU 16.0.0
+
+Frappe v16 and Python 3.14. Run `bench migrate`. If you sent email through Mandrill, configure a Frappe **Email Account** instead.
+
 ## BTU 15.2.0
 
 Run after upgrading the Frappe app:
@@ -33,7 +65,7 @@ Upgrade the scheduler package separately:
 ```bash
 cd btu_scheduler_py
 git pull
-pip install -e .
+pip install -e ".[direct]"   # or: pip install -e .   (webserver mode)
 # restart btu-scheduler run-daemon
 ```
 

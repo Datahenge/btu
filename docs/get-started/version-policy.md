@@ -4,7 +4,7 @@
 
 - **Branch `version-16`**: current production line for Frappe v16 benches.
 - **Branch `version-15`**: Frappe v15 benches.
-- Version in `btu/__init__.py` (e.g. `16.0.0`) tracks app releases.
+- Version in `btu/__init__.py` (e.g. `16.1.0`) tracks app releases.
 
 ## Scheduler
 
@@ -26,4 +26,4 @@ This documentation describes **compatible pairs**: a `version-16` app branch wit
 | BTU app (bench) | Follows Frappe: 3.14 for v16 |
 | BTU Scheduler | ≥ 3.11 (see scheduler `pyproject.toml`) |
 
-The BTU app does not pin RQ; Frappe owns it. The scheduler pins `rq==1.15.1` (see its `pyproject.toml`).
+The BTU app does not pin RQ; Frappe owns it. The scheduler's `version-16` branch pins `rq==2.6.1`, matching Frappe v16 (see its `pyproject.toml`).

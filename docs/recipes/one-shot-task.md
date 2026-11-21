@@ -12,10 +12,10 @@ Use **create and run** flow on BTU Task, or run an existing task on demand.
 from btu.btu_core.doctype.btu_task.btu_task import create_and_run_one_shot
 
 create_and_run_one_shot(
-    short_description="Manual cleanup",
-    function_path="myapp.tasks.cleanup_temp_files",
-    arguments={},
-    queue_name="short",
+	short_description="Manual cleanup",
+	function_path="myapp.tasks.cleanup_temp_files",
+	arguments={},
+	queue_name="short",
 )
 ```
 
